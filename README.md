@@ -214,3 +214,13 @@ See [docs/roadmap.md](docs/roadmap.md) for the full plan. Short version:
 ## License
 
 MIT License. See [LICENSE](LICENSE) for details.
+
+---
+
+## Live Links
+
+| | URL |
+|--|-----|
+| **Frontend** | https://health-care-plus-kappa.vercel.app |
+| **Backend API** | https://healthcare-backend-tylz.onrender.com |
+| **API Docs** | https://healthcare-backend-tylz.onrender.com/api-docs |
