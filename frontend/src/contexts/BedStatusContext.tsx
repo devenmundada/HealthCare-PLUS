@@ -3,8 +3,8 @@ import axios from 'axios';
 import { io, Socket } from 'socket.io-client';
 import type { Bed, BedUpdateEvent, OccupancyMetrics, SpecialtyOccupancy } from '../types/bed.types';
 
-const API_URL = 'http://localhost:3001/api';
-const SOCKET_URL = 'http://localhost:3001';
+const API_URL = 'https://healthcare-backend-tylz.onrender.com/api';
+const SOCKET_URL = 'https://healthcare-backend-tylz.onrender.com';
 
 interface BedStatusContextValue {
   beds: Bed[];

@@ -7,7 +7,7 @@ import { MapPin, Navigation, Star, Clock, Filter, X } from 'lucide-react';
 import locationService from '../../../services/location.service';
 import axios from 'axios';
 
-const API_URL = 'http://localhost:3001/api';
+const API_URL = 'https://healthcare-backend-tylz.onrender.com/api';
 
 interface Doctor {
   id: number;
