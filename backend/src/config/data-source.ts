@@ -6,17 +6,17 @@ dotenv.config();
 
 const isProduction = process.env.NODE_ENV === 'production';
 
+const dbUrl = process.env.DATABASE_URL?.replace('postgresql://', 'postgres://');
+
 export const AppDataSource = new DataSource({
   type: 'postgres',
 
-  // ✅ Railway / Production
-  ...(process.env.DATABASE_URL
+  ...(dbUrl
     ? {
-        url: process.env.DATABASE_URL,
+        url: dbUrl,
         ssl: { rejectUnauthorized: false },
       }
     : {
-        // ✅ Local development fallback
         host: process.env.DB_HOST || 'localhost',
         port: Number(process.env.DB_PORT || 5432),
         username: process.env.DB_USER || 'postgres',
@@ -27,7 +27,6 @@ export const AppDataSource = new DataSource({
   synchronize: false,
   logging: !isProduction,
 
-  // IMPORTANT: dist paths for Railway
   entities: isProduction
     ? ['dist/**/*.js']
     : ['src/**/*.ts'],
