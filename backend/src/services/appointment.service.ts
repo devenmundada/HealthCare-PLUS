@@ -9,6 +9,7 @@ import { GoogleCalendarService } from './google-calendar.service';
 import { CreateAppointmentDto, AppointmentWithDetails, TimeSlot, AppointmentType } from '../types/appointment.types';
 import { Between } from 'typeorm';
 
+// If you use alertService you must import its type and inject/define it properly; here we add it as optional on the class.
 export class AppointmentService {
   private appointmentRepository = AppDataSource.getRepository(Appointment);
   private patientRepository = AppDataSource.getRepository(Patient);
@@ -17,11 +18,15 @@ export class AppointmentService {
   private notificationService: NotificationService;
   private socketService: SocketService;
   private calendarService: GoogleCalendarService;
+  private alertService?: any; // Set correct type if available
 
-  constructor(socketService: SocketService, notificationService: NotificationService) {
+  constructor(socketService: SocketService, notificationService: NotificationService, alertService?: any) {
     this.socketService = socketService;
     this.notificationService = notificationService;
     this.calendarService = new GoogleCalendarService();
+    if (alertService) {
+      this.alertService = alertService;
+    }
   }
 
   /**
@@ -80,17 +85,21 @@ export class AppointmentService {
   }
 
   /**
-   * Create a new appointment with Google Meet for online consultations
+   * Create a new appointment, validate entities, check for availability,
+   * generate meeting link if online, trigger alerts, send notifications,
+   * and emit real-time event.
    */
   async createAppointment(data: CreateAppointmentDto): Promise<AppointmentWithDetails> {
-    const patient = await this.patientRepository.findOne({ 
+    // Validate patient exists
+    const patient = await this.patientRepository.findOne({
       where: { id: data.patientId },
       relations: ['user']
     });
     if (!patient) throw new Error('Patient not found');
 
-    const doctor = await this.doctorRepository.findOne({ 
-      where: { id: data.doctorId } 
+    // Validate doctor exists
+    const doctor = await this.doctorRepository.findOne({
+      where: { id: data.doctorId }
     });
     if (!doctor) throw new Error('Doctor not found');
 
@@ -111,24 +120,25 @@ export class AppointmentService {
     });
     if (!hospital) throw new Error('Hospital not found');
 
+    // Check if slot is available
     const slots = await this.getAvailableSlots(data.doctorId, data.scheduledTime);
-    const requestedSlot = slots.find(s => 
+    const requestedSlot = slots.find(s =>
       s.startTime.getTime() === new Date(data.scheduledTime).getTime() && s.available
     );
-
     if (!requestedSlot) {
       throw new Error('Selected time slot is not available');
     }
 
+    // Calculate end time
     const duration = data.duration || 30;
     const endTime = new Date(data.scheduledTime);
     endTime.setMinutes(endTime.getMinutes() + duration);
 
-    let meetLink = null;
+    // Generate Google Meet link for online appointments
+    let meetLink: string | null = null;
     if (data.appointmentType === 'online') {
       const patientEmail = patient.user?.email;
       const doctorEmail = doctor.email;
-
       const meetResult = await this.calendarService.createMeetingEvent(
         patient.user?.name || 'Patient',
         doctor.name,
@@ -137,19 +147,16 @@ export class AppointmentService {
         patientEmail,
         doctorEmail
       );
-
       if (meetResult.success) {
         meetLink = meetResult.meetLink;
-        console.log('✅ Google Meet created:', meetLink);
-      } else {
-        console.error('❌ Failed to create Google Meet:', meetResult.error);
       }
     }
 
+    // Create appointment
     const appointment = this.appointmentRepository.create({
       patientId: data.patientId,
       doctorId: data.doctorId,
-      hospitalId,
+      hospitalId: hospitalId,
       appointmentType: data.appointmentType,
       scheduledTime: data.scheduledTime,
       endTime,
@@ -157,12 +164,12 @@ export class AppointmentService {
       symptoms: data.symptoms || [],
       notes: data.notes,
       status: 'scheduled',
-      meetingLink: meetLink
+      meetingLink: meetLink,
     });
 
     await this.appointmentRepository.save(appointment);
 
-    // Cast the appointment type to ensure it matches the union type
+    // Prepare response with details
     const appointmentWithDetails: AppointmentWithDetails = {
       id: appointment.id,
       patientId: appointment.patientId,
@@ -191,16 +198,51 @@ export class AppointmentService {
       hospitalAddress: hospital.address || ''
     };
 
-    await this.sendAppointmentNotifications(appointmentWithDetails);
+    // 🔔 TRIGGER ALERTS - NEW APPOINTMENT
+    if (this.alertService && typeof this.alertService.sendAppointmentAlert === "function") {
+      await this.alertService.sendAppointmentAlert(
+        data.patientId,
+        appointmentWithDetails.patientName,
+        data.doctorId,
+        doctor.name,
+        doctor.specialty,
+        data.scheduledTime
+      );
+      // Emergency alert condition (if emergency symptoms)
+      if (data.symptoms && data.symptoms.length > 0) {
+        const emergencyKeywords = ['chest pain', 'heart', 'stroke', 'bleeding', 'unconscious', 'severe'];
+        const hasEmergency = data.symptoms.some(s =>
+          emergencyKeywords.some(keyword => s.toLowerCase().includes(keyword))
+        );
+        if (hasEmergency && typeof this.alertService.sendEmergencyAlert === "function") {
+          await this.alertService.sendEmergencyAlert(
+            data.patientId,
+            appointmentWithDetails.patientName,
+            1, // Example code for emergency priority/level
+            data.symptoms,
+            doctor.specialty,
+            data.scheduledTime
+          );
+        }
+      }
+    }
 
-    this.socketService.broadcastPatientTransition({
-      patientId: data.patientId.toString(),
-      patientName: appointmentWithDetails.patientName,
-      fromStatus: 'scheduled',
-      toStatus: 'appointment-booked',
-      priority: data.symptoms?.length ? 3 : 5,
-      timestamp: new Date()
-    });
+    // Send notifications
+    if (typeof this.sendAppointmentNotifications === "function") {
+      await this.sendAppointmentNotifications(appointmentWithDetails);
+    }
+
+    // Emit real-time event
+    if (this.socketService && typeof this.socketService.broadcastPatientTransition === "function") {
+      this.socketService.broadcastPatientTransition({
+        patientId: data.patientId.toString(),
+        patientName: appointmentWithDetails.patientName,
+        fromStatus: 'scheduled',
+        toStatus: 'appointment-booked',
+        priority: data.symptoms?.length ? 3 : 5,
+        timestamp: new Date()
+      });
+    }
 
     return appointmentWithDetails;
   }
@@ -212,7 +254,7 @@ export class AppointmentService {
     });
 
     let message = `Your appointment with Dr. ${appointment.doctorName} on ${appointmentTime} has been confirmed.`;
-    
+
     if (appointment.meetingLink) {
       message += `\n\n📹 Video Consultation Link: ${appointment.meetingLink}`;
       message += `\n\nThis link will be active at the scheduled time.`;
@@ -254,7 +296,7 @@ export class AppointmentService {
     });
 
     const result = await Promise.all(appointments.map(async apt => {
-      const patient = await this.patientRepository.findOne({ 
+      const patient = await this.patientRepository.findOne({
         where: { id: patientId },
         relations: ['user']
       });
@@ -293,13 +335,13 @@ export class AppointmentService {
 
   async getDoctorAppointments(doctorId: number, date?: Date): Promise<AppointmentWithDetails[]> {
     const whereClause: any = { doctorId };
-    
+
     if (date) {
       const startOfDay = new Date(date);
       startOfDay.setHours(0, 0, 0, 0);
       const endOfDay = new Date(date);
       endOfDay.setHours(23, 59, 59, 999);
-      
+
       whereClause.scheduledTime = Between(startOfDay, endOfDay);
     }
 
@@ -339,11 +381,11 @@ export class AppointmentService {
   }
 
   async updateAppointmentStatus(id: number, status: string, reason?: string): Promise<Appointment> {
-    const appointment = await this.appointmentRepository.findOne({ 
+    const appointment = await this.appointmentRepository.findOne({
       where: { id },
       relations: ['patient', 'patient.user', 'doctor']
     });
-    
+
     if (!appointment) throw new Error('Appointment not found');
 
     appointment.status = status;
@@ -352,7 +394,7 @@ export class AppointmentService {
 
     await this.appointmentRepository.save(appointment);
 
-    const message = status === 'cancelled' 
+    const message = status === 'cancelled'
       ? `Your appointment has been cancelled${reason ? ': ' + reason : ''}`
       : `Your appointment status has been updated to ${status}`;
 
@@ -427,11 +469,11 @@ export class AppointmentService {
   }
 
   async generateMeetingLink(id: number): Promise<string> {
-    const appointment = await this.appointmentRepository.findOne({ 
+    const appointment = await this.appointmentRepository.findOne({
       where: { id },
       relations: ['patient', 'patient.user', 'doctor']
     });
-    
+
     if (!appointment) throw new Error('Appointment not found');
 
     if (appointment.appointmentType !== 'online') {

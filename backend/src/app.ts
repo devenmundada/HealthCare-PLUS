@@ -18,10 +18,20 @@ import { initializeServices } from './services';
 import { AppDataSource } from './config/database.config';
 import aiRoutes from './routes/ai.routes';
 import appointmentRoutes from './routes/appointment.routes';
+import { AlertService } from './services/alert.service'; // ✅ ADD THIS
 
 console.log('1. Imports started...');
-console.log('1.5 Skipping database connection initialization in this environment');
+console.log('1.5 Initializing database connection...');
 
+AppDataSource.initialize()
+  .then(() => {
+    console.log('✅ Database connected successfully');
+  })
+  .catch((error) => {
+    console.error('❌ Database connection failed:', error);
+    process.exit(1);
+  });
+  
 import { AppError } from './utils/errors/AppError';
 console.log('2. AppError imported');
 
@@ -32,7 +42,7 @@ import { auditLogger } from './middleware/audit/auditLogger';
 console.log('4. auditLogger imported');
 
 import { requestId } from './middleware/requestId';
-console.log('5. requestId imported');
+console.log('5. requestId ed');
 
 import { corsOptions } from './config/cors';
 console.log('6. corsOptions imported');
@@ -107,7 +117,7 @@ console.log('21. CORS middleware added');
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
-  message: 'Too many requests from this IP, please try again later.',
+  message: 'Too many requests from th IP, please try again later.',
   standardHeaders: true,
   legacyHeaders: false,
 }); 
@@ -195,49 +205,63 @@ console.log('42. Notification routes mounted');
 app.use(`${apiPrefix}/voice`, voiceRoutes);
 console.log('43. Voice routes mounted');
 
+app.use(`${apiPrefix}/ai`, aiRoutes);
+console.log('44. AI routes mounted');
+
+app.use(`${apiPrefix}/triage`, triageRoutes);
+console.log('45. Triage routes mounted');
+
+app.use(`${apiPrefix}/appointments`, appointmentRoutes);
+console.log('46. Appointment routes mounted');
+
 // 404 handler
 app.use('*', (req: Request, res: Response, next: NextFunction) => {
   next(new AppError(`Cannot find ${req.originalUrl} on this server!`, StatusCodes.NOT_FOUND));
 });
-console.log('42. 404 handler added');
-
-app.use(`${apiPrefix}/ai`, aiRoutes);
+console.log('47. 404 handler added');
 
 // Global error handler
 app.use(errorHandler);
-console.log('44. Error handler added');
+console.log('48. Error handler added');
 
 const PORT = process.env.PORT || 3001;
-console.log(`44. Attempting to start server on port ${PORT}...`);
-app.use(`${apiPrefix}/triage`, triageRoutes);
-console.log('44. Triage routes mounted');
+console.log(`49. Attempting to start server on port ${PORT}...`);
 
-app.use(`${apiPrefix}/appointments`, appointmentRoutes);
-console.log('44. Appointment routes mounted');
-
+// Global variables for services
+export let alertService: AlertService;
 
 try {
   const server = app.listen(PORT, () => {
     // Initialize WebSocket and all services first
     const { socketService, bedAllocationService } = initializeWebSocket(server);
+    
+    // Initialize notification service
+    const notificationService = new NotificationService(socketService);
+    
+    // ✅ Initialize Alert Service
+    alertService = new AlertService(socketService, notificationService);
+    console.log('✅ Alert Service initialized');
+    
     // Then initialize other services with socketService
     initializeServices(socketService);
-    console.log(`44. ✅ Server successfully started on port ${PORT}`);
+    
+    console.log(`50. ✅ Server successfully started on port ${PORT}`);
     
     console.log(`🚀 Server running on port ${PORT}`);
     console.log(`📝 Health check: http://localhost:${PORT}/health`);
-    console.log(`👤 Patient API: http://localhost:${PORT}${apiPrefix}/patients`);
+    console.log(`👤 Patien//localhost:${PORT}${apiPrefix}/patients`);
     console.log(`🛏️ Allocation API: http://localhost:${PORT}${apiPrefix}/allocation`);
     console.log(`👨‍⚕️ Doctors API: http://localhost:${PORT}${apiPrefix}/doctors`);
+    console.log(`🔔 Alert System: ACTIVE`);
     console.log(`🔌 WebSocket: ws://localhost:${PORT}/socket.io`);
   });
 
   server.on('error', (error) => {
-    console.error('47. ❌ Server error:', error);
+    console.error('51. ❌ Server error:', error);
   });
 
 } catch (error) {
-  console.error('48. ❌ Failed to start server:', error);
+  console.error('52. ❌ Failed to start server:', error);
 }
 
 export default app;
