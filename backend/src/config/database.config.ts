@@ -47,9 +47,9 @@ export const AppDataSource = new DataSource({
         database: process.env.DB_NAME || 'healthcare_db',
       }),
 
-  synchronize: false,
-  logging: process.env.NODE_ENV === 'development',
+  synchronize: true,
+  logging: false,
   entities: entities,
-  migrations: ['src/migrations/*.ts'],
+  migrations: [],
   subscribers: [],
 });
