@@ -30,7 +30,8 @@ export interface PatientAlert {
   };
   targetRoles: ('doctor' | 'admin' | 'nurse' | 'all')[];
   targetSpecialties?: string[];
-  status: AlertStatu acknowledgedBy: {
+  status: AlertStatus;
+  acknowledgedBy: {
     userId: string;
     userName: string;
     role: string;
