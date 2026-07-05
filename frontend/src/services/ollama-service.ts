@@ -40,7 +40,7 @@ class OllamaService {
       // First check backend proxy
       if (this.useProxy) {
         try {
-          const proxyStatus = await axios.get('http://localhost:3001/api/ai/status', { timeout: 3000 });
+          const proxyStatus = await axios.get('https://healthcare-backend-tylz.onrender.com/api/ai/status', { timeout: 3000 });
           if (proxyStatus.data.available) {
             this.isAvailable = true;
             console.log('✅ Backend AI proxy is available');
@@ -99,7 +99,7 @@ class OllamaService {
   // Generate using backend proxy
   async generateWithProxy(prompt: string): Promise<string> {
     try {
-      const response = await axios.post('http://localhost:3001/api/ai/chat', {
+      const response = await axios.post('https://healthcare-backend-tylz.onrender.com/api/ai/chat', {
         message: prompt
       }, {
         timeout: 30000

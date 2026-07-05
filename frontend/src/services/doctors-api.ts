@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:3001/api';
+const API_URL = 'https://healthcare-backend-tylz.onrender.com/api';
 
 export const getDoctors = async (params?: any) => {
   try {

@@ -5,7 +5,7 @@ import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
 import { Phone, Calendar, Star } from 'lucide-react';
 
-const API_URL = 'http://localhost:3001/api';
+const API_URL = 'https://healthcare-backend-tylz.onrender.com/api';
 
 // This matches the DoctorStatus type from bed.types.ts
 interface DoctorStatus {

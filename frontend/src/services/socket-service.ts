@@ -6,7 +6,7 @@
 import { io, Socket } from 'socket.io-client';
 import type { BedUpdateEvent } from '../types/bed.types';
 
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:3001';
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'https://healthcare-backend-tylz.onrender.com';
 
 let socket: Socket | null = null;
 

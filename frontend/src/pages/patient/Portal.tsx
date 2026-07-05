@@ -15,7 +15,7 @@ import axios from 'axios';
 import AppointmentBookingModal from '../../components/features/appointment/AppointmentBookingModal';
 import { RealTimeNotification } from '../../components/features/notifications/RealTimeNotification';
 
-const API_URL = 'http://localhost:3001/api';
+const API_URL = 'https://healthcare-backend-tylz.onrender.com/api';
 
 interface Appointment {
   id: number;
