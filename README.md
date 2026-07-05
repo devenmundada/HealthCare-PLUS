@@ -1,5 +1,7 @@
 # Healthcare+
 
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Visit%20Site-brightgreen)](https://health-care-plus-kappa.vercel.app)
+
 > AI-powered healthcare platform connecting patients to real Indian hospitals, doctors, and medical guidance — with a local AI assistant that runs entirely on your device.
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-86%25-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
