@@ -20,17 +20,33 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [patients, setPatients] = useState<any[]>([]);
   const [doctors, setDoctors] = useState<any[]>([]);
   const [emergencies, setEmergencies] = useState<any[]>([]);
+  const [hospitalId, setHospitalId] = useState<number | null>(null);
+
+  // A hospital account should only see its own beds/doctors here, not
+  // every hospital's pooled together.
+  useEffect(() => {
+    if (user?.role !== 'hospital' || !user.id) return;
+    const API_URL = import.meta.env.VITE_API_URL || 'https://healthcare-backend-tylz.onrender.com/api';
+    fetch(`${API_URL}/hospitals/hospital-for-user/${user.id}`)
+      .then((r) => r.json())
+      .then((d) => setHospitalId(d?.data?.hospitalId ?? null))
+      .catch(() => setHospitalId(null));
+  }, [user?.id, user?.role]);
 
   const refreshData = async () => {
     try {
       const [bedsRes, patientsRes, doctorsRes] = await Promise.all([
-        realtimeService.getBeds(),
+        realtimeService.getBeds(hospitalId ? { hospitalId } : undefined),
         realtimeService.getPatients(),
-        realtimeService.getDoctors({ available: true })
+        realtimeService.getDoctors(hospitalId ? { hospitalId, available: true } : { available: true })
       ]);
 
-      setBeds(bedsRes.data?.beds || []);
-      setPatients(patientsRes.data?.patients || []);
+      // /beds and /patients-api both return { success, data: [...] } — a
+      // plain array, not { data: { beds: [...] } }. Only /doctors nests an
+      // extra object. This mismatch meant beds/patients here were always
+      // empty regardless of what the backend actually had.
+      setBeds(bedsRes.data || []);
+      setPatients(patientsRes.data || []);
       setDoctors(doctorsRes.data?.doctors || []);
     } catch (error) {
       console.error('Failed to refresh data:', error);
@@ -70,6 +86,14 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setConnected(false);
     };
   }, [user]);
+
+  // Re-fetch (without tearing down the socket) once a hospital user's
+  // hospitalId resolves — it starts null while that lookup is in flight.
+  useEffect(() => {
+    if (!user || !hospitalId) return;
+    refreshData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hospitalId]);
 
   return (
     <RealtimeContext.Provider value={{ connected, beds, patients, doctors, emergencies, refreshData }}>

@@ -1,13 +1,43 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import axios from 'axios';
 import { useRealtime } from '../../contexts/RealtimeContext';
 import { GlassCard } from '../../components/layout/GlassCard';
 import { Badge } from '../../components/ui/Badge';
-import { Search, Filter } from 'lucide-react';
+import { Search, Loader2 } from 'lucide-react';
+
+const API_URL = import.meta.env.VITE_API_URL || 'https://healthcare-backend-tylz.onrender.com/api';
+
+// Which status changes make sense to offer from each current status —
+// mirrors the real lifecycle the backend enforces (allocation.routes.ts):
+// available -> reserved/occupied (via booking), occupied -> cleaning,
+// cleaning -> available. Available/occupied can also be set directly here
+// for manual corrections (e.g. marking a bed out of service and back).
+const NEXT_ACTIONS: Record<string, { label: string; status: string }[]> = {
+  available: [{ label: 'Mark Occupied', status: 'occupied' }, { label: 'Mark Maintenance', status: 'maintenance' }],
+  occupied: [{ label: 'Start Cleaning', status: 'cleaning' }],
+  cleaning: [{ label: 'Mark Available', status: 'available' }],
+  reserved: [{ label: 'Mark Occupied', status: 'occupied' }, { label: 'Cancel Reservation', status: 'available' }],
+  maintenance: [{ label: 'Mark Available', status: 'available' }],
+};
 
 export const BedsTab: React.FC = () => {
-  const { beds } = useRealtime();
+  const { beds, refreshData } = useRealtime();
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
+
+  const updateStatus = async (bedId: string, status: string) => {
+    setUpdatingId(bedId);
+    try {
+      await axios.patch(`${API_URL}/beds/${bedId}`, { status });
+      await refreshData();
+    } catch (error) {
+      console.error('Failed to update bed status:', error);
+      alert("Couldn't update this bed — please try again.");
+    } finally {
+      setUpdatingId(null);
+    }
+  };
 
   const filteredBeds = beds.filter(bed => {
     if (filter !== 'all' && bed.status !== filter) return false;
@@ -89,8 +119,30 @@ export const BedsTab: React.FC = () => {
                 <p className="font-medium">{bed.currentPatientName}</p>
               </div>
             )}
+
+            {(NEXT_ACTIONS[bed.status] || []).length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {NEXT_ACTIONS[bed.status].map((action) => (
+                  <button
+                    key={action.status}
+                    onClick={() => updateStatus(bed.id, action.status)}
+                    disabled={updatingId === bed.id}
+                    className="text-xs px-2.5 py-1.5 rounded-md border border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700 disabled:opacity-50 flex items-center gap-1"
+                  >
+                    {updatingId === bed.id ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
+                    {action.label}
+                  </button>
+                ))}
+              </div>
+            )}
           </GlassCard>
         ))}
+
+        {filteredBeds.length === 0 && (
+          <div className="col-span-4 text-center py-12 text-neutral-500">
+            No beds match this filter.
+          </div>
+        )}
       </div>
     </div>
   );

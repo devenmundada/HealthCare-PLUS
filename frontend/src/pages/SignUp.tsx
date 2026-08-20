@@ -1,25 +1,36 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { AxiosError } from 'axios';
+import axios, { AxiosError } from 'axios';
 import { Container } from '../components/layout/Container';
 import { GlassCard } from '../components/layout/GlassCard';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Badge } from '../components/ui/Badge';
 import { useAuth } from '../contexts/AuthContext';
-import { 
-  User, 
-  Mail, 
-  Lock, 
-  Phone, 
-  Shield, 
-  CheckCircle, 
+import {
+  User,
+  Mail,
+  Lock,
+  Phone,
+  Shield,
+  CheckCircle,
   AlertCircle,
   Eye,
   EyeOff,
   ArrowRight,
-  Heart
+  Heart,
+  Building2,
+  Search,
 } from 'lucide-react';
+
+const API_URL = import.meta.env.VITE_API_URL || 'https://healthcare-backend-tylz.onrender.com/api';
+
+interface UnclaimedDoctor {
+  id: number;
+  name: string;
+  specialty: string;
+  hospital_name?: string | null;
+}
 
 interface SignUpForm {
   name: string;
@@ -28,8 +39,19 @@ interface SignUpForm {
   password: string;
   confirmPassword: string;
   agreeToTerms: boolean;
-  role: 'patient' | 'doctor';
+  role: 'patient' | 'doctor' | 'hospital';
   specialty: string;
+  claimDoctorId: number | null;
+  hospitalName: string;
+  address: string;
+  city: string;
+  state: string;
+  pincode: string;
+  hospitalType: 'government' | 'private' | 'trust';
+  totalBeds: string;
+  icuBeds: string;
+  operationTheatres: string;
+  ambulancesTotal: string;
 }
 
 interface ValidationErrors {
@@ -39,6 +61,7 @@ interface ValidationErrors {
   password?: string;
   confirmPassword?: string;
   agreeToTerms?: string;
+  hospitalName?: string;
 }
 
 export const SignUp: React.FC = () => {
@@ -53,8 +76,37 @@ export const SignUp: React.FC = () => {
     agreeToTerms: false,
     role: 'patient',
     specialty: '',
+    claimDoctorId: null,
+    hospitalName: '',
+    address: '',
+    city: '',
+    state: '',
+    pincode: '',
+    hospitalType: 'private',
+    totalBeds: '',
+    icuBeds: '',
+    operationTheatres: '',
+    ambulancesTotal: '',
   });
-  
+
+  const [unclaimedDoctors, setUnclaimedDoctors] = useState<UnclaimedDoctor[]>([]);
+  const [doctorSearch, setDoctorSearch] = useState('');
+  const [loadingDoctors, setLoadingDoctors] = useState(false);
+
+  useEffect(() => {
+    if (formData.role !== 'doctor') return;
+    setLoadingDoctors(true);
+    axios
+      .get(`${API_URL}/doctors/unclaimed`)
+      .then((res) => setUnclaimedDoctors(res.data?.data || []))
+      .catch(() => setUnclaimedDoctors([]))
+      .finally(() => setLoadingDoctors(false));
+  }, [formData.role]);
+
+  const filteredUnclaimedDoctors = unclaimedDoctors.filter((d) =>
+    d.name.toLowerCase().includes(doctorSearch.toLowerCase())
+  );
+
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -106,6 +158,10 @@ export const SignUp: React.FC = () => {
       newErrors.agreeToTerms = 'You must agree to the terms and conditions';
     }
 
+    if (formData.role === 'hospital' && !formData.hospitalName.trim()) {
+      newErrors.hospitalName = 'Hospital name is required';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -123,16 +179,27 @@ export const SignUp: React.FC = () => {
       // Use the AuthContext signup so the app's auth state updates immediately
       // (previously this called the API directly and wrote localStorage by hand,
       // which left the rest of the app thinking the user was still logged out).
-      const success = await signup({
+      const result = await signup({
         name: formData.name,
         email: formData.email,
         phone: formData.phone,
         password: formData.password,
         role: formData.role,
-        specialty: formData.role === 'doctor' ? formData.specialty : undefined,
+        claimDoctorId: formData.role === 'doctor' ? formData.claimDoctorId ?? undefined : undefined,
+        specialty: formData.role === 'doctor' && !formData.claimDoctorId ? formData.specialty : undefined,
+        hospitalName: formData.role === 'hospital' ? formData.hospitalName : undefined,
+        address: formData.role === 'hospital' ? formData.address : undefined,
+        city: formData.role === 'hospital' ? formData.city : undefined,
+        state: formData.role === 'hospital' ? formData.state : undefined,
+        pincode: formData.role === 'hospital' ? formData.pincode : undefined,
+        hospitalType: formData.role === 'hospital' ? formData.hospitalType : undefined,
+        totalBeds: formData.role === 'hospital' ? parseInt(formData.totalBeds) || 0 : undefined,
+        icuBeds: formData.role === 'hospital' ? parseInt(formData.icuBeds) || 0 : undefined,
+        operationTheatres: formData.role === 'hospital' ? parseInt(formData.operationTheatres) || 0 : undefined,
+        ambulancesTotal: formData.role === 'hospital' ? parseInt(formData.ambulancesTotal) || 0 : undefined,
       });
 
-      if (success) {
+      if (result.success) {
         setSignUpSuccess(true);
 
         // Redirect after 3 seconds
@@ -140,7 +207,7 @@ export const SignUp: React.FC = () => {
           navigate('/');
         }, 3000);
       } else {
-        setErrors({ email: 'Unable to create account. This email may already be registered.' });
+        setErrors({ email: result.error || 'Unable to create account. This email may already be registered.' });
       }
     } catch (error) {
       console.error('Sign up error:', error);
@@ -288,54 +355,151 @@ export const SignUp: React.FC = () => {
                     <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
                       I am signing up as a
                     </label>
-                    <div className="grid grid-cols-2 gap-3">
-                      <button
-                        type="button"
-                        onClick={() => setFormData((prev) => ({ ...prev, role: 'patient' }))}
-                        disabled={isLoading}
-                        className={`p-3 rounded-lg border text-sm font-medium transition-colors ${
-                          formData.role === 'patient'
-                            ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300'
-                            : 'border-neutral-300 dark:border-neutral-600 text-neutral-600 dark:text-neutral-400 hover:border-primary-300'
-                        }`}
-                      >
-                        Patient
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setFormData((prev) => ({ ...prev, role: 'doctor' }))}
-                        disabled={isLoading}
-                        className={`p-3 rounded-lg border text-sm font-medium transition-colors ${
-                          formData.role === 'doctor'
-                            ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300'
-                            : 'border-neutral-300 dark:border-neutral-600 text-neutral-600 dark:text-neutral-400 hover:border-primary-300'
-                        }`}
-                      >
-                        Doctor
-                      </button>
+                    <div className="grid grid-cols-3 gap-3">
+                      {(['patient', 'doctor', 'hospital'] as const).map((role) => (
+                        <button
+                          key={role}
+                          type="button"
+                          onClick={() => setFormData((prev) => ({ ...prev, role }))}
+                          disabled={isLoading}
+                          className={`p-3 rounded-lg border text-sm font-medium transition-colors capitalize ${
+                            formData.role === role
+                              ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300'
+                              : 'border-neutral-300 dark:border-neutral-600 text-neutral-600 dark:text-neutral-400 hover:border-primary-300'
+                          }`}
+                        >
+                          {role}
+                        </button>
+                      ))}
                     </div>
-                    {formData.role === 'doctor' && (
-                      <p className="text-xs text-neutral-500 mt-2">
-                        If your name/email matches an existing doctor profile on the platform, your account
-                        will be linked to it automatically. Otherwise a new profile is created.
-                      </p>
-                    )}
                   </div>
 
-                  {/* Specialty (doctor only) */}
+                  {/* Doctor: claim an existing profile or create a new one */}
                   {formData.role === 'doctor' && (
-                    <div>
-                      <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                        Specialty
+                    <div className="space-y-3">
+                      <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                        Are you one of our listed doctors?
                       </label>
+
                       <Input
                         type="text"
-                        name="specialty"
-                        value={formData.specialty}
-                        onChange={handleChange}
-                        placeholder="e.g. Cardiology (only used if no existing profile matches your email)"
+                        placeholder="Search doctors by name..."
+                        leftIcon={<Search className="w-4 h-4" />}
+                        value={doctorSearch}
+                        onChange={(e) => setDoctorSearch(e.target.value)}
                         disabled={isLoading}
                       />
+
+                      <div className="max-h-52 overflow-y-auto border border-neutral-200 dark:border-neutral-700 rounded-lg divide-y divide-neutral-100 dark:divide-neutral-800">
+                        <button
+                          type="button"
+                          onClick={() => setFormData((prev) => ({ ...prev, claimDoctorId: null }))}
+                          className={`w-full text-left px-3 py-2.5 text-sm transition-colors ${
+                            formData.claimDoctorId === null
+                              ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300'
+                              : 'hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300'
+                          }`}
+                        >
+                          None of these — create a new profile for me
+                        </button>
+
+                        {loadingDoctors && (
+                          <div className="px-3 py-2.5 text-sm text-neutral-400">Loading doctors...</div>
+                        )}
+
+                        {!loadingDoctors && filteredUnclaimedDoctors.map((doc) => (
+                          <button
+                            type="button"
+                            key={doc.id}
+                            onClick={() => setFormData((prev) => ({ ...prev, claimDoctorId: doc.id }))}
+                            className={`w-full text-left px-3 py-2.5 text-sm transition-colors ${
+                              formData.claimDoctorId === doc.id
+                                ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300'
+                                : 'hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300'
+                            }`}
+                          >
+                            <div className="font-medium">{doc.name}</div>
+                            <div className="text-xs text-neutral-500">
+                              {doc.specialty}{doc.hospital_name ? ` · ${doc.hospital_name}` : ''}
+                            </div>
+                          </button>
+                        ))}
+
+                        {!loadingDoctors && filteredUnclaimedDoctors.length === 0 && doctorSearch && (
+                          <div className="px-3 py-2.5 text-sm text-neutral-400">No matching doctors found</div>
+                        )}
+                      </div>
+
+                      {formData.claimDoctorId === null && (
+                        <Input
+                          type="text"
+                          name="specialty"
+                          value={formData.specialty}
+                          onChange={handleChange}
+                          placeholder="Your specialty, e.g. Cardiology"
+                          disabled={isLoading}
+                        />
+                      )}
+                    </div>
+                  )}
+
+                  {/* Hospital onboarding */}
+                  {formData.role === 'hospital' && (
+                    <div className="space-y-4 p-4 rounded-lg bg-neutral-50 dark:bg-neutral-800/50 border border-neutral-200 dark:border-neutral-700">
+                      <div className="flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                        <Building2 className="w-4 h-4" /> Hospital Details
+                      </div>
+                      <Input
+                        type="text"
+                        placeholder="Hospital name"
+                        value={formData.hospitalName}
+                        onChange={(e) => setFormData((prev) => ({ ...prev, hospitalName: e.target.value }))}
+                        error={errors.hospitalName}
+                        disabled={isLoading}
+                      />
+                      <Input
+                        type="text"
+                        placeholder="Address"
+                        value={formData.address}
+                        onChange={(e) => setFormData((prev) => ({ ...prev, address: e.target.value }))}
+                        disabled={isLoading}
+                      />
+                      <div className="grid grid-cols-3 gap-3">
+                        <Input type="text" placeholder="City" value={formData.city} onChange={(e) => setFormData((prev) => ({ ...prev, city: e.target.value }))} disabled={isLoading} />
+                        <Input type="text" placeholder="State" value={formData.state} onChange={(e) => setFormData((prev) => ({ ...prev, state: e.target.value }))} disabled={isLoading} />
+                        <Input type="text" placeholder="Pincode" value={formData.pincode} onChange={(e) => setFormData((prev) => ({ ...prev, pincode: e.target.value }))} disabled={isLoading} />
+                      </div>
+                      <select
+                        value={formData.hospitalType}
+                        onChange={(e) => setFormData((prev) => ({ ...prev, hospitalType: e.target.value as any }))}
+                        disabled={isLoading}
+                        className="w-full px-3 py-2.5 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-sm text-neutral-700 dark:text-neutral-300"
+                      >
+                        <option value="private">Private</option>
+                        <option value="government">Government</option>
+                        <option value="trust">Trust</option>
+                      </select>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs text-neutral-500 mb-1">Total Beds</label>
+                          <Input type="number" min="0" value={formData.totalBeds} onChange={(e) => setFormData((prev) => ({ ...prev, totalBeds: e.target.value }))} disabled={isLoading} />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-neutral-500 mb-1">ICU Beds</label>
+                          <Input type="number" min="0" value={formData.icuBeds} onChange={(e) => setFormData((prev) => ({ ...prev, icuBeds: e.target.value }))} disabled={isLoading} />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-neutral-500 mb-1">Operation Theatres</label>
+                          <Input type="number" min="0" value={formData.operationTheatres} onChange={(e) => setFormData((prev) => ({ ...prev, operationTheatres: e.target.value }))} disabled={isLoading} />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-neutral-500 mb-1">Ambulances</label>
+                          <Input type="number" min="0" value={formData.ambulancesTotal} onChange={(e) => setFormData((prev) => ({ ...prev, ambulancesTotal: e.target.value }))} disabled={isLoading} />
+                        </div>
+                      </div>
+                      <p className="text-xs text-neutral-500">
+                        You can add individual beds (with ward, floor, and equipment) from your dashboard after signing up — these counts are just your starting headline numbers.
+                      </p>
                     </div>
                   )}
 

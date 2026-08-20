@@ -45,13 +45,24 @@ export const Navigation: React.FC = () => {
     const { isAuthenticated, user, logout } = useAuth();
     const navigate = useNavigate();
 
-    // Doctors and patients each have their own dashboard route — there is
-    // no generic "/appointments" page, so route each role to the real one.
+    // Doctors and patients each have their own dashboard route; hospitals
+    // manage their beds/doctors/OT roster from Command Center. There is no
+    // generic "/appointments" page, so route each role to the real one.
     const dashboardPath =
         user?.role === 'doctor' ? '/doctor-dashboard' :
         user?.role === 'patient' ? '/patient-portal' :
         '/dashboard';
-    const dashboardLabel = user?.role === 'doctor' ? 'My Appointments' : 'Appointments';
+    const dashboardLabel =
+        user?.role === 'doctor' ? 'My Appointments' :
+        user?.role === 'hospital' ? 'Command Center' :
+        'Appointments';
+
+    // Command Center is hospital-only — hide it from patients/doctors/
+    // logged-out visitors instead of showing a link that just bounces them
+    // straight back out via the role redirect.
+    const visibleNavigation = navigation.filter(
+        (item) => item.name !== 'Command Center' || user?.role === 'hospital'
+    );
 
     // Toggle dark mode
     const toggleDarkMode = () => {
@@ -115,7 +126,7 @@ export const Navigation: React.FC = () => {
 
                     {/* Desktop Navigation */}
                     <div className="hidden md:flex items-center space-x-1">
-                        {navigation.map((item) => (
+                        {visibleNavigation.map((item) => (
                             <NavLink
                                 key={item.name}
                                 to={item.href}
@@ -262,7 +273,7 @@ export const Navigation: React.FC = () => {
                     <div className="md:hidden border-t border-neutral-200 dark:border-neutral-800 mt-2 pt-2 pb-3">
                         <div className="px-2 space-y-1">
                             {/* Navigation links */}
-                            {navigation.map((item) => (
+                            {visibleNavigation.map((item) => (
                                 <NavLink
                                     key={item.name}
                                     to={item.href}

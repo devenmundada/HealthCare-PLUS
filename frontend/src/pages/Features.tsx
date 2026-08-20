@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Container } from '../components/layout/Container';
 import { GlassCard } from '../components/layout/GlassCard';
 import { Card } from '../components/ui/Card';
@@ -32,6 +33,7 @@ import {
 } from 'lucide-react';
 
 export const Features: React.FC = () => {
+  const navigate = useNavigate();
   const [showImageAnalysis, setShowImageAnalysis] = useState(false); // Add this state
 
   const mainFeatures = [
@@ -80,16 +82,15 @@ export const Features: React.FC = () => {
     {
       id: 'analytics',
       title: 'Clinical Analytics Dashboard',
-      description: 'Comprehensive data visualization and insights for healthcare performance metrics.',
+      description: 'Real-time bed occupancy, doctor roster, and operational metrics for hospital accounts.',
       icon: <BarChart3 className="w-8 h-8 text-primary-600" />,
       highlights: [
-        'Real-time analytics',
-        'Predictive modeling',
-        'Custom reports',
-        'Export capabilities'
+        'Live bed occupancy by specialty',
+        'Real doctor roster',
+        'Occupancy trend metrics',
       ],
       isComingSoon: false,
-      onTryNow: null
+      onTryNow: () => navigate('/dashboard')
     },
     {
       id: 'code-generator',
@@ -111,12 +112,12 @@ export const Features: React.FC = () => {
       description: 'End-to-end encryption, access controls, and compliance tools for healthcare organizations.',                                                                                                        
       icon: <Shield className="w-8 h-8 text-primary-600" />,
       highlights: [
-        'End-to-end encryption',
         'Role-based access control',
-        'Audit trail',
-        'HIPAA compliance'
+        'Audit trail logging',
+        'Password hashing (bcrypt)',
+        'HIPAA-aligned data handling'
       ],
-      isComingNow: false,
+      isComingSoon: true,
       onTryNow: null
     },
     {
@@ -125,27 +126,25 @@ export const Features: React.FC = () => {
       description: 'Secure video consultations, appointment scheduling, and virtual care delivery.',
       icon: <Video className="w-8 h-8 text-primary-600" />,
       highlights: [
-        'HD video calls',
-        'Secure messaging',
-        'Appointment scheduling',
-        'Prescription management'
+        'Google Meet video consultations',
+        'Doctor accepts before it\'s confirmed',
+        'Real-time slot availability'
       ],
       isComingSoon: false,
-      onTryNow: null
+      onTryNow: () => navigate('/doctors')
     },
     {
       id: 'appointment',
       title: 'Smart Appointment System',
-      description: 'Intelligent scheduling with automated reminders and waitlist management.',
+      description: 'Real-time doctor availability with a doctor-confirms booking flow.',
       icon: <Calendar className="w-8 h-8 text-primary-600" />,
       highlights: [
-        'Smart scheduling',
-        'Automated reminders',
-        'Waitlist management',
-        'No-show prediction'
+        'Live open-slot scheduling',
+        'Doctor accept/decline requests',
+        'Status tracking for patients'
       ],
       isComingSoon: false,
-      onTryNow: null
+      onTryNow: () => navigate('/doctors')
     }
   ];
 

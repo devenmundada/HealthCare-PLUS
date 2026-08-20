@@ -9,7 +9,7 @@ export interface User {
   name: string;
   email: string;
   phone: string;
-  role: 'patient' | 'doctor' | 'admin';
+  role: 'patient' | 'doctor' | 'admin' | 'hospital';
   avatar?: string;
   location?: string;
   age?: number;
@@ -24,8 +24,23 @@ export interface SignupData {
   email: string;
   phone: string;
   password: string;
-  role?: 'patient' | 'doctor';
-  specialty?: string; // only used when role === 'doctor'
+  role?: 'patient' | 'doctor' | 'hospital';
+
+  // role === 'doctor'
+  claimDoctorId?: number;
+  specialty?: string;
+
+  // role === 'hospital'
+  hospitalName?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  pincode?: string;
+  hospitalType?: 'government' | 'private' | 'trust';
+  totalBeds?: number;
+  icuBeds?: number;
+  operationTheatres?: number;
+  ambulancesTotal?: number;
 }
 
 interface AuthContextType {
@@ -33,7 +48,7 @@ interface AuthContextType {
   user: User | null;
   token: string | null;
   login: (email: string, password: string) => Promise<boolean>;
-  signup: (userData: SignupData) => Promise<boolean>;
+  signup: (userData: SignupData) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   updateUser: (userData: Partial<User>) => void;
   isLoading: boolean;
@@ -189,7 +204,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const signup = async (userData: SignupData): Promise<boolean> => {
+  const signup = async (userData: SignupData): Promise<{ success: boolean; error?: string }> => {
     setIsLoading(true);
 
     try {
@@ -206,13 +221,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (response.ok && data.success && data.token && data.user) {
         // Auto-login after signup
         saveAuthData(data.token, data.user);
-        return true;
+        return { success: true };
       }
 
-      return false;
+      return { success: false, error: data.error || 'Unable to create account.' };
     } catch (error) {
       console.error('Signup error:', error);
-      return false;
+      return { success: false, error: 'Unable to connect to the server. Please try again.' };
     } finally {
       setIsLoading(false);
     }

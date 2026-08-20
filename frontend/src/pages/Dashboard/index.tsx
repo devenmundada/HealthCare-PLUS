@@ -21,8 +21,19 @@ import type { DoctorStatus } from '../../types/bed.types';
 import { MOCK_TRIAGE_PATIENTS } from '../../mocks/triage';
 import { MOCK_AMBULANCES } from '../../mocks/ambulances';
 import axios from 'axios';
+import { useAuth } from '../../contexts/AuthContext';
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://healthcare-backend-tylz.onrender.com/api';
+
+// Beds and doctors below are your real data. Triage and ambulance tracking
+// are genuine, sophisticated UI built ahead of the backend that would feed
+// them real patient-arrival and GPS telemetry — rather than pretend that
+// data is live, this says so plainly until that backend exists.
+const DemoDataBanner: React.FC<{ feature: string }> = ({ feature }) => (
+  <div className="mb-4 px-4 py-2.5 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-sm text-amber-800 dark:text-amber-300">
+    {feature} is shown with sample data — this doesn't reflect real patients or vehicles yet.
+  </div>
+);
 
 interface ApiDoctor {
   id: number;
@@ -53,15 +64,29 @@ export const Dashboard: React.FC = () => {
     refresh,
   } = useBedStatus();
 
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<DashboardTab>('overview');
   const [showEmergencyAlert, setShowEmergencyAlert] = useState(true);
   const [doctors, setDoctors] = useState<DoctorStatus[]>([]);
+  const [hospitalId, setHospitalId] = useState<number | null>(null);
+
+  // Resolve which hospital this account manages, so beds/doctors below only
+  // ever show this hospital's real roster, not every hospital's.
+  useEffect(() => {
+    if (!user?.id) return;
+    axios
+      .get(`${API_URL}/hospitals/hospital-for-user/${user.id}`)
+      .then((res) => setHospitalId(res.data?.data?.hospitalId ?? null))
+      .catch(() => setHospitalId(null));
+  }, [user?.id]);
 
   // Fetch real doctors from API and transform to DoctorStatus type
   useEffect(() => {
     const fetchDoctors = async () => {
       try {
-        const response = await axios.get(`${API_URL}/doctors`);
+        const response = await axios.get(`${API_URL}/doctors`, {
+          params: hospitalId ? { hospitalId } : undefined,
+        });
         if (response.data.success) {
           const apiDoctors: ApiDoctor[] = response.data.data?.doctors || [];
           
@@ -84,7 +109,7 @@ export const Dashboard: React.FC = () => {
       }
     };
     fetchDoctors();
-  }, []);
+  }, [hospitalId]);
 
   const emergencyStats = {
     p1Patients: MOCK_TRIAGE_PATIENTS.filter((p) => p.priority === 1).length,
@@ -174,19 +199,25 @@ export const Dashboard: React.FC = () => {
         {activeTab === 'beds' && <BedsTab />}
 
         {activeTab === 'triage' && (
-          <TriageTab
-            patients={MOCK_TRIAGE_PATIENTS}
-            onAssignDoctor={handleAssignDoctor}
-            onViewPatientDetails={handleViewPatientDetails}
-          />
+          <>
+            <DemoDataBanner feature="Triage queue" />
+            <TriageTab
+              patients={MOCK_TRIAGE_PATIENTS}
+              onAssignDoctor={handleAssignDoctor}
+              onViewPatientDetails={handleViewPatientDetails}
+            />
+          </>
         )}
 
         {activeTab === 'ambulances' && (
-          <AmbulancesTab
-            ambulances={MOCK_AMBULANCES}
-            onSelectAmbulance={handleAmbulanceSelect}
-            onDispatchAmbulance={handleDispatchAmbulance}
-          />
+          <>
+            <DemoDataBanner feature="Ambulance tracking" />
+            <AmbulancesTab
+              ambulances={MOCK_AMBULANCES}
+              onSelectAmbulance={handleAmbulanceSelect}
+              onDispatchAmbulance={handleDispatchAmbulance}
+            />
+          </>
         )}
 
         {activeTab === 'doctors' && (

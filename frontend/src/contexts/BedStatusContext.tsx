@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useCallback, useEffect, use
 import axios from 'axios';
 import { io, Socket } from 'socket.io-client';
 import type { Bed, BedUpdateEvent, OccupancyMetrics, SpecialtyOccupancy } from '../types/bed.types';
+import { useAuth } from './AuthContext';
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://healthcare-backend-tylz.onrender.com/api';
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'https://healthcare-backend-tylz.onrender.com';
@@ -20,16 +21,29 @@ interface BedStatusContextValue {
 const BedStatusContext = createContext<BedStatusContextValue | null>(null);
 
 export function BedStatusProvider({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
   const [beds, setBeds] = useState<Bed[]>([]);
   const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected' | 'connecting' | 'error'>('connecting');
   const [filterSpecialty, setFilterSpecialty] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<string>(new Date().toISOString());
+  const [hospitalId, setHospitalId] = useState<string | null>(null);
   const socketRef = useRef<Socket | null>(null);
+
+  // A hospital user only manages their own beds, not every hospital's.
+  useEffect(() => {
+    if (user?.role !== 'hospital' || !user.id) return;
+    axios
+      .get(`${API_URL}/hospitals/hospital-for-user/${user.id}`)
+      .then((res) => setHospitalId(res.data?.data?.hospitalId ? String(res.data.data.hospitalId) : null))
+      .catch(() => setHospitalId(null));
+  }, [user?.id, user?.role]);
 
   // Fetch initial data
   const fetchBeds = useCallback(async () => {
     try {
-      const response = await axios.get(`${API_URL}/beds`);
+      const response = await axios.get(`${API_URL}/beds`, {
+        params: hospitalId ? { hospitalId } : undefined,
+      });
       if (response.data.success) {
         setBeds(response.data.data || []);
         setLastUpdated(new Date().toISOString());
@@ -37,7 +51,7 @@ export function BedStatusProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error('Failed to fetch beds:', error);
     }
-  }, []);
+  }, [hospitalId]);
 
   // Calculate metrics from beds
   const metrics: OccupancyMetrics = {
@@ -71,6 +85,13 @@ export function BedStatusProvider({ children }: { children: React.ReactNode }) {
     ...s,
     percentage: s.total > 0 ? Math.round((s.occupied / s.total) * 100) : 0,
   }));
+
+  // Re-fetch whenever the scope changes — on mount, and again once a
+  // hospital user's hospitalId resolves (it starts null while that lookup
+  // is in flight).
+  useEffect(() => {
+    fetchBeds();
+  }, [fetchBeds]);
 
   // WebSocket connection
   useEffect(() => {

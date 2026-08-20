@@ -178,18 +178,50 @@ export const PatientPortal: React.FC = () => {
         }
       }
       if (doctorsRes.data.success) {
-        const doctorsWithDistance = doctorsRes.data.data?.doctors?.map((doc: any) => ({
+        const rawDoctors: any[] = doctorsRes.data.data?.doctors || [];
+        const doctorsWithDistance = rawDoctors.map((doc: any) => ({
           ...doc,
           distance: userLocation ? calculateDistance(
             userLocation.lat, userLocation.lng,
             19.0760, 72.8777
           ) : undefined,
-          availableToday: Math.random() > 0.3,
-          nextSlot: `${Math.floor(Math.random() * 3 + 1)}:00 PM`,
+          availableToday: false, // filled in below from real slot data
+          nextSlot: undefined as string | undefined,
           hospitalName: doc.hospital_name || 'City Hospital',
           hospitalAddress: doc.hospital_address || 'Mumbai'
-        })) || [];
+        }));
         setDoctors(doctorsWithDistance);
+
+        // Check each doctor's real availability today instead of guessing —
+        // fetched separately (not blocking the initial render) since it's
+        // one request per doctor.
+        const today = new Date().toISOString().split('T')[0];
+        Promise.all(
+          rawDoctors.map((doc: any) =>
+            axios
+              .get(`${API_URL}/appointments/slots`, { params: { doctorId: doc.id, date: today } })
+              .then((res) => {
+                const slots: any[] = res.data?.data || [];
+                const nextOpen = slots.find((s) => s.available);
+                return {
+                  id: doc.id,
+                  availableToday: !!nextOpen,
+                  nextSlot: nextOpen
+                    ? new Date(nextOpen.startTime).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
+                    : undefined,
+                };
+              })
+              .catch(() => ({ id: doc.id, availableToday: false, nextSlot: undefined }))
+          )
+        ).then((results) => {
+          const byId = new Map(results.map((r) => [r.id, r]));
+          setDoctors((prev) =>
+            prev.map((d) => {
+              const match = byId.get(d.id);
+              return match ? { ...d, availableToday: match.availableToday, nextSlot: match.nextSlot } : d;
+            })
+          );
+        });
       }
     } catch (error) {
       console.error('Failed to fetch data:', error);
