@@ -110,17 +110,23 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             setIsAuthenticated(true);
             // Update localStorage with fresh user data
             localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(data.user));
-          } else {
-            // Token invalid, clear storage
-            clearAuthData();
           }
-        } else {
-          // Token invalid, clear storage
+          // A 200 with no user is treated as "leave existing session alone"
+          // below, same as any other non-definitive response.
+        } else if (response.status === 401) {
+          // The server explicitly says this token is invalid/expired —
+          // this is the only case that should actually log someone out.
           clearAuthData();
         }
+        // Anything else (429 rate-limited, 500, Render free-tier cold start
+        // returning a bad gateway, etc.) is a server/network hiccup, not
+        // proof the session is invalid — keep the user logged in with
+        // whatever was already in localStorage and let the next successful
+        // check (or an individual API call's own 401) sort it out.
       } catch (error) {
-        console.error('Auth check failed:', error);
-        clearAuthData();
+        // Network error / request never reached the server — same reasoning:
+        // don't punish the user for a flaky connection or a sleeping backend.
+        console.warn('Auth check failed (keeping existing session):', error);
       }
     };
 
