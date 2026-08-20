@@ -100,6 +100,9 @@ export const PatientPortal: React.FC = () => {
   const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
   const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>('upcoming');
   const [portalTab, setPortalTab] = useState<'dashboard' | 'find-doctors' | 'appointments' | 'records'>('dashboard');
+  const [patientId, setPatientId] = useState<number | null>(null);
+  const [medicalProfile, setMedicalProfile] = useState<any>(null);
+  const [showMedicalHistory, setShowMedicalHistory] = useState(false);
   
   // Location and filters
   const [userLocation, setUserLocation] = useState<any>(null);
@@ -170,11 +173,18 @@ export const PatientPortal: React.FC = () => {
         axios.get(`${API_URL}/doctors`)
       ]);
 
-      const patientId = patientRes?.data?.data?.patientId;
-      if (patientId) {
-        const appointmentsRes = await axios.get(`${API_URL}/appointments/patient/${patientId}`);
+      const resolvedPatientId = patientRes?.data?.data?.patientId;
+      if (resolvedPatientId) {
+        setPatientId(resolvedPatientId);
+        const [appointmentsRes, profileRes] = await Promise.all([
+          axios.get(`${API_URL}/appointments/patient/${resolvedPatientId}`),
+          axios.get(`${API_URL}/appointments/patient-profile/${resolvedPatientId}`).catch(() => null),
+        ]);
         if (appointmentsRes.data.success) {
           setAppointments(appointmentsRes.data.data);
+        }
+        if (profileRes?.data?.success) {
+          setMedicalProfile(profileRes.data.data);
         }
       }
       if (doctorsRes.data.success) {
@@ -811,27 +821,84 @@ export const PatientPortal: React.FC = () => {
         {/* Health Records Tab */}
         {portalTab === 'records' && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <button className="p-6 text-center hover:shadow-lg transition-all hover:-translate-y-1 bg-white rounded-xl border">
+            <button
+              onClick={() => setShowMedicalHistory(true)}
+              className="p-6 text-center hover:shadow-lg transition-all hover:-translate-y-1 bg-white rounded-xl border"
+            >
               <FileText className="w-12 h-12 mx-auto mb-3 text-medical-cyan" />
               <h3 className="font-bold text-lg">Medical History</h3>
-              <p className="text-sm text-gray-500">View your past records and diagnoses</p>
+              <p className="text-sm text-gray-500">View your allergies, conditions & past appointments</p>
             </button>
-            
-            <button className="p-6 text-center hover:shadow-lg transition-all hover:-translate-y-1 bg-white rounded-xl border">
-              <svg className="w-12 h-12 mx-auto mb-3 text-medical-cyan" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+
+            <div className="p-6 text-center bg-white rounded-xl border opacity-60 relative">
+              <span className="absolute top-3 right-3 text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">Coming soon</span>
+              <svg className="w-12 h-12 mx-auto mb-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
-              <h3 className="font-bold text-lg">Prescriptions</h3>
-              <p className="text-sm text-gray-500">Download and view your prescriptions</p>
-            </button>
-            
-            <button className="p-6 text-center hover:shadow-lg transition-all hover:-translate-y-1 bg-white rounded-xl border">
-              <svg className="w-12 h-12 mx-auto mb-3 text-medical-cyan" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <h3 className="font-bold text-lg text-gray-600">Prescriptions</h3>
+              <p className="text-sm text-gray-500">Doctors don't yet issue digital prescriptions here</p>
+            </div>
+
+            <div className="p-6 text-center bg-white rounded-xl border opacity-60 relative">
+              <span className="absolute top-3 right-3 text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">Coming soon</span>
+              <svg className="w-12 h-12 mx-auto mb-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
-              <h3 className="font-bold text-lg">Lab Reports</h3>
-              <p className="text-sm text-gray-500">View your test results and reports</p>
-            </button>
+              <h3 className="font-bold text-lg text-gray-600">Lab Reports</h3>
+              <p className="text-sm text-gray-500">No lab-report upload/sharing exists yet</p>
+            </div>
+          </div>
+        )}
+
+        {/* Medical History Modal — real data (allergies, conditions,
+            medications, past appointments), not a placeholder. */}
+        {showMedicalHistory && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowMedicalHistory(false)}>
+            <div className="bg-white rounded-xl max-w-lg w-full max-h-[80vh] overflow-y-auto p-6" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-bold">Medical History</h3>
+                <button onClick={() => setShowMedicalHistory(false)} className="text-gray-400 hover:text-gray-600">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              {!medicalProfile ? (
+                <p className="text-gray-500 text-sm">No profile data on file yet.</p>
+              ) : (
+                <div className="space-y-4 text-sm">
+                  <div>
+                    <span className="text-gray-500">Blood Group</span>
+                    <p className="font-medium">{medicalProfile.bloodGroup || 'Not on file'}</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Allergies</span>
+                    <p className="font-medium">{medicalProfile.allergies?.length ? medicalProfile.allergies.join(', ') : 'None on file'}</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Chronic Conditions</span>
+                    <p className="font-medium">{medicalProfile.chronicConditions?.length ? medicalProfile.chronicConditions.join(', ') : 'None on file'}</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Current Medications</span>
+                    <p className="font-medium">{medicalProfile.currentMedications?.length ? medicalProfile.currentMedications.join(', ') : 'None on file'}</p>
+                  </div>
+                  <div className="border-t pt-4">
+                    <span className="text-gray-500">Past Appointments</span>
+                    {appointments.filter((a) => a.status === 'completed').length === 0 ? (
+                      <p className="font-medium">No completed appointments yet</p>
+                    ) : (
+                      <ul className="mt-2 space-y-2">
+                        {appointments.filter((a) => a.status === 'completed').map((a) => (
+                          <li key={a.id} className="p-2 bg-gray-50 rounded">
+                            <span className="font-medium">Dr. {a.doctorName}</span> ({a.doctorSpecialty}) —{' '}
+                            {new Date(a.scheduledTime).toLocaleDateString()}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         )}
 

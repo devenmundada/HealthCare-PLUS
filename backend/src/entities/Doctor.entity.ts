@@ -59,6 +59,13 @@ export class Doctor {
   @Column({ name: 'is_verified', nullable: true, default: true })
   isVerified: boolean;
 
+  // Doctor's own "I'm not taking bookings right now" toggle — separate from
+  // isVerified (an admin/platform flag) and from DoctorAvailability (a
+  // per-hospital shift table). This is the simple global switch the
+  // doctor's own dashboard controls.
+  @Column({ name: 'is_accepting_patients', default: true })
+  isAcceptingPatients: boolean;
+
   @Column({ name: 'available_days', type: 'text', array: true, nullable: true })
   availableDays: string[];
 

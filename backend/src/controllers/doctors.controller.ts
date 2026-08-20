@@ -8,6 +8,27 @@ export class DoctorsController {
   private doctorRepository = AppDataSource.getRepository(Doctor);
   private hospitalRepository = AppDataSource.getRepository(Hospital);
 
+  // PATCH /api/doctors/:id/availability
+  async updateAvailability(req: Request, res: Response) {
+    try {
+      const id = parseInt(req.params.id);
+      const { isAcceptingPatients } = req.body;
+      if (isNaN(id) || typeof isAcceptingPatients !== 'boolean') {
+        return res.status(400).json({ success: false, error: 'Valid doctor id and boolean isAcceptingPatients required' });
+      }
+      const doctor = await this.doctorRepository.findOne({ where: { id } });
+      if (!doctor) {
+        return res.status(404).json({ success: false, error: 'Doctor not found' });
+      }
+      doctor.isAcceptingPatients = isAcceptingPatients;
+      await this.doctorRepository.save(doctor);
+      return res.json({ success: true, data: { isAcceptingPatients: doctor.isAcceptingPatients } });
+    } catch (error: any) {
+      console.error('Update doctor availability error:', error);
+      return res.status(500).json({ success: false, error: error.message });
+    }
+  }
+
   // GET /api/doctors/unclaimed
   // Doctor profiles with no login account linked yet — used by the signup
   // form so a real person can pick "I am Dr. X" instead of a fragile

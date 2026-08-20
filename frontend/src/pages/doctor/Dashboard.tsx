@@ -41,6 +41,7 @@ export const DoctorDashboard: React.FC = () => {
   const [contactOpenId, setContactOpenId] = useState<number | null>(null);
   const [doctorId, setDoctorId] = useState<number | null>(null);
   const [profileError, setProfileError] = useState<string | null>(null);
+  const [acknowledgedAlertIds, setAcknowledgedAlertIds] = useState<string[]>([]);
 
   // The logged-in User's id and the Doctor profile's id are different rows —
   // resolve the real one before fetching anything appointment-related.
@@ -51,6 +52,37 @@ export const DoctorDashboard: React.FC = () => {
       .then((res) => setDoctorId(res.data?.data?.doctorId ?? null))
       .catch(() => setProfileError('No doctor profile is linked to this account yet.'));
   }, [user?.id]);
+
+  const [isAcceptingPatients, setIsAcceptingPatients] = useState(true);
+  const [togglingAvailability, setTogglingAvailability] = useState(false);
+
+  useEffect(() => {
+    if (!doctorId) return;
+    axios
+      .get(`${API_URL}/doctors/${doctorId}`)
+      .then((res) => {
+        const d = res.data?.data;
+        if (d && typeof d.isAcceptingPatients === 'boolean') {
+          setIsAcceptingPatients(d.isAcceptingPatients);
+        }
+      })
+      .catch(() => {});
+  }, [doctorId]);
+
+  const toggleAvailability = async () => {
+    if (!doctorId) return;
+    setTogglingAvailability(true);
+    const next = !isAcceptingPatients;
+    try {
+      await axios.patch(`${API_URL}/doctors/${doctorId}/availability`, { isAcceptingPatients: next });
+      setIsAcceptingPatients(next);
+    } catch (error) {
+      console.error('Failed to update availability:', error);
+      alert("Couldn't update your availability — please try again.");
+    } finally {
+      setTogglingAvailability(false);
+    }
+  };
 
   const fetchAppointments = useCallback(async () => {
     if (!doctorId) return;
@@ -114,13 +146,15 @@ export const DoctorDashboard: React.FC = () => {
 
   const pendingCount = appointments.filter((a) => a.status === 'pending_confirmation').length;
 
+  const visibleEmergencies = emergencies.filter((e: any) => !acknowledgedAlertIds.includes(e.alertId));
+
   return (
     <div className="min-h-screen bg-background-primary py-8">
       <Container>
         {/* Emergency Alerts */}
-        {emergencies.length > 0 && (
+        {visibleEmergencies.length > 0 && (
           <div className="mb-6 space-y-2">
-            {emergencies.map((emergency: any) => (
+            {visibleEmergencies.map((emergency: any) => (
               <div key={emergency.alertId} className="p-4 bg-red-50 border border-red-200 rounded-lg animate-pulse">
                 <div className="flex items-center gap-3">
                   <AlertTriangle className="w-5 h-5 text-red-600" />
@@ -128,7 +162,12 @@ export const DoctorDashboard: React.FC = () => {
                     <h3 className="font-bold text-red-800">Emergency Alert</h3>
                     <p className="text-sm text-red-600">{emergency.message}</p>
                   </div>
-                  <Button variant="danger" size="sm" className="ml-auto">
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    className="ml-auto"
+                    onClick={() => setAcknowledgedAlertIds((prev) => [...prev, emergency.alertId])}
+                  >
                     Acknowledge
                   </Button>
                 </div>
@@ -144,8 +183,18 @@ export const DoctorDashboard: React.FC = () => {
             <p className="text-neutral-500">Welcome back, Dr. {user?.name}</p>
           </div>
           <div className="flex items-center gap-3">
-            <Badge variant="success">Online</Badge>
-            <Button variant="secondary" size="sm">Mark Unavailable</Button>
+            <Badge variant={isAcceptingPatients ? 'success' : 'default'}>
+              {isAcceptingPatients ? 'Accepting Patients' : 'Unavailable'}
+            </Badge>
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={togglingAvailability || !doctorId}
+              onClick={toggleAvailability}
+              leftIcon={togglingAvailability ? <Loader2 className="w-4 h-4 animate-spin" /> : undefined}
+            >
+              {isAcceptingPatients ? 'Mark Unavailable' : 'Mark Available'}
+            </Button>
           </div>
         </div>
 

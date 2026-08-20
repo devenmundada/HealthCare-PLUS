@@ -16,6 +16,9 @@ router.get('/unclaimed', controller.getUnclaimedDoctors.bind(controller));
 // Resolve the Doctor profile id for a logged-in user (users.id -> doctors.id)
 router.get('/doctor-for-user/:userId', controller.getDoctorForUser.bind(controller));
 
+// Doctor toggling their own "accepting patients" status
+router.patch('/:id/availability', controller.updateAvailability.bind(controller));
+
 // Get all doctors
 router.get('/', controller.getAllDoctors.bind(controller));
 

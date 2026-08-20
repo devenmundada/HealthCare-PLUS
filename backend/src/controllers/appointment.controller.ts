@@ -215,6 +215,44 @@ export class AppointmentController {
   }
 
   /**
+   * GET /api/appointments/patient-profile/:patientId
+   * Real medical profile data (allergies, conditions, medications, etc.) —
+   * distinct from the separate mock ER/triage "patient state" system.
+   */
+  async getPatientProfile(req: Request, res: Response) {
+    try {
+      const patientId = parseInt(req.params.patientId);
+      if (isNaN(patientId)) {
+        return res.status(400).json({ success: false, error: 'Valid patient ID required' });
+      }
+
+      const patientRepo = AppDataSource.getRepository(Patient);
+      const patient = await patientRepo.findOne({ where: { id: patientId }, relations: ['user'] });
+      if (!patient) {
+        return res.status(404).json({ success: false, error: 'Patient not found' });
+      }
+
+      return res.json({
+        success: true,
+        data: {
+          name: patient.user?.name,
+          email: patient.user?.email,
+          phone: patient.user?.phone,
+          dateOfBirth: patient.dateOfBirth,
+          bloodGroup: patient.bloodGroup,
+          allergies: patient.allergies || [],
+          chronicConditions: patient.chronicConditions || [],
+          currentMedications: patient.currentMedications || [],
+          emergencyContact: patient.emergencyContact,
+        },
+      });
+    } catch (error: any) {
+      console.error('Get patient profile error:', error);
+      return res.status(500).json({ success: false, error: error.message });
+    }
+  }
+
+  /**
    * GET /api/appointments/default-hospital
    * Get first available hospital (for when doctor has no hospitalId)
    */

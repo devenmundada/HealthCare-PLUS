@@ -25,6 +25,9 @@ router.get('/slots', bind('getAvailableSlots'));
 // Get patient ID for user (booking flow)
 router.get('/patient-for-user/:userId', bind('getPatientForUser'));
 
+// Real medical profile data (allergies, conditions, medications)
+router.get('/patient-profile/:patientId', bind('getPatientProfile'));
+
 // Get default hospital (fallback when doctor has no hospitalId)
 router.get('/default-hospital', bind('getDefaultHospital'));
 
