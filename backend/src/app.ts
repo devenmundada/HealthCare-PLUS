@@ -30,8 +30,11 @@ AppDataSource.initialize()
     await seedInitialData();
   })
   .catch((error) => {
-    console.error('❌ Database connection failed:', error);
-    process.exit(1);
+    console.error('❌ Database connection failed:', error?.message || error);
+    console.error('   Full error:', error);
+    // Do NOT exit — keep the HTTP server alive so /health stays reachable
+    // and Render logs stop crash-looping. Routes that need the DB will
+    // fail individually instead of taking the whole process down.
   });
   
 import { AppError } from './utils/errors/AppError';
