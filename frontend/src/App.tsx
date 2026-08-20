@@ -1,6 +1,7 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { RealtimeProvider } from './contexts/RealtimeContext';
+import { ErrorBoundary } from './components/shared/ErrorBoundary';
 import { MainLayout } from './layouts/MainLayout';
 import { About } from './pages/About';
 import { Doctors } from './pages/Doctors';
@@ -32,6 +33,7 @@ const NotFound = () => (
 
 function App() {
   return (
+    <ErrorBoundary>
     <BrowserRouter>
       <AuthProvider>
         <RealtimeProvider>
@@ -83,6 +85,7 @@ function App() {
         </RealtimeProvider>
       </AuthProvider>
     </BrowserRouter>
+    </ErrorBoundary>
   );
 }
 
