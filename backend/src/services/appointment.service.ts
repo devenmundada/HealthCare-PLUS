@@ -254,7 +254,7 @@ export class AppointmentService {
       timeStyle: 'short'
     });
 
-    const patientMessage = `Your appointment request with Dr. ${appointment.doctorName} for ${appointmentTime} has been sent. You'll get a confirmation as soon as the doctor accepts.`;
+    const patientMessage = `Your appointment request with ${appointment.doctorName} for ${appointmentTime} has been sent. You'll get a confirmation as soon as the doctor accepts.`;
 
     await this.notificationService.sendNotification(
       appointment.patientId.toString(),
@@ -270,7 +270,7 @@ export class AppointmentService {
       'patient',
       'email',
       'medium',
-      `Appointment Request Sent to Dr. ${appointment.doctorName}`,
+      `Appointment Request Sent to ${appointment.doctorName}`,
       patientMessage
     );
 
@@ -422,7 +422,7 @@ export class AppointmentService {
 
     if (status === 'confirmed') {
       title = 'Appointment Confirmed';
-      message = `Your appointment with Dr. ${appointment.doctor?.name || ''} on ${appointmentTime} has been confirmed.`;
+      message = `Your appointment with ${appointment.doctor?.name || ''} on ${appointmentTime} has been confirmed.`;
       if (appointment.meetingLink) {
         message += `\n\n📹 Video Consultation Link: ${appointment.meetingLink}\n\nThis link will be active at the scheduled time.`;
       } else if (appointment.appointmentType === 'online') {
@@ -431,7 +431,7 @@ export class AppointmentService {
     } else if (status === 'cancelled') {
       title = wasPending ? 'Appointment Request Declined' : 'Appointment Cancelled';
       message = wasPending
-        ? `Dr. ${appointment.doctor?.name || ''} was unable to accept your request for ${appointmentTime}${reason ? `: ${reason}` : '.'} Please choose another time.`
+        ? `${appointment.doctor?.name || ''} was unable to accept your request for ${appointmentTime}${reason ? `: ${reason}` : '.'} Please choose another time.`
         : `Your appointment has been cancelled${reason ? ': ' + reason : '.'}`;
     } else {
       title = `Appointment ${status}`;

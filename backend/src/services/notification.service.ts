@@ -1,11 +1,14 @@
 import { EmailService } from './email.service';
 import { SMSService } from './sms.service';
 import { SocketService } from './socket.service';
-import { 
-  Notification, 
-  NotificationChannel, 
+import { AppDataSource } from '../config/database.config';
+import { Patient } from '../entities/Patient.entity';
+import { Doctor } from '../entities/Doctor.entity';
+import {
+  Notification,
+  NotificationChannel,
   NotificationPriority,
-  NOTIFICATION_TEMPLATES 
+  NOTIFICATION_TEMPLATES
 } from '../types/notification.types';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -14,6 +17,8 @@ export class NotificationService {
   private smsService: SMSService;
   private socketService: SocketService;
   private notifications: Map<string, Notification>;
+  private patientRepository = AppDataSource.getRepository(Patient);
+  private doctorRepository = AppDataSource.getRepository(Doctor);
 
   constructor(socketService: SocketService) {
     this.emailService = new EmailService();
@@ -24,17 +29,61 @@ export class NotificationService {
     console.log('🔔 Notification service initialized');
   }
 
+  // Resolve a real email/phone for this notification's recipient. `userId`
+  // is the Patient or Doctor row's own id (not the login User's id — see
+  // how appointment.service.ts calls sendNotification), so this needs an
+  // actual DB lookup, not just the id passed through.
+  private async resolveContact(userId: string, userType: string): Promise<{ email?: string; phone?: string }> {
+    const id = parseInt(userId, 10);
+    if (isNaN(id)) return {};
+
+    if (userType === 'patient') {
+      const patient = await this.patientRepository.findOne({ where: { id }, relations: ['user'] });
+      return { email: patient?.user?.email, phone: patient?.user?.phone };
+    }
+    if (userType === 'doctor') {
+      const doctor = await this.doctorRepository.findOne({ where: { id } });
+      return { email: doctor?.email, phone: doctor?.phone };
+    }
+    return {};
+  }
+
   // Dispatches a single notification. Runs directly (no Redis/queue dependency —
   // this app doesn't provision Redis, and a queue that can't reach it would hang
   // every caller indefinitely). Failures here must never block the caller
   // (e.g. appointment booking), so errors are logged and swallowed.
+  //
+  // Notification (id/userId/title/message) and EmailNotification/SMSNotification
+  // (to/subject/html, to/body) are different shapes — this used to blindly cast
+  // one to the other with `as any`, so `to` was always undefined and every send
+  // failed with "No recipients defined" regardless of SMTP/Twilio configuration.
   private async dispatch(notification: Notification, channel: NotificationChannel) {
     try {
       switch (channel) {
-        case 'email':
-          return await this.emailService.sendEmail(notification as any);
-        case 'sms':
-          return await this.smsService.sendSMS(notification as any);
+        case 'email': {
+          const { email } = await this.resolveContact(notification.userId, notification.userType);
+          if (!email) {
+            console.warn(`⚠️ No email on file for ${notification.userType} ${notification.userId}, skipping email notification`);
+            return { success: false };
+          }
+          return await this.emailService.sendEmail({
+            to: email,
+            subject: notification.title,
+            html: `<p>${notification.message.replace(/\n/g, '<br>')}</p>`,
+            text: notification.message,
+          });
+        }
+        case 'sms': {
+          const { phone } = await this.resolveContact(notification.userId, notification.userType);
+          if (!phone) {
+            console.warn(`⚠️ No phone on file for ${notification.userType} ${notification.userId}, skipping SMS notification`);
+            return { success: false };
+          }
+          return await this.smsService.sendSMS({
+            to: phone,
+            body: `${notification.title}: ${notification.message}`,
+          });
+        }
         case 'push':
           console.log('Push notification:', notification);
           return { success: true };
