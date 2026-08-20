@@ -1,157 +1,59 @@
 /**
  * Bed Allocation Service
- * Core intelligence for matching patients to beds
+ * Core intelligence for matching patients to beds.
+ *
+ * Data source: the real `beds` table (entities/Bed.entity.ts), via TypeORM.
+ * Previously this ran entirely against a hardcoded in-memory mock array —
+ * every reservation/occupy/clean call mutated fake objects that reset on
+ * every server restart. All state here is now persisted for real.
  */
 
+import { AppDataSource } from '../config/database.config';
+import { Bed as BedEntity } from '../entities/Bed.entity';
+import { WaitTimeSample } from '../entities/WaitTimeSample.entity';
 import type { Bed, AdmissionRequirements, AllocationResult, BedReservation, AllocationMetrics } from '../types/allocation.types';
 
-// Mock data (replace with DB queries later)
-const mockBeds: Bed[] = [
-  // ICU Beds
-  {
-    id: 'bed-001',
-    hospitalId: 'hosp-001',
-    bedNumber: 'ICU-101',
-    specialty: 'Cardiology',
-    type: 'ICU',
-    ward: 'Cardiac Care Unit',
-    floor: 3,
-    status: 'available',
-    equipment: ['ventilator', 'monitor', 'defibrillator', 'pacemaker'],
-    isolationRequired: false,
-    lastCleaned: new Date(Date.now() - 2 * 60 * 60 * 1000),
-    isPediatric: false,
-  },
-  {
-    id: 'bed-002',
-    hospitalId: 'hosp-001',
-    bedNumber: 'ICU-102',
-    specialty: 'Critical Care',
-    type: 'ICU',
-    ward: 'Intensive Care Unit',
-    floor: 3,
-    status: 'available',
-    equipment: ['ventilator', 'monitor', 'defibrillator'],
-    isolationRequired: true,
-    lastCleaned: new Date(Date.now() - 1 * 60 * 60 * 1000),
-    tags: ['negative-pressure'],
-  },
-  {
-    id: 'bed-003',
-    hospitalId: 'hosp-001',
-    bedNumber: 'ICU-103',
-    specialty: 'Neurology',
-    type: 'ICU',
-    ward: 'Neuro ICU',
-    floor: 4,
-    status: 'occupied',
-    equipment: ['ventilator', 'monitor', 'EEG'],
-    isolationRequired: false,
-    currentPatientId: 'pat-456',
-    estimatedVacancy: new Date(Date.now() + 12 * 60 * 60 * 1000),
-    lastCleaned: new Date(Date.now() - 3 * 60 * 60 * 1000),
-  },
-  // General Beds
-  {
-    id: 'bed-004',
-    hospitalId: 'hosp-001',
-    bedNumber: 'W-201',
-    specialty: 'General Medicine',
-    type: 'General',
-    ward: 'General Ward',
-    floor: 2,
-    status: 'available',
-    equipment: ['monitor'],
-    isolationRequired: false,
-    lastCleaned: new Date(Date.now() - 5 * 60 * 60 * 1000),
-  },
-  {
-    id: 'bed-005',
-    hospitalId: 'hosp-001',
-    bedNumber: 'W-202',
-    specialty: 'General Medicine',
-    type: 'General',
-    ward: 'General Ward',
-    floor: 2,
-    status: 'available',
-    equipment: [],
-    isolationRequired: false,
-    lastCleaned: new Date(Date.now() - 2 * 60 * 60 * 1000),
-    isFemaleOnly: true,
-  },
-  {
-    id: 'bed-006',
-    hospitalId: 'hosp-001',
-    bedNumber: 'W-203',
-    specialty: 'Pediatrics',
-    type: 'General',
-    ward: 'Pediatric Ward',
-    floor: 1,
-    status: 'cleaning',
-    equipment: ['monitor'],
-    isolationRequired: false,
-    lastCleaned: new Date(Date.now() - 30 * 60 * 1000),
-    isPediatric: true,
-  },
-  // Emergency Beds
-  {
-    id: 'bed-007',
-    hospitalId: 'hosp-001',
-    bedNumber: 'ER-01',
-    specialty: 'Emergency Medicine',
-    type: 'Emergency',
-    ward: 'Emergency Room',
-    floor: 1,
-    status: 'available',
-    equipment: ['monitor', 'defibrillator', 'suction'],
-    isolationRequired: false,
-    lastCleaned: new Date(Date.now() - 45 * 60 * 1000),
-  },
-  {
-    id: 'bed-008',
-    hospitalId: 'hosp-001',
-    bedNumber: 'ER-02',
-    specialty: 'Emergency Medicine',
-    type: 'Emergency',
-    ward: 'Emergency Room',
-    floor: 1,
-    status: 'reserved',
-    equipment: ['monitor', 'defibrillator'],
-    isolationRequired: false,
-    currentPatientId: 'pat-789',
-    estimatedVacancy: new Date(Date.now() + 15 * 60 * 1000),
-    lastCleaned: new Date(Date.now() - 15 * 60 * 1000),
-  },
-  // NICU
-  {
-    id: 'bed-009',
-    hospitalId: 'hosp-001',
-    bedNumber: 'NICU-01',
-    specialty: 'Neonatology',
-    type: 'NICU',
-    ward: 'Neonatal ICU',
-    floor: 3,
-    status: 'available',
-    equipment: ['incubator', 'monitor', 'ventilator'],
-    isolationRequired: false,
-    lastCleaned: new Date(Date.now() - 4 * 60 * 60 * 1000),
-    isPediatric: true,
-  },
-];
-
 export class BedAllocationService {
-  private beds: Bed[];
+  private bedRepository = AppDataSource.getRepository(BedEntity);
+  private waitTimeRepository = AppDataSource.getRepository(WaitTimeSample);
 
-  constructor(beds: Bed[] = mockBeds) {
-    this.beds = beds;
+  // Map a DB row onto the allocation engine's Bed shape. IDs are stringified
+  // to keep the public API (bedId: string, hospitalId: string) unchanged for
+  // every existing caller (controllers, socket service, admission workflow).
+  private toAllocationBed(b: BedEntity): Bed {
+    return {
+      id: String(b.id),
+      hospitalId: String(b.hospitalId),
+      bedNumber: b.bedNumber,
+      specialty: b.specialty || 'General Medicine',
+      type: (b.type as any) || 'General',
+      ward: b.ward || '',
+      floor: b.floor ?? 0,
+      status: b.status as any,
+      equipment: b.equipment || [],
+      isolationRequired: b.isIsolation,
+      currentPatientId: b.currentPatientId != null ? String(b.currentPatientId) : undefined,
+      estimatedVacancy: b.estimatedVacancy || undefined,
+      lastCleaned: b.lastCleaned || b.createdAt,
+      isFemaleOnly: b.isFemaleOnly,
+      isPediatric: b.isPediatric,
+      tags: b.tags || undefined,
+    };
+  }
+
+  private async loadBeds(hospitalId?: number): Promise<Bed[]> {
+    const rows = await this.bedRepository.find(
+      hospitalId ? { where: { hospitalId } } : {}
+    );
+    return rows.map((b) => this.toAllocationBed(b));
   }
 
   /**
    * Get all available beds (status = 'available' or 'reserved' with estimated vacancy soon)
    */
-  private getAvailableBeds(): Bed[] {
-    return this.beds.filter(bed => 
-      bed.status === 'available' || 
+  private getAvailableBeds(beds: Bed[]): Bed[] {
+    return beds.filter(bed =>
+      bed.status === 'available' ||
       (bed.status === 'reserved' && bed.estimatedVacancy && bed.estimatedVacancy < new Date(Date.now() + 30 * 60 * 1000))
     );
   }
@@ -241,11 +143,14 @@ export class BedAllocationService {
   }
 
   /**
-   * Find the best bed for a patient based on requirements
+   * Find the best bed for a patient based on requirements.
+   * Pass hospitalId to restrict the search to one hospital's beds; omit to
+   * search across every hospital in the system.
    */
-  async findBestBed(requirements: AdmissionRequirements): Promise<AllocationResult> {
-    const availableBeds = this.getAvailableBeds();
-    
+  async findBestBed(requirements: AdmissionRequirements, hospitalId?: number): Promise<AllocationResult> {
+    const allBeds = await this.loadBeds(hospitalId);
+    const availableBeds = this.getAvailableBeds(allBeds);
+
     if (availableBeds.length === 0) {
       return {
         success: false,
@@ -303,25 +208,43 @@ export class BedAllocationService {
     };
   }
 
+  private async getBedOrThrow(bedId: string): Promise<BedEntity> {
+    const id = parseInt(bedId, 10);
+    if (isNaN(id)) throw new Error('Invalid bed id');
+    const bed = await this.bedRepository.findOne({ where: { id } });
+    if (!bed) throw new Error('Bed not found');
+    return bed;
+  }
+
+  /**
+   * Get a single bed in the allocation engine's Bed shape (used by the
+   * socket-broadcasting subclass instead of reaching into private state).
+   */
+  async getBedById(bedId: string): Promise<Bed | null> {
+    try {
+      const bed = await this.getBedOrThrow(bedId);
+      return this.toAllocationBed(bed);
+    } catch {
+      return null;
+    }
+  }
+
   /**
    * Reserve a bed for a patient
    */
   async reserveBed(bedId: string, patientId: string, doctorId: string, duration?: number): Promise<BedReservation> {
-    const bed = this.beds.find(b => b.id === bedId);
-    if (!bed) {
-      throw new Error('Bed not found');
-    }
+    const bed = await this.getBedOrThrow(bedId);
 
     if (bed.status !== 'available' && bed.status !== 'reserved') {
       throw new Error(`Bed is not available (current status: ${bed.status})`);
     }
 
-    // Update bed status
     bed.status = 'reserved';
-    bed.currentPatientId = patientId;
+    bed.currentPatientId = parseInt(patientId, 10);
     bed.estimatedVacancy = new Date(Date.now() + (duration || 4) * 60 * 60 * 1000); // Default 4 hours
+    await this.bedRepository.save(bed);
 
-    const reservation: BedReservation = {
+    return {
       bedId,
       patientId,
       doctorId,
@@ -329,219 +252,165 @@ export class BedAllocationService {
       expiresAt: new Date(Date.now() + 30 * 60 * 1000), // 30 minute reservation timeout
       estimatedDuration: duration,
     };
-
-    // In real implementation, save to database
-    console.log(`Bed ${bedId} reserved for patient ${patientId} by doctor ${doctorId}`);
-
-    return reservation;
   }
 
   /**
    * Release a bed reservation (if patient doesn't show up)
    */
   async releaseReservation(bedId: string): Promise<void> {
-    const bed = this.beds.find(b => b.id === bedId);
-    if (!bed) {
-      throw new Error('Bed not found');
-    }
+    const bed = await this.getBedOrThrow(bedId);
 
     if (bed.status !== 'reserved') {
       throw new Error(`Bed is not reserved (current status: ${bed.status})`);
     }
 
     bed.status = 'available';
-    bed.currentPatientId = undefined;
-    bed.estimatedVacancy = undefined;
-
-    console.log(`Bed ${bedId} released from reservation`);
+    bed.currentPatientId = null as any;
+    bed.estimatedVacancy = null as any;
+    await this.bedRepository.save(bed);
   }
 
   /**
    * Occupy a bed (patient arrives)
    */
   async occupyBed(bedId: string, patientId: string): Promise<void> {
-    const bed = this.beds.find(b => b.id === bedId);
-    if (!bed) {
-      throw new Error('Bed not found');
-    }
+    const bed = await this.getBedOrThrow(bedId);
 
     if (bed.status !== 'reserved') {
       throw new Error(`Bed is not reserved (current status: ${bed.status})`);
     }
 
-    if (bed.currentPatientId !== patientId) {
+    if (String(bed.currentPatientId) !== patientId) {
       throw new Error(`Bed reserved for different patient (expected: ${bed.currentPatientId})`);
     }
 
     bed.status = 'occupied';
-    console.log(`Bed ${bedId} occupied by patient ${patientId}`);
+    await this.bedRepository.save(bed);
   }
 
   /**
    * Start cleaning a bed (after discharge)
    */
   async startCleaning(bedId: string): Promise<void> {
-    const bed = this.beds.find(b => b.id === bedId);
-    if (!bed) {
-      throw new Error('Bed not found');
-    }
+    const bed = await this.getBedOrThrow(bedId);
 
     if (bed.status !== 'occupied') {
       throw new Error(`Bed is not occupied (current status: ${bed.status})`);
     }
 
     bed.status = 'cleaning';
-    bed.currentPatientId = undefined;
+    bed.currentPatientId = null as any;
     bed.lastCleaned = new Date();
-
-    console.log(`Bed ${bedId} cleaning started`);
+    await this.bedRepository.save(bed);
   }
 
   /**
    * Complete cleaning (bed becomes available)
    */
   async completeCleaning(bedId: string): Promise<void> {
-    const bed = this.beds.find(b => b.id === bedId);
-    if (!bed) {
-      throw new Error('Bed not found');
-    }
+    const bed = await this.getBedOrThrow(bedId);
 
     if (bed.status !== 'cleaning') {
       throw new Error(`Bed is not being cleaned (current status: ${bed.status})`);
     }
 
     bed.status = 'available';
-    bed.estimatedVacancy = undefined;
-
-    console.log(`Bed ${bedId} cleaning completed, now available`);
+    bed.estimatedVacancy = null as any;
+    await this.bedRepository.save(bed);
   }
 
   /**
-   * Get allocation metrics
+   * Get allocation metrics, optionally scoped to one hospital.
    */
-  async getMetrics(): Promise<AllocationMetrics> {
-    const totalBeds = this.beds.length;
-    const availableBeds = this.beds.filter(b => b.status === 'available').length;
-    const occupiedBeds = this.beds.filter(b => b.status === 'occupied').length;
+  async getMetrics(hospitalId?: number): Promise<AllocationMetrics> {
+    const beds = await this.loadBeds(hospitalId);
+    const totalBeds = beds.length;
+    const availableBeds = beds.filter(b => b.status === 'available').length;
+    const occupiedBeds = beds.filter(b => b.status === 'occupied').length;
 
-    // Group by specialty for bottlenecks
     const specialtyMap = new Map<string, { total: number; occupied: number }>();
-    this.beds.forEach(bed => {
+    beds.forEach(bed => {
       const current = specialtyMap.get(bed.specialty) || { total: 0, occupied: 0 };
       current.total++;
       if (bed.status === 'occupied') current.occupied++;
       specialtyMap.set(bed.specialty, current);
     });
 
-    const bottlenecks = Array.from(specialtyMap.entries())
-      .filter(([_, stats]) => stats.occupied / stats.total > 0.8) // >80% occupancy
-      .map(([specialty, stats]) => ({
-        specialty,
-        waitCount: Math.round(stats.total * 0.2), // estimate
-        avgWaitTime: 45, // placeholder, would come from real data
-      }));
+    // Real wait-time telemetry (wait_time_samples) only has data once
+    // something actually writes to it, which nothing in this codebase does
+    // yet. Use a real average per specialty when samples exist; otherwise
+    // fall back to a clearly-labeled estimate rather than pretending it's
+    // measured.
+    const bottlenecks = await Promise.all(
+      Array.from(specialtyMap.entries())
+        .filter(([_, stats]) => stats.total > 0 && stats.occupied / stats.total > 0.8) // >80% occupancy
+        .map(async ([specialty, stats]) => {
+          const samples = await this.waitTimeRepository
+            .createQueryBuilder('w')
+            .select('AVG(w.wait_time_minutes)', 'avg')
+            .where('w.appointment_type = :specialty', { specialty })
+            .getRawOne();
+          const avgWaitTime = samples?.avg ? Math.round(Number(samples.avg)) : 45; // fallback estimate — no samples recorded yet
+
+          return {
+            specialty,
+            waitCount: Math.round(stats.total * 0.2), // estimate — no queue-length telemetry exists
+            avgWaitTime,
+          };
+        })
+    );
 
     return {
       totalBeds,
       availableBeds,
-      occupancyRate: Math.round((occupiedBeds / totalBeds) * 100),
-      avgAllocationTime: 3.5, // placeholder
+      occupancyRate: totalBeds > 0 ? Math.round((occupiedBeds / totalBeds) * 100) : 0,
+      avgAllocationTime: 3.5, // estimate — no allocation-time telemetry exists yet
       bottlenecks,
     };
   }
-}
 
-import { SocketService } from './socket.service';
-import { BedUpdateData } from '../types/socket.types';
+  // ==========================================================================
+  // Direct bed management (hospital dashboard) — plain CRUD against the real
+  // table, independent of the matching algorithm above.
+  // ==========================================================================
 
-export class BedAllocationSocketService {
-  private socketService: SocketService;
-  private beds: Bed[];
-
-  constructor(socketService: SocketService, beds: Bed[]) {
-    this.socketService = socketService;
-    this.beds = beds;
+  async getAllBedsRaw(filters: { hospitalId?: number; specialty?: string; status?: string; type?: string }): Promise<BedEntity[]> {
+    const where: any = {};
+    if (filters.hospitalId) where.hospitalId = filters.hospitalId;
+    if (filters.specialty) where.specialty = filters.specialty;
+    if (filters.status) where.status = filters.status;
+    if (filters.type) where.type = filters.type;
+    return this.bedRepository.find({
+      where,
+      relations: ['currentPatient', 'currentPatient.user'],
+      order: { hospitalId: 'ASC', bedNumber: 'ASC' },
+    });
   }
 
-  async reserveBed(bedId: string, patientId: string, doctorId: string, duration?: number) {
-    const bed = this.beds.find(b => b.id === bedId);
-    if (!bed) {
-      throw new Error('Bed not found');
-    }
-    bed.status = 'reserved';
-    bed.currentPatientId = patientId;
-    bed.estimatedVacancy = new Date(Date.now() + (duration || 4) * 60 * 60 * 1000); // Default 4 hours
-
-    // Emit socket event
-    const updateData: BedUpdateData = {
-      bedId,
-      status: 'reserved',
-      patientId,
-      patientName: `Patient-${patientId.substring(0, 8)}`,
-      estimatedVacancy: bed.estimatedVacancy,
-      updatedAt: new Date()
-    };
-    this.socketService.broadcastBedUpdate(updateData);
-
-    // Return BedReservation structure to match BedAllocationService
-    const reservation: BedReservation = {
-      bedId,
-      patientId,
-      doctorId,
-      reservedAt: new Date(),
-      expiresAt: new Date(Date.now() + 30 * 60 * 1000), // 30 minute reservation timeout, placeholder
-      estimatedDuration: duration,
-    };
-    return reservation;
+  async getBedRawById(id: number): Promise<BedEntity | null> {
+    return this.bedRepository.findOne({ where: { id }, relations: ['currentPatient', 'currentPatient.user'] });
   }
 
-  async occupyBed(bedId: string, patientId: string) {
-    const bed = this.beds.find(b => b.id === bedId);
-    if (!bed) {
-      throw new Error('Bed not found');
+  async createBed(data: Partial<BedEntity>): Promise<BedEntity> {
+    if (!data.hospitalId || !data.bedNumber) {
+      throw new Error('hospitalId and bedNumber are required');
     }
-    bed.status = 'occupied';
-    bed.currentPatientId = patientId;
-    const updateData: BedUpdateData = {
-      bedId,
-      status: 'occupied',
-      patientId,
-      patientName: `Patient-${patientId.substring(0, 8)}`,
-      updatedAt: new Date()
-    };
-    this.socketService.broadcastBedUpdate(updateData);
-  }
-
-  async startCleaning(bedId: string) {
-    const bed = this.beds.find(b => b.id === bedId);
-    if (!bed) {
-      throw new Error('Bed not found');
-    }
-    bed.status = 'cleaning';
-    bed.currentPatientId = undefined;
-    bed.lastCleaned = new Date();
-    // Optionally emit socket update for cleaning status
-    const updateData: BedUpdateData = {
-      bedId,
-      status: 'cleaning',
-      updatedAt: new Date(),
-    };
-    this.socketService.broadcastBedUpdate(updateData);
-  }
-
-  async completeCleaning(bedId: string) {
-    const bed = this.beds.find(b => b.id === bedId);
-    if (!bed) {
-      throw new Error('Bed not found');
-    }
-    bed.status = 'available';
-    bed.estimatedVacancy = undefined;
-    // Optionally emit socket update for available status
-    const updateData: BedUpdateData = {
-      bedId,
+    const bed = this.bedRepository.create({
       status: 'available',
-      updatedAt: new Date()
-    };
-    this.socketService.broadcastBedUpdate(updateData);
+      ...data,
+    });
+    return this.bedRepository.save(bed);
+  }
+
+  async updateBed(id: number, data: Partial<BedEntity>): Promise<BedEntity> {
+    const bed = await this.bedRepository.findOne({ where: { id } });
+    if (!bed) throw new Error('Bed not found');
+    Object.assign(bed, data);
+    return this.bedRepository.save(bed);
+  }
+
+  async deleteBed(id: number): Promise<void> {
+    const result = await this.bedRepository.delete(id);
+    if (!result.affected) throw new Error('Bed not found');
   }
 }

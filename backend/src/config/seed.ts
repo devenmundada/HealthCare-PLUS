@@ -1,6 +1,7 @@
 import { AppDataSource } from './database.config';
 import { Hospital } from '../entities/Hospital.entity';
 import { Doctor } from '../entities/Doctor.entity';
+import { Bed } from '../entities/Bed.entity';
 
 // Real, well-known Indian hospitals used to seed a fresh deployment so the app
 // has real data to show immediately instead of an empty database.
@@ -64,10 +65,29 @@ const DOCTOR_CITY_HOSPITAL: Record<string, string> = {
   Urology: 'Apollo Hospitals Greams Road',
 };
 
+// A representative slice of each hospital's real bed inventory (not the full
+// totalBeds count on the Hospital row, which is just a headline number) —
+// enough for the allocation engine and hospital dashboard to have real rows
+// to match/manage against, across the ward types the matching algorithm
+// actually understands (General / ICU / Emergency / NICU / CCU).
+const BED_TEMPLATE: Array<{ type: string; ward: string; specialty: string; equipment: string[]; isIsolation?: boolean }> = [
+  { type: 'ICU', ward: 'Intensive Care Unit', specialty: 'Critical Care', equipment: ['ventilator', 'monitor', 'defibrillator'] },
+  { type: 'ICU', ward: 'Cardiac Care Unit', specialty: 'Cardiology', equipment: ['ventilator', 'monitor', 'defibrillator', 'pacemaker'] },
+  { type: 'CCU', ward: 'Coronary Care Unit', specialty: 'Cardiology', equipment: ['monitor', 'defibrillator'] },
+  { type: 'Emergency', ward: 'Emergency Department', specialty: 'Emergency Medicine', equipment: ['monitor', 'defibrillator'] },
+  { type: 'Emergency', ward: 'Emergency Department', specialty: 'Emergency Medicine', equipment: ['monitor'] },
+  { type: 'General', ward: 'General Ward', specialty: 'General Medicine', equipment: ['monitor'] },
+  { type: 'General', ward: 'General Ward', specialty: 'General Medicine', equipment: [] },
+  { type: 'General', ward: 'Surgical Ward', specialty: 'Surgery', equipment: ['monitor'] },
+  { type: 'General', ward: 'Isolation Ward', specialty: 'General Medicine', equipment: ['monitor'], isIsolation: true },
+  { type: 'NICU', ward: 'Neonatal ICU', specialty: 'Pediatrics', equipment: ['incubator', 'monitor'] },
+];
+
 export async function seedInitialData(): Promise<void> {
   try {
     const hospitalRepo = AppDataSource.getRepository(Hospital);
     const doctorRepo = AppDataSource.getRepository(Doctor);
+    const bedRepo = AppDataSource.getRepository(Bed);
 
     const hospitalCount = await hospitalRepo.count();
     let savedHospitals: Hospital[] = [];
@@ -88,6 +108,33 @@ export async function seedInitialData(): Promise<void> {
       });
       const saved = await doctorRepo.save(doctorsToInsert as Doctor[]);
       console.log(`🌱 Seeded ${saved.length} doctors`);
+    }
+
+    const bedCount = await bedRepo.count();
+    if (bedCount === 0 && savedHospitals.length > 0) {
+      const bedsToInsert: Partial<Bed>[] = [];
+      savedHospitals.forEach((hospital, hIdx) => {
+        BED_TEMPLATE.forEach((template, bIdx) => {
+          // Deterministic mix of statuses so the dashboard isn't 100% empty
+          // or 100% full on first load.
+          const statusRoll = (hIdx + bIdx) % 5;
+          const status = statusRoll === 0 ? 'occupied' : statusRoll === 1 ? 'cleaning' : 'available';
+          bedsToInsert.push({
+            hospitalId: hospital.id,
+            bedNumber: `${template.type.slice(0, 3).toUpperCase()}-${hIdx + 1}${bIdx + 1}`,
+            ward: template.ward,
+            floor: Math.floor(bIdx / 3) + 1,
+            type: template.type,
+            specialty: template.specialty,
+            status,
+            equipment: template.equipment,
+            isIsolation: !!template.isIsolation,
+            lastCleaned: new Date(Date.now() - Math.random() * 6 * 60 * 60 * 1000),
+          });
+        });
+      });
+      const savedBeds = await bedRepo.save(bedsToInsert as Bed[]);
+      console.log(`🌱 Seeded ${savedBeds.length} beds across ${savedHospitals.length} hospitals`);
     }
   } catch (error) {
     console.error('⚠️ Seeding initial data failed (non-fatal):', error);

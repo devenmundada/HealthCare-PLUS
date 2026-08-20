@@ -38,6 +38,17 @@ export class Bed {
   @Column({ name: 'is_isolation', default: false })
   isIsolation: boolean;
 
+  // Used by the allocation matching algorithm (bed-allocation.service.ts)
+  // to score/filter candidate beds against patient requirements.
+  @Column({ name: 'is_female_only', default: false })
+  isFemaleOnly: boolean;
+
+  @Column({ name: 'is_pediatric', default: false })
+  isPediatric: boolean;
+
+  @Column('text', { array: true, nullable: true })
+  tags: string[];
+
   @Column({ name: 'current_patient_id', nullable: true })
   currentPatientId: number;
 

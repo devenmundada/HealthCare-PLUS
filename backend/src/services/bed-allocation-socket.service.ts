@@ -12,9 +12,9 @@ export class BedAllocationSocketService extends BedAllocationService {
 
   async reserveBed(bedId: string, patientId: string, doctorId: string, duration?: number) {
     const reservation = await super.reserveBed(bedId, patientId, doctorId, duration);
-    
+
     // Emit socket event
-    const bed = this['beds'].find((b: any) => b.id === bedId);
+    const bed = await this.getBedById(bedId);
     if (bed) {
       const updateData: BedUpdateData = {
         bedId,
