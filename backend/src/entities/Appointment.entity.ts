@@ -1,9 +1,18 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, Index } from 'typeorm';
 import { Patient } from './Patient.entity';
 import { Doctor } from './Doctor.entity';
 import { Hospital } from './Hospital.entity';
 
 @Entity('appointments')
+// A doctor can only hold one active (pending/scheduled/confirmed) appointment
+// per exact start time. This is the real guard against the double-booking
+// race: two near-simultaneous bookings can both pass the application-level
+// slot check, but only one can win this DB-level constraint — the loser gets
+// a clean "slot just got taken" error instead of silently overbooking.
+@Index('uq_doctor_active_slot', ['doctorId', 'scheduledTime'], {
+  unique: true,
+  where: `status IN ('pending_confirmation', 'scheduled', 'confirmed')`,
+})
 export class Appointment {
   @PrimaryGeneratedColumn()
   id: number;
@@ -20,7 +29,9 @@ export class Appointment {
   @Column({ name: 'appointment_type', length: 20, default: 'in-person' })
   appointmentType: string;
 
-  @Column({ length: 20, default: 'scheduled' })
+  // Lifecycle: pending_confirmation -> confirmed -> completed
+  //                                 -> cancelled (doctor declined, or patient/doctor cancels later)
+  @Column({ length: 20, default: 'pending_confirmation' })
   status: string;
 
   @Column({ name: 'scheduled_time', type: 'timestamp' })

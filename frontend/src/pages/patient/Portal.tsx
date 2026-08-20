@@ -14,6 +14,7 @@ import {
 import axios from 'axios';
 import AppointmentBookingModal from '../../components/features/appointment/AppointmentBookingModal';
 import { RealTimeNotification } from '../../components/features/notifications/RealTimeNotification';
+import realtimeService from '../../services/realtime.service';
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://healthcare-backend-tylz.onrender.com/api';
 
@@ -27,6 +28,14 @@ interface Appointment {
   meetingLink?: string;
   hospitalName: string;
 }
+
+const APPOINTMENT_STATUS_BADGE: Record<string, { variant: 'success' | 'warning' | 'error' | 'default'; label: string }> = {
+  pending_confirmation: { variant: 'warning', label: 'Awaiting Confirmation' },
+  confirmed: { variant: 'success', label: 'Confirmed' },
+  scheduled: { variant: 'success', label: 'Confirmed' },
+  cancelled: { variant: 'error', label: 'Cancelled' },
+  completed: { variant: 'default', label: 'Completed' },
+};
 
 interface Doctor {
   id: number;
@@ -108,6 +117,19 @@ export const PatientPortal: React.FC = () => {
     fetchSpecialties();
   }, []);
 
+  // Live-refresh when the doctor confirms/declines a pending request, so the
+  // status badge updates without the patient needing to reload the page.
+  useEffect(() => {
+    const onUpdate = () => fetchData();
+    realtimeService.on('patient:transition', onUpdate);
+    realtimeService.on('notification:new', onUpdate);
+    return () => {
+      realtimeService.off('patient:transition', onUpdate);
+      realtimeService.off('notification:new', onUpdate);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Removed useEffect for realtime?.appointments; source of error.
   // useEffect(() => {
   //   if (realtime?.appointments) {
@@ -135,13 +157,25 @@ export const PatientPortal: React.FC = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [appointmentsRes, doctorsRes] = await Promise.all([
-        axios.get(`${API_URL}/appointments/patient/${user?.id}`),
+
+      // /appointments/patient/:patientId wants the Patient row's id, which
+      // is a different sequence from the logged-in User's id — resolve that
+      // first or every appointment lookup silently 404s/returns nothing.
+      const patientLookup = user?.id
+        ? axios.get(`${API_URL}/appointments/patient-for-user/${user.id}`).catch(() => null)
+        : Promise.resolve(null);
+
+      const [patientRes, doctorsRes] = await Promise.all([
+        patientLookup,
         axios.get(`${API_URL}/doctors`)
       ]);
 
-      if (appointmentsRes.data.success) {
-        setAppointments(appointmentsRes.data.data);
+      const patientId = patientRes?.data?.data?.patientId;
+      if (patientId) {
+        const appointmentsRes = await axios.get(`${API_URL}/appointments/patient/${patientId}`);
+        if (appointmentsRes.data.success) {
+          setAppointments(appointmentsRes.data.data);
+        }
       }
       if (doctorsRes.data.success) {
         const doctorsWithDistance = doctorsRes.data.data?.doctors?.map((doc: any) => ({
@@ -681,11 +715,22 @@ export const PatientPortal: React.FC = () => {
               </div>
             ) : (
               <div className="space-y-4">
-                {filteredAppointments.map((apt) => (
-                  <div key={apt.id} className="p-4 border rounded-lg hover:shadow-md transition-shadow">
-                    <div className="flex items-start justify-between">
+                {filteredAppointments.map((apt) => {
+                  const statusInfo = APPOINTMENT_STATUS_BADGE[apt.status] || { variant: 'default' as const, label: apt.status };
+                  const isConfirmed = apt.status === 'confirmed' || apt.status === 'scheduled';
+                  return (
+                  <div
+                    key={apt.id}
+                    className={`p-4 border rounded-lg hover:shadow-md transition-shadow ${
+                      apt.status === 'pending_confirmation' ? 'border-amber-300 bg-amber-50/40 dark:border-amber-700 dark:bg-amber-900/10' : ''
+                    }`}
+                  >
+                    <div className="flex items-start justify-between flex-wrap gap-3">
                       <div>
-                        <h3 className="font-bold text-lg">Dr. {apt.doctorName}</h3>
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-bold text-lg">Dr. {apt.doctorName}</h3>
+                          <Badge variant={statusInfo.variant} size="sm">{statusInfo.label}</Badge>
+                        </div>
                         <p className="text-medical-cyan text-sm">{apt.doctorSpecialty}</p>
                         <div className="flex items-center gap-4 mt-2 text-sm text-neutral-500">
                           <div className="flex items-center gap-1">
@@ -702,24 +747,30 @@ export const PatientPortal: React.FC = () => {
                           </div>
                         </div>
                         <p className="text-xs text-neutral-400 mt-1">{apt.hospitalName}</p>
+                        {apt.status === 'pending_confirmation' && (
+                          <p className="text-xs text-amber-700 dark:text-amber-400 mt-1">
+                            Waiting for Dr. {apt.doctorName} to confirm — you'll be notified as soon as they respond.
+                          </p>
+                        )}
+                        {apt.status === 'cancelled' && (
+                          <p className="text-xs text-error-600 mt-1">This appointment was cancelled or declined.</p>
+                        )}
                       </div>
                       <div className="flex gap-2">
-                        {apt.status === 'scheduled' && apt.appointmentType === 'online' && apt.meetingLink && (
-                          <Button 
-                            size="sm" 
-                            leftIcon={<Video className="w-4 h-4" />} 
+                        {isConfirmed && apt.appointmentType === 'online' && apt.meetingLink && (
+                          <Button
+                            size="sm"
+                            leftIcon={<Video className="w-4 h-4" />}
                             onClick={() => window.open(apt.meetingLink, '_blank')}
                           >
                             Join
                           </Button>
                         )}
-                        <Button variant="secondary" size="sm" leftIcon={<Download className="w-4 h-4" />}>
-                          Prescription
-                        </Button>
                       </div>
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

@@ -6,8 +6,8 @@ import { Hospital } from '../entities/Hospital.entity';
 import { NotificationService } from './notification.service';
 import { SocketService } from './socket.service';
 import { GoogleCalendarService } from './google-calendar.service';
-import { CreateAppointmentDto, AppointmentWithDetails, TimeSlot, AppointmentType } from '../types/appointment.types';
-import { Between } from 'typeorm';
+import { CreateAppointmentDto, AppointmentWithDetails, TimeSlot, AppointmentType, ACTIVE_APPOINTMENT_STATUSES } from '../types/appointment.types';
+import { Between, In, QueryFailedError } from 'typeorm';
 
 // If you use alertService you must import its type and inject/define it properly; here we add it as optional on the class.
 export class AppointmentService {
@@ -51,7 +51,7 @@ export class AppointmentService {
       where: {
         doctorId,
         scheduledTime: Between(startOfDay, endOfDay),
-        status: 'scheduled'
+        status: In(ACTIVE_APPOINTMENT_STATUSES),
       }
     });
 
@@ -134,26 +134,10 @@ export class AppointmentService {
     const endTime = new Date(data.scheduledTime);
     endTime.setMinutes(endTime.getMinutes() + duration);
 
-    // Generate Google Meet link for online appointments
-    let meetLink: string | null = null;
-    if (data.appointmentType === 'online') {
-      const patientEmail = patient.user?.email;
-      const doctorEmail = doctor.email;
-      const meetResult = await this.calendarService.createMeetingEvent(
-        patient.user?.name || 'Patient',
-        doctor.name,
-        data.scheduledTime,
-        endTime,
-        patientEmail,
-        doctorEmail,
-        doctor.googleRefreshToken
-      );
-      if (meetResult.success) {
-        meetLink = meetResult.meetLink;
-      }
-    }
-
-    // Create appointment
+    // Booking only *requests* the slot — the doctor must confirm before it's
+    // final. The Google Meet link is generated on confirmation (see
+    // updateAppointmentStatus), not here, so we never hand a patient a
+    // meeting link for a visit the doctor hasn't actually accepted yet.
     const appointment = this.appointmentRepository.create({
       patientId: data.patientId,
       doctorId: data.doctorId,
@@ -164,11 +148,22 @@ export class AppointmentService {
       duration,
       symptoms: data.symptoms || [],
       notes: data.notes,
-      status: 'scheduled',
-      meetingLink: meetLink,
+      status: 'pending_confirmation',
+      meetingLink: null,
     });
 
-    await this.appointmentRepository.save(appointment);
+    try {
+      await this.appointmentRepository.save(appointment);
+    } catch (err: unknown) {
+      // Postgres error code 23505 = unique_violation. Two requests can both
+      // pass the getAvailableSlots check above before either INSERT lands;
+      // the partial unique index on (doctorId, scheduledTime) is the actual
+      // guard, and this is where a losing request finds out.
+      if (err instanceof QueryFailedError && (err as any).code === '23505') {
+        throw new Error('This time slot was just booked by someone else — please pick another time.');
+      }
+      throw err;
+    }
 
     // Prepare response with details
     const appointmentWithDetails: AppointmentWithDetails = {
@@ -238,8 +233,8 @@ export class AppointmentService {
       this.socketService.broadcastPatientTransition({
         patientId: data.patientId.toString(),
         patientName: appointmentWithDetails.patientName,
-        fromStatus: 'scheduled',
-        toStatus: 'appointment-booked',
+        fromStatus: 'none',
+        toStatus: 'appointment-requested',
         priority: data.symptoms?.length ? 3 : 5,
         timestamp: new Date()
       });
@@ -248,44 +243,44 @@ export class AppointmentService {
     return appointmentWithDetails;
   }
 
+  // Fired right after a patient submits a booking request — nothing is
+  // confirmed yet, so the copy here must not claim otherwise. The doctor
+  // gets the actionable notification; the patient gets a "we'll let you
+  // know" one. Compare to the confirmation-time messaging sent from
+  // updateAppointmentStatus once the doctor actually accepts.
   private async sendAppointmentNotifications(appointment: AppointmentWithDetails) {
     const appointmentTime = new Date(appointment.scheduledTime).toLocaleString('en-IN', {
       dateStyle: 'full',
       timeStyle: 'short'
     });
 
-    let message = `Your appointment with Dr. ${appointment.doctorName} on ${appointmentTime} has been confirmed.`;
-
-    if (appointment.meetingLink) {
-      message += `\n\n📹 Video Consultation Link: ${appointment.meetingLink}`;
-      message += `\n\nThis link will be active at the scheduled time.`;
-    }
+    const patientMessage = `Your appointment request with Dr. ${appointment.doctorName} for ${appointmentTime} has been sent. You'll get a confirmation as soon as the doctor accepts.`;
 
     await this.notificationService.sendNotification(
       appointment.patientId.toString(),
       'patient',
       'sms',
-      'high',
-      'Appointment Confirmed',
-      message
+      'medium',
+      'Appointment Request Sent',
+      patientMessage
     );
 
     await this.notificationService.sendNotification(
       appointment.patientId.toString(),
       'patient',
       'email',
-      'high',
-      `Appointment Confirmed with Dr. ${appointment.doctorName}`,
-      message
+      'medium',
+      `Appointment Request Sent to Dr. ${appointment.doctorName}`,
+      patientMessage
     );
 
     await this.notificationService.sendNotification(
       appointment.doctorId.toString(),
       'doctor',
       'inapp',
-      'medium',
-      'New Appointment',
-      `New appointment scheduled with ${appointment.patientName} on ${appointmentTime}`
+      'high',
+      'New Appointment Request',
+      `${appointment.patientName} requested a ${appointment.appointmentType} appointment for ${appointmentTime}. Please confirm or decline.`
     );
   }
 
@@ -389,32 +384,101 @@ export class AppointmentService {
 
     if (!appointment) throw new Error('Appointment not found');
 
+    const wasPending = appointment.status === 'pending_confirmation';
+
     appointment.status = status;
     if (reason) appointment.cancellationReason = reason;
     if (status === 'completed') appointment.actualTime = new Date();
 
+    // Doctor just confirmed a pending request: this is when we actually
+    // generate the Google Meet link/calendar event, not at booking time —
+    // a patient should never hold a meeting link for a visit that wasn't
+    // accepted yet.
+    if (status === 'confirmed' && appointment.appointmentType === 'online' && !appointment.meetingLink) {
+      const endTime = appointment.endTime || new Date(new Date(appointment.scheduledTime).getTime() + (appointment.duration || 30) * 60000);
+      const meetResult = await this.calendarService.createMeetingEvent(
+        appointment.patient?.user?.name || 'Patient',
+        appointment.doctor?.name || 'Doctor',
+        appointment.scheduledTime,
+        endTime,
+        appointment.patient?.user?.email,
+        appointment.doctor?.email,
+        appointment.doctor?.googleRefreshToken
+      );
+      if (meetResult.success) {
+        appointment.meetingLink = meetResult.meetLink;
+      }
+    }
+
     await this.appointmentRepository.save(appointment);
 
-    const message = status === 'cancelled'
-      ? `Your appointment has been cancelled${reason ? ': ' + reason : ''}`
-      : `Your appointment status has been updated to ${status}`;
+    const appointmentTime = new Date(appointment.scheduledTime).toLocaleString('en-IN', {
+      dateStyle: 'full',
+      timeStyle: 'short'
+    });
+
+    let title: string;
+    let message: string;
+
+    if (status === 'confirmed') {
+      title = 'Appointment Confirmed';
+      message = `Your appointment with Dr. ${appointment.doctor?.name || ''} on ${appointmentTime} has been confirmed.`;
+      if (appointment.meetingLink) {
+        message += `\n\n📹 Video Consultation Link: ${appointment.meetingLink}\n\nThis link will be active at the scheduled time.`;
+      } else if (appointment.appointmentType === 'online') {
+        message += `\n\nYour doctor hasn't connected Google Calendar yet, so a video link couldn't be generated automatically — the clinic will follow up with details.`;
+      }
+    } else if (status === 'cancelled') {
+      title = wasPending ? 'Appointment Request Declined' : 'Appointment Cancelled';
+      message = wasPending
+        ? `Dr. ${appointment.doctor?.name || ''} was unable to accept your request for ${appointmentTime}${reason ? `: ${reason}` : '.'} Please choose another time.`
+        : `Your appointment has been cancelled${reason ? ': ' + reason : '.'}`;
+    } else {
+      title = `Appointment ${status}`;
+      message = `Your appointment status has been updated to ${status}`;
+    }
 
     await this.notificationService.sendNotification(
       appointment.patientId.toString(),
       'patient',
       'sms',
-      'medium',
-      `Appointment ${status}`,
+      status === 'confirmed' ? 'high' : 'medium',
+      title,
+      message
+    );
+
+    await this.notificationService.sendNotification(
+      appointment.patientId.toString(),
+      'patient',
+      'email',
+      status === 'confirmed' ? 'high' : 'medium',
+      title,
+      message
+    );
+
+    // Let the patient's open tab react live instead of waiting for a refresh.
+    await this.notificationService.sendNotification(
+      appointment.patientId.toString(),
+      'patient',
+      'inapp',
+      status === 'confirmed' ? 'high' : 'medium',
+      title,
       message
     );
 
     this.socketService.broadcastPatientTransition({
       patientId: appointment.patientId.toString(),
       patientName: appointment.patient?.user?.name || 'Patient',
-      fromStatus: 'appointment-booked',
+      fromStatus: wasPending ? 'appointment-requested' : 'appointment-booked',
       toStatus: `appointment-${status}`,
       timestamp: new Date()
     });
+
+    // Never let a password hash leave this service — `patient.user` is only
+    // loaded here to read name/email/phone.
+    if (appointment.patient?.user) {
+      delete (appointment.patient.user as any).password;
+    }
 
     return appointment;
   }
@@ -427,7 +491,7 @@ export class AppointmentService {
     const appointments = await this.appointmentRepository.find({
       where: {
         scheduledTime: Between(now, tomorrow),
-        status: 'scheduled'
+        status: In(ACTIVE_APPOINTMENT_STATUSES),
       },
       relations: ['patient', 'patient.user', 'doctor', 'hospital'],
       order: { scheduledTime: 'ASC' }
@@ -497,7 +561,8 @@ export class AppointmentService {
       appointment.scheduledTime,
       endTime,
       patientEmail,
-      doctorEmail
+      doctorEmail,
+      appointment.doctor?.googleRefreshToken
     );
 
     if (!meetResult.success) {

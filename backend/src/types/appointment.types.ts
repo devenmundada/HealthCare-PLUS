@@ -1,4 +1,6 @@
-export type AppointmentStatus = 'scheduled' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled' | 'no-show';
+export type AppointmentStatus = 'pending_confirmation' | 'scheduled' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled' | 'no-show';
+// Statuses that hold a doctor's calendar slot and must block new bookings for the same time.
+export const ACTIVE_APPOINTMENT_STATUSES: AppointmentStatus[] = ['pending_confirmation', 'scheduled', 'confirmed'];
 export type AppointmentType = 'online' | 'in-person' | 'emergency';
 
 export interface Appointment {

@@ -30,11 +30,15 @@ class RealtimeService {
     });
 
     this.socket.on('doctor:status', (data) => {
-      is.emit('doctor:status', data);
+      this.emit('doctor:status', data);
     });
 
     this.socket.on('alert:emergency', (data) => {
       this.emit('alert:emergency', data);
+    });
+
+    this.socket.on('notification:new', (data) => {
+      this.emit('notification:new', data);
     });
 
     return this;
@@ -45,6 +49,12 @@ class RealtimeService {
       this.listeners.set(event, []);
     }
     this.listeners.get(event)?.push(callback);
+  }
+
+  off(event: string, callback: Function) {
+    const callbacks = this.listeners.get(event);
+    if (!callbacks) return;
+    this.listeners.set(event, callbacks.filter((cb) => cb !== callback));
   }
 
   private emit(event: string, data: any) {

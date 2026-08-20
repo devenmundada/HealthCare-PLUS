@@ -1,18 +1,21 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { Container } from '../../components/layout/Container';
 import { GlassCard } from '../../components/layout/GlassCard';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
-import { Calendar, Clock, Video, Phone, MapPin, Users, Stethoscope, AlertTriangle } from 'lucide-react';
+import { Calendar, Clock, Video, Phone, Mail, MapPin, Users, AlertTriangle, Check, X, Loader2 } from 'lucide-react';
 import axios from 'axios';
 import { useRealtime } from '../../contexts/RealtimeContext';
+import realtimeService from '../../services/realtime.service';
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://healthcare-backend-tylz.onrender.com/api';
 
 interface Appointment {
   id: number;
   patientName: string;
+  patientPhone?: string;
+  patientEmail?: string;
   scheduledTime: string;
   appointmentType: string;
   status: string;
@@ -20,18 +23,24 @@ interface Appointment {
   symptoms?: string[];
 }
 
+const STATUS_BADGE: Record<string, { variant: 'success' | 'warning' | 'error' | 'default'; label: string }> = {
+  pending_confirmation: { variant: 'warning', label: 'Needs your response' },
+  confirmed: { variant: 'success', label: 'Confirmed' },
+  scheduled: { variant: 'success', label: 'Confirmed' },
+  cancelled: { variant: 'error', label: 'Cancelled' },
+  completed: { variant: 'default', label: 'Completed' },
+};
+
 export const DoctorDashboard: React.FC = () => {
   const { user } = useAuth();
   const { emergencies } = useRealtime();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'today' | 'upcoming' | 'past'>('today');
+  const [respondingId, setRespondingId] = useState<number | null>(null);
+  const [contactOpenId, setContactOpenId] = useState<number | null>(null);
 
-  useEffect(() => {
-    fetchAppointments();
-  }, []);
-
-  const fetchAppointments = async () => {
+  const fetchAppointments = useCallback(async () => {
     try {
       const response = await axios.get(`${API_URL}/appointments/doctor/${user?.id}`);
       if (response.data.success) {
@@ -42,20 +51,54 @@ export const DoctorDashboard: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.id]);
+
+  useEffect(() => {
+    fetchAppointments();
+  }, [fetchAppointments]);
+
+  // Live-refresh when a new booking request comes in or another session
+  // (e.g. this doctor logged in on another tab) changes an appointment's
+  // status, instead of requiring a manual page reload.
+  useEffect(() => {
+    const onTransition = () => fetchAppointments();
+    const onNotification = () => fetchAppointments();
+    realtimeService.on('patient:transition', onTransition);
+    realtimeService.on('notification:new', onNotification);
+    return () => {
+      realtimeService.off('patient:transition', onTransition);
+      realtimeService.off('notification:new', onNotification);
+    };
+  }, [fetchAppointments]);
 
   const handleStartMeeting = (meetingLink: string) => {
     window.open(meetingLink, '_blank');
   };
 
+  const respondToAppointment = async (id: number, status: 'confirmed' | 'cancelled') => {
+    setRespondingId(id);
+    try {
+      const reason = status === 'cancelled' ? window.prompt('Reason for declining (optional):') || undefined : undefined;
+      await axios.patch(`${API_URL}/appointments/${id}/status`, { status, reason });
+      await fetchAppointments();
+    } catch (error) {
+      console.error('Failed to update appointment:', error);
+      alert("Couldn't update this appointment — please try again.");
+    } finally {
+      setRespondingId(null);
+    }
+  };
+
   const filteredAppointments = appointments.filter(apt => {
     const aptDate = new Date(apt.scheduledTime).toDateString();
     const today = new Date().toDateString();
-    
+
     if (activeTab === 'today') return aptDate === today;
     if (activeTab === 'upcoming') return new Date(apt.scheduledTime) > new Date();
     return new Date(apt.scheduledTime) < new Date();
   });
+
+  const pendingCount = appointments.filter((a) => a.status === 'pending_confirmation').length;
 
   return (
     <div className="min-h-screen bg-background-primary py-8">
@@ -91,6 +134,16 @@ export const DoctorDashboard: React.FC = () => {
             <Button variant="secondary" size="sm">Mark Unavailable</Button>
           </div>
         </div>
+
+        {/* Pending Requests Banner */}
+        {pendingCount > 0 && (
+          <div className="mb-6 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg flex items-center gap-3">
+            <Clock className="w-5 h-5 text-amber-600 flex-shrink-0" />
+            <p className="text-sm text-amber-800 dark:text-amber-300">
+              You have <strong>{pendingCount}</strong> appointment request{pendingCount > 1 ? 's' : ''} waiting for your response.
+            </p>
+          </div>
+        )}
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
@@ -170,42 +223,102 @@ export const DoctorDashboard: React.FC = () => {
             </div>
           ) : (
             <div className="space-y-4">
-              {filteredAppointments.map((apt) => (
-                <div key={apt.id} className="p-4 border rounded-lg hover:shadow-md transition-shadow">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h3 className="font-bold text-lg">{apt.patientName}</h3>
-                      <div className="flex items-center gap-4 mt-2 text-sm text-neutral-500">
-                        <div className="flex items-center gap-1">
-                          <Clock className="w-4 h-4" />
-                          {new Date(apt.scheduledTime).toLocaleTimeString()}
+              {filteredAppointments.map((apt) => {
+                const statusInfo = STATUS_BADGE[apt.status] || { variant: 'default' as const, label: apt.status };
+                const isPending = apt.status === 'pending_confirmation';
+                const isResponding = respondingId === apt.id;
+
+                return (
+                  <div
+                    key={apt.id}
+                    className={`p-4 border rounded-lg hover:shadow-md transition-shadow ${
+                      isPending ? 'border-amber-300 dark:border-amber-700 bg-amber-50/40 dark:bg-amber-900/10' : ''
+                    }`}
+                  >
+                    <div className="flex items-start justify-between flex-wrap gap-3">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="font-bold text-lg">{apt.patientName}</h3>
+                          <Badge variant={statusInfo.variant} size="sm">{statusInfo.label}</Badge>
                         </div>
-                        <div className="flex items-center gap-1">
-                          {apt.appointmentType === 'online' ? <Video className="w-4 h-4" /> : <MapPin className="w-4 h-4" />}
-                          {apt.appointmentType}
+                        <div className="flex items-center gap-4 mt-2 text-sm text-neutral-500">
+                          <div className="flex items-center gap-1">
+                            <Clock className="w-4 h-4" />
+                            {new Date(apt.scheduledTime).toLocaleString()}
+                          </div>
+                          <div className="flex items-center gap-1">
+                            {apt.appointmentType === 'online' ? <Video className="w-4 h-4" /> : <MapPin className="w-4 h-4" />}
+                            {apt.appointmentType}
+                          </div>
                         </div>
+                        {apt.symptoms && apt.symptoms.length > 0 && (
+                          <div className="flex gap-1 mt-2">
+                            {apt.symptoms.map((s, i) => (
+                              <Badge key={i} variant="outline" size="sm">{s}</Badge>
+                            ))}
+                          </div>
+                        )}
+
+                        {contactOpenId === apt.id && (
+                          <div className="mt-3 flex flex-col gap-1 text-sm">
+                            {apt.patientPhone && (
+                              <a href={`tel:${apt.patientPhone}`} className="text-primary-600 hover:underline flex items-center gap-1">
+                                <Phone className="w-3.5 h-3.5" /> {apt.patientPhone}
+                              </a>
+                            )}
+                            {apt.patientEmail && (
+                              <a href={`mailto:${apt.patientEmail}`} className="text-primary-600 hover:underline flex items-center gap-1">
+                                <Mail className="w-3.5 h-3.5" /> {apt.patientEmail}
+                              </a>
+                            )}
+                            {!apt.patientPhone && !apt.patientEmail && (
+                              <span className="text-neutral-400">No contact details on file</span>
+                            )}
+                          </div>
+                        )}
                       </div>
-                      {apt.symptoms && apt.symptoms.length > 0 && (
-                        <div className="flex gap-1 mt-2">
-                          {apt.symptoms.map((s, i) => (
-                            <Badge key={i} variant="outline" size="sm">{s}</Badge>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex gap-2">
-                      {apt.appointmentType === 'online' && apt.meetingLink && (
-                        <Button size="sm" leftIcon={<Video className="w-4 h-4" />} onClick={() => handleStartMeeting(apt.meetingLink!)}>
-                          Join Meeting
+
+                      <div className="flex gap-2 flex-wrap">
+                        {isPending && (
+                          <>
+                            <Button
+                              size="sm"
+                              variant="clinical"
+                              leftIcon={isResponding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                              disabled={isResponding}
+                              onClick={() => respondToAppointment(apt.id, 'confirmed')}
+                            >
+                              Accept
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="danger"
+                              leftIcon={<X className="w-4 h-4" />}
+                              disabled={isResponding}
+                              onClick={() => respondToAppointment(apt.id, 'cancelled')}
+                            >
+                              Decline
+                            </Button>
+                          </>
+                        )}
+                        {apt.appointmentType === 'online' && apt.meetingLink && (
+                          <Button size="sm" leftIcon={<Video className="w-4 h-4" />} onClick={() => handleStartMeeting(apt.meetingLink!)}>
+                            Join Meeting
+                          </Button>
+                        )}
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          leftIcon={<Phone className="w-4 h-4" />}
+                          onClick={() => setContactOpenId(contactOpenId === apt.id ? null : apt.id)}
+                        >
+                          Contact
                         </Button>
-                      )}
-                      <Button variant="secondary" size="sm" leftIcon={<Phone className="w-4 h-4" />}>
-                        Contact
-                      </Button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </GlassCard>

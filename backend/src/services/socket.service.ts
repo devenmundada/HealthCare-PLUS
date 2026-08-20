@@ -54,6 +54,12 @@ export class SocketService {
         socket.join(`role:${userType}`);
         this.connectedUsers.get(socket.id)?.rooms.push(`role:${userType}`);
 
+        // Join this user's personal room — sendNotificationToUser() below
+        // targets `user:${userId}` specifically, so without this join
+        // in-app notifications are emitted to an empty room and vanish.
+        socket.join(`user:${userId}`);
+        this.connectedUsers.get(socket.id)?.rooms.push(`user:${userId}`);
+
         // If doctor, join doctor-specific room
         if (userType === 'doctor') {
           socket.join(`doctor:${userId}`);

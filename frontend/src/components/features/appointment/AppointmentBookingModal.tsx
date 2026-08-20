@@ -8,6 +8,7 @@ import {
   MapPin,
   AlertCircle,
   ExternalLink,
+  Loader2,
 } from "lucide-react";
 import { useAuth } from "../../../contexts/AuthContext";
 import realtimeService from "../../../services/realtime.service";
@@ -17,7 +18,14 @@ interface DoctorOption {
   name: string;
   specialization?: string;
   hospitalId?: number | null;
+  hospitalName?: string | null;
   available?: string[];
+}
+
+interface TimeSlotOption {
+  startTime: string; // ISO
+  endTime: string; // ISO
+  available: boolean;
 }
 
 interface AppointmentBookingModalProps {
@@ -48,6 +56,13 @@ const AppointmentBookingModal: React.FC<AppointmentBookingModalProps> = ({
     message: string;
   } | null>(null);
 
+  const [doctors, setDoctors] = useState<DoctorOption[]>([]);
+  const [doctorsLoading, setDoctorsLoading] = useState(false);
+  const [doctorsError, setDoctorsError] = useState<string | null>(null);
+
+  const [slots, setSlots] = useState<TimeSlotOption[]>([]);
+  const [slotsLoading, setSlotsLoading] = useState(false);
+
   // Use initial doctor from props or internal selection
   const activeDoctor = selectedDoctor ?? initialDoctor;
 
@@ -63,18 +78,44 @@ const AppointmentBookingModal: React.FC<AppointmentBookingModalProps> = ({
     return dates;
   };
 
-  const availableDates = activeDoctor?.available ?? generateNextDays(7);
+  const availableDates = generateNextDays(7);
 
-  const doctors = [
-    { id: 1, name: "Dr. Sarah Chen", specialization: "Cardiology", available: generateNextDays(7) },
-    { id: 2, name: "Dr. Michael Rodriguez", specialization: "Neurology", available: generateNextDays(5) },
-    { id: 3, name: "Dr. Emma Johnson", specialization: "Pediatrics", available: generateNextDays(10) },
-  ];
+  // Load the real doctor list from the backend when the picker step is shown.
+  useEffect(() => {
+    if (!isOpen || initialDoctor) return;
 
-  const timeSlots = [
-    "9:00 AM", "9:30 AM", "10:00 AM", "10:30 AM", "11:00 AM", "11:30 AM",
-    "2:00 PM", "2:30 PM", "3:00 PM", "3:30 PM", "4:00 PM", "4:30 PM",
-  ];
+    let cancelled = false;
+    setDoctorsLoading(true);
+    setDoctorsError(null);
+
+    realtimeService
+      .getDoctors()
+      .then((res) => {
+        if (cancelled) return;
+        const raw: any[] = res?.data?.doctors ?? res?.data ?? [];
+        setDoctors(
+          raw.map((d) => ({
+            id: d.id,
+            name: d.name,
+            specialization: d.specialty || d.specialization,
+            hospitalId: d.hospitalId ?? null,
+            hospitalName: d.hospital_name ?? d.hospitalName ?? null,
+          }))
+        );
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        console.error("Failed to load doctors:", err);
+        setDoctorsError("Couldn't load the doctor list. Please try again.");
+      })
+      .finally(() => {
+        if (!cancelled) setDoctorsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, initialDoctor]);
 
   // If initialDoctor is passed, skip step 1
   useEffect(() => {
@@ -89,32 +130,38 @@ const AppointmentBookingModal: React.FC<AppointmentBookingModalProps> = ({
     setBookingSuccess(null);
   }, [initialDoctor, isOpen]);
 
-  const getAvailableTimeSlots = () => {
-    if (!selectedDate) return [];
-    const now = new Date();
-    const selected = new Date(selectedDate);
-    return timeSlots.filter((time) => {
-      const isToday = selected.toDateString() === now.toDateString();
-      if (!isToday) return true;
-      const [hourMinute, period] = time.split(" ");
-      let [hour, minute] = hourMinute.split(":").map(Number);
-      if (period === "PM" && hour !== 12) hour += 12;
-      if (period === "AM" && hour === 12) hour = 0;
-      const slotTime = new Date(selectedDate);
-      slotTime.setHours(hour, minute, 0);
-      return slotTime > now;
-    });
-  };
+  // Load this doctor's real open/booked slots for the selected date.
+  useEffect(() => {
+    if (!activeDoctor || !selectedDate) {
+      setSlots([]);
+      return;
+    }
+    let cancelled = false;
+    setSlotsLoading(true);
+    setSelectedTime("");
 
-  const parseTimeToISO = (dateStr: string, timeStr: string): string => {
-    const [hourMinute, period] = timeStr.split(" ");
-    let [hour, minute] = hourMinute.split(":").map(Number);
-    if (period === "PM" && hour !== 12) hour += 12;
-    if (period === "AM" && hour === 12) hour = 0;
-    const d = new Date(dateStr);
-    d.setHours(hour, minute, 0, 0);
-    return d.toISOString();
-  };
+    realtimeService
+      .getAvailableSlots(parseInt(String(activeDoctor.id)), selectedDate)
+      .then((res) => {
+        if (cancelled) return;
+        setSlots(res?.data ?? []);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        console.error("Failed to load slots:", err);
+        setSlots([]);
+      })
+      .finally(() => {
+        if (!cancelled) setSlotsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeDoctor, selectedDate]);
+
+  const formatSlotTime = (iso: string) =>
+    new Date(iso).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
 
   const handleSubmit = async () => {
     if (!activeDoctor || !selectedDate || !selectedTime) return;
@@ -136,32 +183,31 @@ const AppointmentBookingModal: React.FC<AppointmentBookingModalProps> = ({
         return;
       }
 
-      const scheduledTime = parseTimeToISO(selectedDate, selectedTime);
       const payload = {
         patientId,
         doctorId: parseInt(String(activeDoctor.id)),
         hospitalId: (activeDoctor as any).hospitalId ?? undefined,
         appointmentType: consultationType === "video" ? "online" : "in-person",
-        scheduledTime,
+        scheduledTime: selectedTime, // already an ISO string from the real slot
         duration: 30,
         symptoms: [],
       };
 
-      const response = await realtimeService.bookAppointment(payload);
-      const appointment = response?.data ?? response;
+      await realtimeService.bookAppointment(payload);
 
-      const message = `Appointment booked successfully with ${activeDoctor.name} on ${selectedDate} at ${selectedTime}.`;
+      // Booking only sends a request — the doctor still has to accept it.
+      // No meeting link exists yet even for video: that's generated once
+      // the doctor confirms, so we don't hand out a link (or claim a
+      // calendar event was created) for a visit that isn't accepted yet.
+      const message = `Your request to see ${activeDoctor.name} on ${new Date(
+        selectedDate
+      ).toLocaleDateString()} at ${formatSlotTime(selectedTime)} has been sent.`;
 
       setBookingSuccess({
-        meetLink: appointment?.meetingLink ?? null,
-        // Only claim a calendar event exists when the backend actually returned
-        // a meet link — otherwise say plainly why there isn't one.
+        meetLink: null,
         calendarNote:
-          consultationType === "video"
-            ? appointment?.meetingLink
-              ? "A Google Meet link was created and added to the doctor's calendar. You've been invited by email."
-              : "This doctor hasn't enabled video consultations (Google Calendar not connected) yet — your appointment is booked, but no meeting link was created. Please contact the clinic for details."
-            : null,
+          "You'll get a notification as soon as the doctor confirms" +
+          (consultationType === "video" ? " — the Google Meet link will be included then." : "."),
         message,
       });
     } catch (err: any) {
@@ -240,12 +286,33 @@ const AppointmentBookingModal: React.FC<AppointmentBookingModalProps> = ({
             {step === 1 && (
               <div>
                 <h3 className="font-semibold mb-3 text-neutral-900 dark:text-white">Select Doctor</h3>
+
+                {doctorsLoading && (
+                  <div className="flex items-center gap-2 text-neutral-500 py-6 justify-center">
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Loading doctors...
+                  </div>
+                )}
+
+                {doctorsError && (
+                  <div className="mb-3 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-center gap-2 text-red-700 dark:text-red-300">
+                    <AlertCircle className="flex-shrink-0 w-4 h-4" />
+                    <span className="text-sm">{doctorsError}</span>
+                  </div>
+                )}
+
+                {!doctorsLoading && !doctorsError && doctors.length === 0 && (
+                  <p className="text-sm text-neutral-500 py-6 text-center">
+                    No doctors are available to book right now.
+                  </p>
+                )}
+
                 {doctors.map((doc) => (
                   <div
                     key={doc.id}
                     className="border dark:border-neutral-600 p-3 rounded-lg mb-2 cursor-pointer hover:border-blue-500 dark:hover:border-primary-500"
                     onClick={() => {
-                      setSelectedDoctor(doc as DoctorOption);
+                      setSelectedDoctor(doc);
                       setStep(2);
                     }}
                   >
@@ -253,7 +320,10 @@ const AppointmentBookingModal: React.FC<AppointmentBookingModalProps> = ({
                       <User className="mr-3 text-neutral-600 dark:text-neutral-400" />
                       <div>
                         <div className="font-medium text-neutral-900 dark:text-white">{doc.name}</div>
-                        <div className="text-sm text-neutral-500">{doc.specialization}</div>
+                        <div className="text-sm text-neutral-500">
+                          {doc.specialization}
+                          {doc.hospitalName ? ` · ${doc.hospitalName}` : ""}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -284,22 +354,37 @@ const AppointmentBookingModal: React.FC<AppointmentBookingModalProps> = ({
                     </button>
                   ))}
                 </div>
-                {selectedDate && (
+                {selectedDate && slotsLoading && (
+                  <div className="flex items-center gap-2 text-neutral-500 py-4 justify-center">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Checking {activeDoctor?.name}'s availability...
+                  </div>
+                )}
+
+                {selectedDate && !slotsLoading && slots.filter((s) => s.available).length === 0 && (
+                  <p className="text-sm text-neutral-500 py-4 text-center">
+                    No open slots with {activeDoctor?.name} on this day — try another date.
+                  </p>
+                )}
+
+                {selectedDate && !slotsLoading && slots.filter((s) => s.available).length > 0 && (
                   <div className="grid grid-cols-3 gap-2 mb-4">
-                    {getAvailableTimeSlots().map((time) => (
-                      <button
-                        key={time}
-                        onClick={() => setSelectedTime(time)}
-                        className={`p-2 border rounded flex items-center gap-1 ${
-                          selectedTime === time
-                            ? "bg-blue-100 dark:bg-primary-900/30 border-blue-500 dark:border-primary-500"
-                            : "dark:border-neutral-600 dark:text-neutral-300"
-                        }`}
-                      >
-                        <Clock className="w-4" />
-                        {time}
-                      </button>
-                    ))}
+                    {slots
+                      .filter((s) => s.available)
+                      .map((slot) => (
+                        <button
+                          key={slot.startTime}
+                          onClick={() => setSelectedTime(slot.startTime)}
+                          className={`p-2 border rounded flex items-center gap-1 ${
+                            selectedTime === slot.startTime
+                              ? "bg-blue-100 dark:bg-primary-900/30 border-blue-500 dark:border-primary-500"
+                              : "dark:border-neutral-600 dark:text-neutral-300"
+                          }`}
+                        >
+                          <Clock className="w-4" />
+                          {formatSlotTime(slot.startTime)}
+                        </button>
+                      ))}
                   </div>
                 )}
                 <div className="flex gap-4 mb-4">
@@ -341,13 +426,13 @@ const AppointmentBookingModal: React.FC<AppointmentBookingModalProps> = ({
                 <h3 className="font-semibold mb-3 text-neutral-900 dark:text-white">Confirm Appointment</h3>
                 <div className="border dark:border-neutral-600 p-3 rounded mb-4">
                   <p><strong>Doctor:</strong> {activeDoctor?.name}</p>
-                  <p><strong>Date:</strong> {selectedDate}</p>
-                  <p><strong>Time:</strong> {selectedTime}</p>
+                  <p><strong>Date:</strong> {selectedDate && new Date(selectedDate).toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}</p>
+                  <p><strong>Time:</strong> {selectedTime && formatSlotTime(selectedTime)}</p>
                   <p><strong>Type:</strong> {consultationType === "video" ? "Video (Google Meet)" : "In-Person"}</p>
                 </div>
                 {consultationType === "video" && (
                   <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-3">
-                    A Google Meet link will be generated and added to your Google Calendar.
+                    Once {activeDoctor?.name} confirms, a Google Meet link will be generated and you'll be notified.
                   </p>
                 )}
                 <button
