@@ -62,6 +62,13 @@ export const Home: React.FC = () => {
   const [isCarouselPaused, setIsCarouselPaused] = useState(false);
   const [selectedArticle, setSelectedArticle] = useState<MedicalInsight | null>(null);
   const [showArticleModal, setShowArticleModal] = useState(false);
+  const [insightCategory, setInsightCategory] = useState<string | null>(null);
+  const [showAllInsights, setShowAllInsights] = useState(false);
+  const [remindersEnabled, setRemindersEnabled] = useState(
+    () => typeof window !== 'undefined' && localStorage.getItem('daily_reminders_enabled') === 'true'
+  );
+  const [newsletterEmail, setNewsletterEmail] = useState('');
+  const [newsletterState, setNewsletterState] = useState<'idle' | 'saved'>('idle');
   
 
 
@@ -290,15 +297,23 @@ export const Home: React.FC = () => {
           const apptJson = await apptRes.json();
           const raw: any[] = apptJson?.data || [];
 
+          const STATUS_LABEL: Record<string, string> = {
+            pending_confirmation: 'Awaiting Confirmation',
+            confirmed: 'Confirmed',
+            scheduled: 'Confirmed',
+            completed: 'Completed',
+            cancelled: 'Cancelled',
+          };
+
           const upcoming = raw
-            .filter((a) => new Date(a.scheduledTime).getTime() >= Date.now() - 60 * 60 * 1000)
+            .filter((a) => a.status !== 'cancelled' && new Date(a.scheduledTime).getTime() >= Date.now() - 60 * 60 * 1000)
             .sort((a, b) => new Date(a.scheduledTime).getTime() - new Date(b.scheduledTime).getTime());
 
           setAppointments(
             upcoming.map((a) => ({
               id: a.id,
               type: a.appointmentType === 'online' ? 'Video Consultation' : 'In-person',
-              status: a.status === 'scheduled' ? 'Scheduled' : a.status === 'completed' ? 'Completed' : a.status === 'cancelled' ? 'Cancelled' : a.status,
+              status: STATUS_LABEL[a.status] || a.status,
               doctor: a.doctorName ? `Dr. ${a.doctorName}` : 'Doctor',
               specialization: a.doctorSpecialty || '',
               date: new Date(a.scheduledTime).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }),
@@ -347,18 +362,30 @@ export const Home: React.FC = () => {
               Access personalized appointments, health notifications, and your complete medical history.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-xl mx-auto mb-8">
-              <div className="p-4 rounded-xl bg-white dark:bg-neutral-800">
+              <button
+                onClick={() => navigate('/login')}
+                className="p-4 rounded-xl bg-white dark:bg-neutral-800 hover:ring-2 hover:ring-primary-400 transition-shadow text-center"
+              >
                 <Calendar className="w-6 h-6 text-primary-600 mx-auto mb-2" />
                 <p className="text-sm font-medium">Appointments</p>
-              </div>
-              <div className="p-4 rounded-xl bg-white dark:bg-neutral-800">
+                <p className="text-xs text-neutral-500 mt-1">Sign in to view</p>
+              </button>
+              <button
+                onClick={() => navigate('/login')}
+                className="p-4 rounded-xl bg-white dark:bg-neutral-800 hover:ring-2 hover:ring-primary-400 transition-shadow text-center"
+              >
                 <Bell className="w-6 h-6 text-primary-600 mx-auto mb-2" />
                 <p className="text-sm font-medium">Notifications</p>
-              </div>
-              <div className="p-4 rounded-xl bg-white dark:bg-neutral-800">
+                <p className="text-xs text-neutral-500 mt-1">Sign in to view</p>
+              </button>
+              <button
+                onClick={() => navigate('/login')}
+                className="p-4 rounded-xl bg-white dark:bg-neutral-800 hover:ring-2 hover:ring-primary-400 transition-shadow text-center"
+              >
                 <User className="w-6 h-6 text-primary-600 mx-auto mb-2" />
                 <p className="text-sm font-medium">Personalized Data</p>
-              </div>
+                <p className="text-xs text-neutral-500 mt-1">Sign in to view</p>
+              </button>
             </div>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button
@@ -439,9 +466,10 @@ export const Home: React.FC = () => {
                           {apt.type}
                         </Badge>
                         <Badge variant="outline" className={
-                          apt.status === 'Scheduled' ? 'border-yellow-200 text-yellow-700 dark:border-yellow-800 dark:text-yellow-300' :
-                            apt.status === 'Completed' ? 'border-green-200 text-green-700 dark:border-green-800 dark:text-green-300' :
-                              'border-red-200 text-red-700 dark:border-red-800 dark:text-red-300'
+                          apt.status === 'Confirmed' ? 'border-green-200 text-green-700 dark:border-green-800 dark:text-green-300' :
+                            apt.status === 'Awaiting Confirmation' ? 'border-amber-200 text-amber-700 dark:border-amber-800 dark:text-amber-300' :
+                              apt.status === 'Completed' ? 'border-neutral-200 text-neutral-600 dark:border-neutral-700 dark:text-neutral-400' :
+                                'border-red-200 text-red-700 dark:border-red-800 dark:text-red-300'
                         }>
                           {apt.status}
                         </Badge>
@@ -578,7 +606,7 @@ export const Home: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-neutral-700 dark:text-neutral-300">Appointments</span>
                   <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300">
-                    {appointments.filter((a: any) => a.status === 'Scheduled').length} Upcoming
+                    {appointments.filter((a: any) => a.status === 'Confirmed' || a.status === 'Awaiting Confirmation').length} Upcoming
                   </Badge>
                 </div>
                 <div className="flex items-center justify-between">
@@ -599,6 +627,51 @@ export const Home: React.FC = () => {
         </div>
       </>
     );
+  };
+
+  const filteredInsights = insightCategory
+    ? medicalInsights.filter((a) => a.category === insightCategory)
+    : medicalInsights;
+  const visibleInsights = showAllInsights ? filteredInsights : filteredInsights.slice(0, 4);
+
+  const toggleDailyReminders = async () => {
+    if (remindersEnabled) {
+      setRemindersEnabled(false);
+      localStorage.setItem('daily_reminders_enabled', 'false');
+      return;
+    }
+    if (typeof Notification === 'undefined') {
+      alert("Your browser doesn't support notifications.");
+      return;
+    }
+    const permission = await Notification.requestPermission();
+    if (permission === 'granted') {
+      setRemindersEnabled(true);
+      localStorage.setItem('daily_reminders_enabled', 'true');
+      new Notification('Daily reminders enabled', {
+        body: "We'll remind you here each day to check in on your wellness goals.",
+      });
+    } else {
+      alert('Notification permission was denied. Enable it in your browser settings to receive daily reminders.');
+    }
+  };
+
+  const handleNewsletterSubmit = async () => {
+    if (!newsletterEmail || !newsletterEmail.includes('@')) return;
+    const API_URL = import.meta.env.VITE_API_URL || 'https://healthcare-backend-tylz.onrender.com/api';
+    try {
+      const res = await fetch(`${API_URL}/newsletter/subscribe`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: newsletterEmail }),
+      });
+      if (!res.ok) throw new Error('Subscribe failed');
+      setNewsletterState('saved');
+      setNewsletterEmail('');
+    } catch (err) {
+      console.error('Newsletter subscribe failed:', err);
+      alert("Couldn't subscribe right now — please try again shortly.");
+    }
   };
 
   return (
@@ -1094,7 +1167,7 @@ export const Home: React.FC = () => {
             {/* Featured Articles - Main Content */}
             <div className="lg:col-span-2">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {medicalInsights.slice(0, 4).map((article) => (
+                {visibleInsights.map((article) => (
                   <article
                     key={article.id}
                     className="group cursor-pointer"
@@ -1174,16 +1247,19 @@ export const Home: React.FC = () => {
                 ))}
               </div>
 
-              {/* View All Button */}
-              <div className="mt-8 text-center">
-                <Button
-                  variant="secondary"
-                  leftIcon={<TrendingUp className="w-4 h-4" />}
-                  className="border-primary-200 dark:border-primary-800 text-primary-700 dark:text-primary-300 hover:bg-primary-50 dark:hover:bg-primary-900/30"
-                >
-                  View All Articles
-                </Button>
-              </div>
+              {/* View All / Show Fewer */}
+              {filteredInsights.length > 4 && (
+                <div className="mt-8 text-center">
+                  <Button
+                    variant="secondary"
+                    leftIcon={<TrendingUp className="w-4 h-4" />}
+                    className="border-primary-200 dark:border-primary-800 text-primary-700 dark:text-primary-300 hover:bg-primary-50 dark:hover:bg-primary-900/30"
+                    onClick={() => setShowAllInsights((v) => !v)}
+                  >
+                    {showAllInsights ? 'Show Fewer Articles' : `View All ${filteredInsights.length} Articles`}
+                  </Button>
+                </div>
+              )}
             </div>
 
             {/* Sidebar - Daily Tips & Categories */}
@@ -1195,10 +1271,21 @@ export const Home: React.FC = () => {
                   Browse by Category
                 </h3>
                 <div className="space-y-3">
+                  {insightCategory && (
+                    <button
+                      onClick={() => { setInsightCategory(null); setShowAllInsights(false); }}
+                      className="flex items-center gap-2 text-sm text-primary-600 dark:text-primary-400 hover:underline mb-1"
+                    >
+                      <ChevronLeft className="w-4 h-4" /> All categories
+                    </button>
+                  )}
                   {['Cardiology', 'Respiratory', 'Mental Health', 'Nutrition', 'Preventive Care', 'Pediatrics'].map((category) => (
                     <button
                       key={category}
-                      className="flex items-center justify-between w-full p-3 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors group"
+                      onClick={() => { setInsightCategory(category); setShowAllInsights(false); }}
+                      className={`flex items-center justify-between w-full p-3 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors group ${
+                        insightCategory === category ? 'bg-primary-50 dark:bg-primary-900/20' : ''
+                      }`}
                     >
                       <span className="text-neutral-700 dark:text-neutral-300">{category}</span>
                       <ChevronRight className="w-4 h-4 text-neutral-400 group-hover:translate-x-1 transition-transform" />
@@ -1242,11 +1329,12 @@ export const Home: React.FC = () => {
                 </div>
 
                 <Button
-                  variant="ghost"
+                  variant={remindersEnabled ? 'secondary' : 'ghost'}
                   className="w-full mt-6"
                   leftIcon={<Bell className="w-4 h-4" />}
+                  onClick={toggleDailyReminders}
                 >
-                  Enable Daily Reminders
+                  {remindersEnabled ? 'Daily Reminders Enabled ✓' : 'Enable Daily Reminders'}
                 </Button>
               </Card>
 
@@ -1263,15 +1351,25 @@ export const Home: React.FC = () => {
                     Get weekly evidence-based health tips and research updates
                   </p>
 
+                  {newsletterState === 'saved' ? (
+                    <p className="text-sm text-primary-700 dark:text-primary-300 font-medium">
+                      You're subscribed! Look out for our next issue.
+                    </p>
+                  ) : (
                   <div className="space-y-3">
                     <Input
+                      type="email"
                       placeholder="Your email address"
                       className="bg-white dark:bg-neutral-800"
+                      value={newsletterEmail}
+                      onChange={(e) => setNewsletterEmail(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') handleNewsletterSubmit(); }}
                     />
-                    <Button className="w-full">
+                    <Button className="w-full" onClick={handleNewsletterSubmit} disabled={!newsletterEmail.includes('@')}>
                       Subscribe
                     </Button>
                   </div>
+                  )}
                 </div>
               </Card>
             </div>

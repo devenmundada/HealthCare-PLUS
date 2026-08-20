@@ -96,6 +96,9 @@ console.log('18.5. hospitalsRoutes imported');
 import googleAuthRoutes from './routes/google-auth.routes';
 console.log('18.6. googleAuthRoutes imported');
 
+import newsletterRoutes from './routes/newsletter.routes';
+console.log('18.7. newsletterRoutes imported');
+
 console.log('✅ All imports successful');
 
 const app: Application = express();
@@ -212,6 +215,9 @@ console.log('41. Doctors routes mounted');
 
 app.use(`${apiPrefix}/india/hospitals`, hospitalsRoutes);
 console.log('41.5. Hospitals routes mounted');
+
+app.use(`${apiPrefix}/newsletter`, newsletterRoutes);
+console.log('41.7. Newsletter routes mounted');
 
 app.use(`${apiPrefix}/auth/google`, googleAuthRoutes);
 console.log('41.6. Google auth routes mounted');

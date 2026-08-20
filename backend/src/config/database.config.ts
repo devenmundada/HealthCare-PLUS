@@ -15,11 +15,12 @@ try {
   const DoctorAvailability = require('../entities/DoctorAvailability.entity').DoctorAvailability;
   const WaitTimeSample = require('../entities/WaitTimeSample.entity').WaitTimeSample;
   const User = require('../entities/User.entity').User;
+  const NewsletterSubscriber = require('../entities/NewsletterSubscriber.entity').NewsletterSubscriber;
 
   entities = [
     Doctor, Patient, Hospital, DoctorHospital, Bed,
     Appointment, Admission, Notification, DoctorAvailability,
-    WaitTimeSample, User
+    WaitTimeSample, User, NewsletterSubscriber
   ].filter(entity => entity !== undefined);
 
   console.log(`✅ Loaded ${entities.length} entities successfully`);
