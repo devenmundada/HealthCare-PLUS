@@ -38,8 +38,8 @@ export const WeatherNotifications: React.FC = () => {
   const [locationError, setLocationError] = useState<string | null>(null);
   const [userLocation, setUserLocation] = useState<{ lat: number; lon: number } | null>(null);
 
-  // Mock cities for demo
-  const mockCities = [
+  // Quick-switch shortcuts — real coordinates, fetched live from the API below.
+  const presetCities = [
     { name: 'San Francisco, CA', lat: 37.7749, lon: -122.4194 },
     { name: 'New York, NY', lat: 40.7128, lon: -74.0060 },
     { name: 'Chicago, IL', lat: 41.8781, lon: -87.6298 },
@@ -142,43 +142,88 @@ export const WeatherNotifications: React.FC = () => {
     return 'from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20';
   };
 
-  // Simulate fetching weather data
-  const fetchWeatherData = (lat: number, lon: number, cityName: string) => {
-    setLoading(true);
-    
-    // Mock weather data based on location
-    const mockTemperature = 35 + Math.sin(lat) * 25 + Math.cos(lon) * 15; // Varies by location
-    const mockHumidity = 40 + Math.sin(lat * 2) * 30;
-    const mockWindSpeed = 5 + Math.sin(lon) * 15;
-    const mockAQI = 30 + Math.abs(Math.sin(lat) * 150);
-    
-    const conditions = ['Sunny', 'Partly Cloudy', 'Cloudy', 'Light Rain', 'Clear'];
-    const mockCondition = conditions[Math.floor(Math.abs(Math.sin(lat + lon)) * conditions.length)];
-    
-    const weatherIcon = getWeatherIcon(mockCondition);
-    const advisory = getHealthAdvisory(mockTemperature, mockAQI, mockHumidity, mockCondition);
-    const healthRisks = getHealthRisks(mockTemperature, mockAQI, mockHumidity);
-    const color = getConditionColor(mockTemperature, mockAQI);
+  // WMO weather codes (used by Open-Meteo) -> a human condition label.
+  // https://open-meteo.com/en/docs#weathervariables
+  const wmoToCondition = (code: number): string => {
+    if (code === 0) return 'Clear';
+    if (code <= 2) return 'Partly Cloudy';
+    if (code === 3) return 'Cloudy';
+    if (code >= 45 && code <= 48) return 'Foggy';
+    if (code >= 51 && code <= 67) return 'Light Rain';
+    if (code >= 71 && code <= 77) return 'Snow';
+    if (code >= 80 && code <= 82) return 'Rain';
+    if (code >= 95) return 'Thunderstorm';
+    return 'Clear';
+  };
 
-    setTimeout(() => {
+  // Reverse-geocode coordinates to a human-readable city name (free, keyless).
+  const reverseGeocode = async (lat: number, lon: number): Promise<string> => {
+    try {
+      const res = await fetch(
+        `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`
+      );
+      if (!res.ok) throw new Error('reverse geocode failed');
+      const data = await res.json();
+      const city = data.city || data.locality || data.principalSubdivision;
+      const region = data.principalSubdivision;
+      return city ? (region && region !== city ? `${city}, ${region}` : city) : 'Your Location';
+    } catch {
+      return 'Your Location';
+    }
+  };
+
+  // Fetch real current weather + air quality from Open-Meteo (free, no API key).
+  const fetchWeatherData = async (lat: number, lon: number, cityNameHint?: string) => {
+    setLoading(true);
+
+    try {
+      const [weatherRes, aqiRes, cityName] = await Promise.all([
+        fetch(
+          `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
+            `&current=temperature_2m,relative_humidity_2m,apparent_temperature,wind_speed_10m,weather_code` +
+            `&temperature_unit=fahrenheit&wind_speed_unit=mph`
+        ).then((r) => r.json()),
+        fetch(
+          `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=us_aqi`
+        ).then((r) => r.json()),
+        cityNameHint ? Promise.resolve(cityNameHint) : reverseGeocode(lat, lon),
+      ]);
+
+      const current = weatherRes.current;
+      const temperature = Math.round(current.temperature_2m);
+      const feelsLike = Math.round(current.apparent_temperature);
+      const humidity = Math.round(current.relative_humidity_2m);
+      const windSpeed = Math.round(current.wind_speed_10m);
+      const condition = wmoToCondition(current.weather_code);
+      const aqi = Math.round(aqiRes?.current?.us_aqi ?? 50);
+
+      const weatherIcon = getWeatherIcon(condition);
+      const advisory = getHealthAdvisory(temperature, aqi, humidity, condition);
+      const healthRisks = getHealthRisks(temperature, aqi, humidity);
+      const color = getConditionColor(temperature, aqi);
+
       setWeatherData({
         city: cityName,
-        temperature: Math.round(mockTemperature),
-        condition: mockCondition,
-        humidity: Math.round(mockHumidity),
-        windSpeed: Math.round(mockWindSpeed),
-        aqi: Math.round(mockAQI),
-        feelsLike: Math.round(mockTemperature + (mockHumidity > 70 ? 5 : 0)),
+        temperature,
+        condition,
+        humidity,
+        windSpeed,
+        aqi,
+        feelsLike,
         advisory,
         icon: weatherIcon,
         color,
-        healthRisks
+        healthRisks,
       });
+    } catch (err) {
+      console.error('Failed to fetch live weather/air quality data:', err);
+      setLocationError('Weather service is unavailable right now. Please try again shortly.');
+    } finally {
       setLoading(false);
-    }, 800);
+    }
   };
 
-  // Get user location or use mock
+  // Get the user's real location, falling back to Delhi if denied/unsupported.
   useEffect(() => {
     const getUserLocation = () => {
       if (navigator.geolocation) {
@@ -186,47 +231,38 @@ export const WeatherNotifications: React.FC = () => {
           (position) => {
             const { latitude, longitude } = position.coords;
             setUserLocation({ lat: latitude, lon: longitude });
-            // For demo, use nearest mock city
-            const nearestCity = mockCities.reduce((prev, curr) => {
-              const prevDist = Math.abs(prev.lat - latitude) + Math.abs(prev.lon - longitude);
-              const currDist = Math.abs(curr.lat - latitude) + Math.abs(curr.lon - longitude);
-              return currDist < prevDist ? curr : prev;
-            });
-            fetchWeatherData(latitude, longitude, nearestCity.name);
+            fetchWeatherData(latitude, longitude);
           },
           (error) => {
-            console.warn('Using mock location due to:', error.message);
-            setLocationError('Using demo location. Enable location for personalized data.');
-            // Use first mock city as default
-            const defaultCity = mockCities[0];
+            console.warn('Location permission denied, using default city:', error.message);
+            setLocationError('Enable location access for weather at your exact location.');
+            const defaultCity = presetCities[0];
             setUserLocation({ lat: defaultCity.lat, lon: defaultCity.lon });
             fetchWeatherData(defaultCity.lat, defaultCity.lon, defaultCity.name);
           }
         );
       } else {
-        setLocationError('Geolocation not supported. Using demo location.');
-        const defaultCity = mockCities[0];
+        setLocationError('Geolocation not supported by this browser.');
+        const defaultCity = presetCities[0];
         setUserLocation({ lat: defaultCity.lat, lon: defaultCity.lon });
         fetchWeatherData(defaultCity.lat, defaultCity.lon, defaultCity.name);
       }
     };
 
     getUserLocation();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Handle city selection
-  const handleCitySelect = (city: typeof mockCities[0]) => {
+  const handleCitySelect = (city: typeof presetCities[0]) => {
     setUserLocation({ lat: city.lat, lon: city.lon });
     fetchWeatherData(city.lat, city.lon, city.name);
   };
 
-  // Refresh weather data
+  // Refresh weather data for whatever location is currently shown
   const handleRefresh = () => {
     if (userLocation) {
-      const city = mockCities.find(c => 
-        Math.abs(c.lat - userLocation.lat) < 1 && Math.abs(c.lon - userLocation.lon) < 1
-      ) || mockCities[0];
-      fetchWeatherData(userLocation.lat, userLocation.lon, city.name);
+      fetchWeatherData(userLocation.lat, userLocation.lon, weatherData?.city);
     }
   };
 
@@ -420,7 +456,7 @@ export const WeatherNotifications: React.FC = () => {
             <div className="p-4 rounded-xl bg-white/70 dark:bg-neutral-800/70">
               <h4 className="font-bold text-neutral-900 dark:text-white mb-3">Check Other Cities</h4>
               <div className="grid grid-cols-2 gap-2">
-                {mockCities.map((city) => (
+                {presetCities.map((city) => (
                   <button
                     key={city.name}
                     onClick={() => handleCitySelect(city)}

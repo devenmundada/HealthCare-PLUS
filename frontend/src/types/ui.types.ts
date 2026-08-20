@@ -6,12 +6,14 @@ export interface GlassCardProps {
 }
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-    variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
+    variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'critical' | 'clinical';
     size?: 'sm' | 'md' | 'lg';
     isLoading?: boolean;
     fullWidth?: boolean;
     leftIcon?: React.ReactNode;
     rightIcon?: React.ReactNode;
+    medicalPriority?: 'high' | 'medium' | 'low';
+    ariaLabel?: string;
 }
 
 export interface CardProps {

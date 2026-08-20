@@ -3,9 +3,9 @@ import { AuthProvider } from './contexts/AuthContext';
 import { RealtimeProvider } from './contexts/RealtimeContext';
 import { MainLayout } from './layouts/MainLayout';
 import { About } from './pages/About';
-import { ChatAssistant } from './pages/ChatAssistant';
 import { Doctors } from './pages/Doctors';
 import { Features } from './pages/Features';
+import { HealthAssessment } from './pages/HealthAssessment';
 import ImageAnalysis from './pages/ImageAnalysis';
 import { Home } from "./pages/Home";
 import { Login } from './pages/Login';
@@ -53,6 +53,7 @@ function App() {
               <Route path="/chat" element={<Chat />} />
               <Route path="analysis" element={<ImageAnalysis />} />
               <Route path="map-prediction" element={<MapPrediction />} />
+              <Route path="health-assessment" element={<HealthAssessment />} />
               
               {/* Protected Routes */}
               <Route path="dashboard" element={

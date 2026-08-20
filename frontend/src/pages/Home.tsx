@@ -1,4 +1,5 @@
 
+import { useNavigate } from 'react-router-dom';
 import { medicalInsights, type MedicalInsight } from '../mocks/medicalInsights';
 import { Container } from '../components/layout/Container';
 import { GlassCard } from '../components/layout/GlassCard';
@@ -54,6 +55,7 @@ import {
 } from 'lucide-react';
 
 export const Home: React.FC = () => {
+  const navigate = useNavigate();
   const [showAppointmentModal, setShowAppointmentModal] = useState(false);
   const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
   const [weatherData, setWeatherData] = useState<any>(null);
@@ -627,10 +629,12 @@ export const Home: React.FC = () => {
                       fullWidth
                       leftIcon={<Stethoscope className="w-5 h-5" />}
                       className="justify-start px-6 py-4 hover-lift"
+                      onClick={() => navigate('/health-assessment')}
+                      ariaLabel="Start health assessment"
                     >
                       <div className="text-left">
                         <div className="font-medium">Health Assessment</div>
-                        <div className="text-xs text-neutral-500">10 min questionnaire</div>
+                        <div className="text-xs text-neutral-500">3 min questionnaire</div>
                       </div>
                     </Button>
 
@@ -639,6 +643,8 @@ export const Home: React.FC = () => {
                       fullWidth
                       leftIcon={<MessageSquare className="w-5 h-5" />}
                       className="justify-start px-6 py-4 hover-lift"
+                      onClick={() => navigate('/chat')}
+                      ariaLabel="Chat with AI assistant"
                     >
                       <div className="text-left">
                         <div className="font-medium">Chat with AI Assistant</div>
@@ -651,6 +657,8 @@ export const Home: React.FC = () => {
                       fullWidth
                       leftIcon={<MapPin className="w-5 h-5" />}
                       className="justify-start px-6 py-4"
+                      onClick={() => navigate('/map-prediction')}
+                      ariaLabel="Find nearby hospitals"
                     >
                       <div className="text-left">
                         <div className="font-medium">Find Nearby Hospitals</div>
