@@ -43,6 +43,35 @@ export class AIController {
     }
   }
 
+  async analyzeImage(req: Request, res: Response) {
+    try {
+      const { image, analysisType } = req.body;
+
+      if (!image || typeof image !== 'string' || !image.startsWith('data:image/')) {
+        return res.status(400).json({ success: false, error: 'A base64 image data URI is required' });
+      }
+
+      const validTypes = ['skin', 'xray', 'wound', 'general'];
+      const type = validTypes.includes(analysisType) ? analysisType : 'general';
+
+      if (!groqService.isConfigured()) {
+        return res.status(503).json({
+          success: false,
+          error: 'Image analysis is not configured on the server (missing GROQ_API_KEY).',
+        });
+      }
+
+      const result = await groqService.analyzeImage(image, type);
+      return res.json({ success: true, data: result });
+    } catch (error: any) {
+      console.error('AI image analysis error:', error?.response?.data || error.message);
+      return res.status(500).json({
+        success: false,
+        error: 'Image analysis is temporarily unavailable. Please try again shortly.',
+      });
+    }
+  }
+
   async analyzeSymptoms(req: Request, res: Response) {
     try {
       const { symptoms, vitals } = req.body;

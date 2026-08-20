@@ -1,9 +1,10 @@
 import React, { useState, useRef } from 'react';
+import axios from 'axios';
 import { GlassCard } from '../layout/GlassCard';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
-import { 
+import {
   Upload,
   Brain,
   X,
@@ -18,6 +19,16 @@ import {
   MessageSquare
 } from 'lucide-react';
 
+const API_URL = import.meta.env.VITE_API_URL || 'https://healthcare-backend-tylz.onrender.com/api';
+
+interface RealAnalysisResult {
+  overallImpression: string;
+  findings: { name: string; detail: string; notability: string; confidence: number }[];
+  recommendations: string[];
+  urgent: boolean;
+  model: string;
+}
+
 interface ImageAnalysisModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -27,7 +38,8 @@ export const ImageAnalysisModal: React.FC<ImageAnalysisModalProps> = ({ isOpen, 
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [analysisResults, setAnalysisResults] = useState<any>(null);
+  const [analysisResults, setAnalysisResults] = useState<RealAnalysisResult | null>(null);
+  const [analysisError, setAnalysisError] = useState<string | null>(null);
   const [selectedAIType, setSelectedAIType] = useState<'skin' | 'xray' | 'wound' | 'general'>('xray');
   
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -53,31 +65,26 @@ export const ImageAnalysisModal: React.FC<ImageAnalysisModalProps> = ({ isOpen, 
     if (!uploadedImage) return;
 
     setIsAnalyzing(true);
-    
+    setAnalysisError(null);
+
     try {
-      // Simulate AI analysis
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Mock analysis results
-      const mockResults = {
-        confidence: 0.87,
-        findings: [
-          { id: 1, name: 'Normal Lung Fields', confidence: 0.92, severity: 'low' },
-          { id: 2, name: 'Clear Costophrenic Angles', confidence: 0.89, severity: 'low' },
-          { id: 3, name: 'No Active Disease', confidence: 0.85, severity: 'low' },
-        ],
-        recommendations: [
-          'No immediate follow-up required',
-          'Routine check-up in 1 year recommended',
-          'Maintain regular health screenings',
-        ],
-        aiModel: 'TorchXRayVision v2.0',
-        processingTime: '2.3 seconds',
-      };
-      
-      setAnalysisResults(mockResults);
-    } catch (error) {
+      const response = await axios.post(
+        `${API_URL}/ai/analyze-image`,
+        { image: uploadedImage, analysisType: selectedAIType },
+        { timeout: 35000 }
+      );
+
+      if (!response.data?.success) {
+        throw new Error(response.data?.error || 'Analysis failed');
+      }
+
+      setAnalysisResults(response.data.data);
+    } catch (error: any) {
       console.error('Analysis failed:', error);
+      setAnalysisError(
+        error?.response?.data?.error ||
+          "AI image analysis isn't available right now — please try again in a moment."
+      );
     } finally {
       setIsAnalyzing(false);
     }
@@ -86,28 +93,31 @@ export const ImageAnalysisModal: React.FC<ImageAnalysisModalProps> = ({ isOpen, 
   const handleReset = () => {
     setUploadedImage(null);
     setAnalysisResults(null);
+    setAnalysisError(null);
   };
 
   const handleDownloadReport = () => {
     if (!analysisResults) return;
-    
+
     const report = `
       Medical Image Analysis Report
       =============================
       Analysis Type: ${selectedAIType}
-      AI Model: ${analysisResults.aiModel}
-      Confidence: ${(analysisResults.confidence * 100).toFixed(1)}%
-      Processing Time: ${analysisResults.processingTime}
+      AI Model: ${analysisResults.model}
       Date: ${new Date().toLocaleString()}
-      
+
+      Overall Impression:
+      ${analysisResults.overallImpression}
+
       Findings:
-      ${analysisResults.findings.map((f: any) => `• ${f.name} (${(f.confidence * 100).toFixed(1)}%)`).join('\n')}
-      
+      ${analysisResults.findings.map((f) => `• ${f.name} (self-reported confidence ${f.confidence}%): ${f.detail}`).join('\n')}
+
       Recommendations:
       ${analysisResults.recommendations.map((r: string) => `• ${r}`).join('\n')}
-      
-      Disclaimer: This AI analysis is for informational purposes only.
-      Always consult with a qualified healthcare professional.
+
+      Disclaimer: This is a general-purpose AI visual assessment, not a
+      clinically validated diagnostic tool. It is for informational purposes
+      only. Always consult a qualified healthcare professional.
     `;
 
     const blob = new Blob([report], { type: 'text/plain' });
@@ -244,7 +254,7 @@ export const ImageAnalysisModal: React.FC<ImageAnalysisModalProps> = ({ isOpen, 
 
             {/* Step 3: Analyze Button */}
             {uploadedImage && !analysisResults && (
-              <div className="text-center">
+              <div className="text-center space-y-3">
                 <Button
                   onClick={handleAnalyze}
                   disabled={isAnalyzing}
@@ -253,6 +263,12 @@ export const ImageAnalysisModal: React.FC<ImageAnalysisModalProps> = ({ isOpen, 
                 >
                   {isAnalyzing ? 'AI is Analyzing...' : 'Analyze with AI'}
                 </Button>
+                {analysisError && (
+                  <div className="flex items-start gap-2 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-left">
+                    <AlertTriangle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+                    <p className="text-sm text-red-300">{analysisError}</p>
+                  </div>
+                )}
               </div>
             )}
 
@@ -262,49 +278,39 @@ export const ImageAnalysisModal: React.FC<ImageAnalysisModalProps> = ({ isOpen, 
                 <h3 className="text-lg font-semibold text-white mb-4">
                   3. AI Analysis Results
                 </h3>
-                
-                {/* AI Confidence */}
+
+                {/* Overall impression */}
                 <GlassCard className="p-6">
-                  <div className="flex items-center gap-3 mb-4">
+                  <div className="flex items-center gap-3 mb-3">
                     <Brain className="w-5 h-5 text-blue-400" />
-                    <div>
-                      <h4 className="font-semibold text-white">AI Confidence Score</h4>
-                      <p className="text-sm text-gray-400">How confident is the AI in its analysis</p>
-                    </div>
+                    <h4 className="font-semibold text-white">Overall Impression</h4>
+                    {analysisResults.urgent && (
+                      <Badge variant="error">Discuss promptly</Badge>
+                    )}
                   </div>
-                  <div className="text-center">
-                    <div className="inline-flex items-baseline">
-                      <span className="text-5xl font-bold text-white">
-                        {(analysisResults.confidence * 100).toFixed(1)}
-                      </span>
-                      <span className="text-xl text-gray-400 ml-1">%</span>
-                    </div>
-                    <div className="mt-4">
-                      <div className="h-3 bg-white/10 rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-gradient-to-r from-green-400 to-blue-500 rounded-full"
-                          style={{ width: `${analysisResults.confidence * 100}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                  </div>
+                  <p className="text-gray-300">{analysisResults.overallImpression}</p>
                 </GlassCard>
 
-                {/* AI Detections */}
+                {/* AI Findings */}
                 <GlassCard className="p-6">
                   <h4 className="font-semibold text-white mb-4">AI Findings</h4>
-                  <div className="space-y-3">
-                    {analysisResults.findings.map((finding: any) => (
-                      <div key={finding.id} className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
-                        <div>
-                          <span className="font-medium text-white">{finding.name}</span>
+                  {analysisResults.findings.length === 0 ? (
+                    <p className="text-sm text-gray-400">No specific findings identified.</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {analysisResults.findings.map((finding, i) => (
+                        <div key={i} className="p-3 bg-white/5 rounded-lg">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="font-medium text-white">{finding.name}</span>
+                            <Badge variant={finding.notability === 'seek-prompt-care' ? 'error' : finding.notability === 'worth-discussing' ? 'warning' : 'success'}>
+                              {finding.notability.replace('-', ' ')}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-gray-400">{finding.detail}</p>
                         </div>
-                        <Badge variant={finding.severity === 'high' ? 'error' : 'success'}>
-                          {(finding.confidence * 100).toFixed(1)}%
-                        </Badge>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  )}
                 </GlassCard>
 
                 {/* Recommendations */}
@@ -321,15 +327,9 @@ export const ImageAnalysisModal: React.FC<ImageAnalysisModalProps> = ({ isOpen, 
                 </GlassCard>
 
                 {/* Model Info */}
-                <div className="flex items-center justify-between text-sm text-gray-400">
-                  <div className="flex items-center gap-2">
-                    <Brain className="w-4 h-4" />
-                    <span>AI Model: {analysisResults.aiModel}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Brain className="w-4 h-4" />
-                    <span>Processing: {analysisResults.processingTime}</span>
-                  </div>
+                <div className="flex items-center gap-2 text-sm text-gray-400">
+                  <Brain className="w-4 h-4" />
+                  <span>AI Model: {analysisResults.model} (general-purpose vision AI, not a diagnostic device)</span>
                 </div>
 
                 {/* Actions */}

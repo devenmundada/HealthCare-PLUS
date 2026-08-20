@@ -83,9 +83,13 @@ const ImageAnalysis: React.FC = () => {
 
       // Generate downloadable report
       generateReport(result);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Analysis failed:', error);
-      alert('Analysis failed. Please try again with a different image.');
+      const serverMessage = error?.response?.data?.error;
+      alert(
+        serverMessage ||
+          "AI image analysis isn't available right now — please try again in a moment."
+      );
     } finally {
       setIsAnalyzing(false);
     }
@@ -223,21 +227,19 @@ Always consult with qualified healthcare professionals for medical diagnosis and
           {/* Status Indicators */}
           <div className="flex flex-wrap justify-center gap-4 mt-6">
             <div className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-neutral-800 rounded-full shadow-sm">
-              {apiStatus.available ? (
-                <>
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                  <span className="text-sm font-medium text-green-600 dark:text-green-400">
-                    AI Models Online
-                  </span>
-                </>
-              ) : (
-                <>
-                  <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                  <span className="text-sm font-medium text-yellow-600 dark:text-yellow-400">
-                    Using Local Analysis
-                  </span>
-                </>
-              )}
+              {/* Whether the backend AI service is configured doesn't guarantee
+                  a given analysis call succeeds — the real result (including
+                  any failure) shows after you click Analyze, not here. */}
+              <div className={`w-2 h-2 rounded-full ${apiStatus.available ? 'bg-green-500 animate-pulse' : 'bg-neutral-400'}`}></div>
+              <span className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
+                {apiStatus.available ? 'AI Service Configured' : 'AI Service Unavailable'}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-neutral-800 rounded-full shadow-sm">
+              <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
+              <span className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
+                Not a diagnostic device
+              </span>
             </div>
             <div className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-neutral-800 rounded-full shadow-sm">
               <WoundIcon className="w-4 h-4 text-blue-500" />

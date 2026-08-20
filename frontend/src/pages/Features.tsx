@@ -40,13 +40,13 @@ export const Features: React.FC = () => {
     {
       id: 'image-analysis',
       title: 'AI Image Analysis',
-      description: 'Advanced diagnostic support for medical imaging using TorchXRayVision models trained on 2M+ chest X-rays.',                                                                                         
+      description: 'Upload a photo or scan and get a general-purpose AI visual assessment — not a replacement for a radiologist or specialist.',
       icon: <Brain className="w-8 h-8 text-primary-600" />,
       highlights: [
-        '18+ pathology detection',
-        'Grad-CAM visual explanations',
-        'Real-time processing',
-        'DICOM support'
+        'Plain-language visual observations',
+        'Flags findings worth discussing with a doctor',
+        'Self-reported confidence per finding',
+        'Always paired with a "confirm with a professional" disclaimer'
       ],
       isComingSoon: false,
       onTryNow: () => setShowImageAnalysis(true) // Add this

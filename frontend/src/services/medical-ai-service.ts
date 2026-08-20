@@ -1,407 +1,119 @@
 import axios from 'axios';
+import type { AnalysisResult, Finding, Recommendation, ModelInfo } from '../types/medical-images';
 
-// Hugging Face Inference API - FREE TIER (up to 30k requests/month)
-const HF_API_TOKEN = 'hf_your_token_here'; // You can get one from huggingface.co
-const HF_API_URL = 'https://api-inference.huggingface.co/models';
+// Real backend-proxied AI image analysis (Groq vision model). This used to
+// call Hugging Face's public inference API directly with a placeholder
+// token ('hf_your_token_here') against generic ImageNet classifiers that
+// were never medical models in the first place — every call failed and
+// silently fell back to hardcoded mock findings regardless of the image.
+// There is no mock fallback here anymore: if the backend can't produce a
+// real result, this throws, and the UI shows that honestly instead of
+// presenting invented findings as if they were real.
+const API_URL = import.meta.env.VITE_API_URL || 'https://healthcare-backend-tylz.onrender.com/api';
 
-// Open Source Medical Models on Hugging Face
-const MODELS = {
-  // Skin Condition Analysis
-  SKIN: {
-    modelId: 'dima806/skin_cancer_detection',
-    name: 'Skin Lesion Classifier',
-    description: 'Detects 7 types of skin lesions including melanoma',
-    specialties: ['skin', 'dermatology'],
-    inputSize: '224x224',
-  },
-  
-  // X-ray Analysis (Chest)
-  XRAY: {
-    modelId: 'google/vit-base-patch16-224',
-    name: 'Chest X-ray Analyzer',
-    description: 'Analyzes chest X-rays for abnormalities',
-    specialties: ['xray', 'radiology'],
-    inputSize: '224x224',
-  },
-  
-  // General Medical Image Understanding
-  GENERAL: {
-    modelId: 'microsoft/resnet-50',
-    name: 'Medical Image Classifier',
-    description: 'General purpose medical image analysis',
-    specialties: ['general', 'screening'],
-    inputSize: '224x224',
-  },
-  
-  // Wound Assessment (Custom model)
-  WOUND: {
-    modelId: 'nickmuchi/vit-finetuned-diabetic-retinopathy',
-    name: 'Wound Assessment Model',
-    description: 'Assesses wounds and diabetic conditions',
-    specialties: ['wound', 'diabetes'],
-    inputSize: '384x384',
-  },
-} as const;
+const NOTABILITY_TO_SEVERITY: Record<string, 'low' | 'medium' | 'high'> = {
+  routine: 'low',
+  'worth-discussing': 'medium',
+  'seek-prompt-care': 'high',
+};
 
 export class MedicalAIService {
-  private apiToken: string;
-  private cache: Map<string, any> = new Map();
-
-  constructor(apiToken?: string) {
-    this.apiToken = apiToken || HF_API_TOKEN;
-  }
-
-  // Analyze medical image with appropriate model
   async analyzeImage(
     imageFile: File,
-    analysisType: 'skin' | 'xray' | 'wound' | 'general',
-    options?: {
-      maxRetries?: number;
-      timeout?: number;
-    }
+    analysisType: 'skin' | 'xray' | 'wound' | 'general'
   ): Promise<AnalysisResult> {
     const startTime = Date.now();
-    const model = MODELS[analysisType.toUpperCase() as keyof typeof MODELS];
-    
-    if (!model) {
-      throw new Error(`No model found for analysis type: ${analysisType}`);
+    const imageDataUri = await this.fileToDataUri(imageFile);
+
+    const response = await axios.post(
+      `${API_URL}/ai/analyze-image`,
+      { image: imageDataUri, analysisType },
+      { timeout: 35000 }
+    );
+
+    if (!response.data?.success) {
+      throw new Error(response.data?.error || 'Image analysis failed');
     }
 
-    try {
-      // Convert image to base64
-      const imageBase64 = await this.fileToBase64(imageFile);
-      
-      // Prepare request
-      const payload = {
-        inputs: imageBase64,
-        parameters: {
-          top_k: 5, // Return top 5 predictions
-          threshold: 0.1, // Minimum confidence
-        },
-      };
+    const result = response.data.data as {
+      overallImpression: string;
+      findings: { name: string; detail: string; notability: string; confidence: number }[];
+      recommendations: string[];
+      urgent: boolean;
+      model: string;
+    };
 
-      // Make API call to Hugging Face
-      const response = await axios.post(
-        `${HF_API_URL}/${model.modelId}`,
-        payload,
-        {
-          headers: {
-            'Authorization': `Bearer ${this.apiToken}`,
-            'Content-Type': 'application/json',
-          },
-          timeout: options?.timeout || 30000,
-        }
-      );
+    const findings: Finding[] = result.findings.map((f) => ({
+      name: f.name,
+      // The model's own self-reported certainty in this specific
+      // observation — not a calibrated diagnostic accuracy score, but a
+      // real signal from the model rather than an invented number.
+      confidence: Math.max(0, Math.min(100, f.confidence || 0)) / 100,
+      description: f.detail,
+      severity: NOTABILITY_TO_SEVERITY[f.notability] || 'low',
+    }));
 
-      const processingTime = Date.now() - startTime;
-      
-      // Transform response to our format
-      return this.transformResponse(
-        response.data,
-        analysisType,
-        model,
-        processingTime,
-        imageFile.name
-      );
-    } catch (error) {
-      console.error('AI analysis error:', error);
-      
-      // Fallback to mock analysis if API fails
-      return this.mockAnalysis(imageFile, analysisType, startTime);
-    }
+    const recommendations: Recommendation[] = [
+      {
+        type: 'standard',
+        title: 'AI-Assisted Visual Review — Not a Diagnosis',
+        description:
+          'This is a general-purpose vision AI, not a clinically validated radiology/dermatology model. Always have a qualified doctor confirm before acting on this.',
+      },
+      ...result.recommendations.map((r): Recommendation => ({
+        type: result.urgent ? 'urgent' : 'follow-up',
+        title: result.urgent ? 'Seek prompt medical attention' : 'Suggested next step',
+        description: r,
+      })),
+    ];
+
+    const avgConfidence =
+      findings.length > 0 ? findings.reduce((sum, f) => sum + f.confidence, 0) / findings.length : 0;
+
+    return {
+      id: `analysis-${Date.now()}`,
+      timestamp: new Date().toISOString(),
+      aiModel: result.model,
+      confidence: avgConfidence,
+      severity: result.urgent ? 'high' : findings.some((f) => f.severity === 'medium') ? 'medium' : 'low',
+      findings,
+      recommendations,
+      disclaimer: result.overallImpression,
+      imageType: analysisType,
+      processingTime: Date.now() - startTime,
+    };
   }
 
-  private async fileToBase64(file: File): Promise<string> {
+  private fileToDataUri(file: File): Promise<string> {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.readAsDataURL(file);
-      reader.onload = () => {
-        const base64 = (reader.result as string).split(',')[1];
-        resolve(base64);
-      };
+      reader.onload = () => resolve(reader.result as string);
       reader.onerror = reject;
     });
   }
 
-  private transformResponse(
-    data: any,
-    analysisType: string,
-    model: any,
-    processingTime: number,
-    imageName: string
-  ): AnalysisResult {
-    // Different models return different response formats
-    let findings: Finding[] = [];
-    let confidence = 0;
-
-    if (Array.isArray(data)) {
-      // Standard Hugging Face classification format
-      findings = data.slice(0, 3).map((item: any, index: number) => ({
-        id: `finding-${index}`,
-        name: item.label,
-        confidence: item.score,
-        description: this.getFindingDescription(item.label, analysisType),
-        color: this.getSeverityColor(item.score),
-      }));
-      confidence = data[0]?.score || 0;
-    } else if (data.label) {
-      // Single label format
-      findings = [{
-        id: 'finding-0',
-        name: data.label,
-        confidence: data.score || 0.8,
-        description: this.getFindingDescription(data.label, analysisType),
-        color: this.getSeverityColor(data.score || 0.8),
-      }];
-      confidence = data.score || 0.8;
-    }
-
-    return {
-      id: `analysis-${Date.now()}`,
-      imageId: imageName,
-      findings,
-      confidence,
-      recommendations: this.generateRecommendations(findings, analysisType),
-      severity: this.calculateSeverity(findings),
-      timestamp: new Date(),
-      aiModel: model.name,
-      processingTime,
-      metadata: {
-        modelId: model.modelId,
-        analysisType,
-        timestamp: new Date().toISOString(),
-      },
-    };
-  }
-
-  private getFindingDescription(label: string, analysisType: string): string {
-    const descriptions: Record<string, Record<string, string>> = {
-      skin: {
-        'melanoma': 'Potential melanoma detected. Consult dermatologist immediately.',
-        'nevus': 'Common mole (nevus). Regular monitoring recommended.',
-        'basal cell carcinoma': 'Basal cell carcinoma detected. Requires medical attention.',
-        'actinic keratosis': 'Pre-cancerous lesion. Dermatologist consultation advised.',
-        'seborrheic keratosis': 'Benign skin growth. No immediate concern.',
-        'squamous cell carcinoma': 'Squamous cell carcinoma detected. Urgent medical attention needed.',
-      },
-      xray: {
-        'normal': 'Chest X-ray appears normal.',
-        'pneumonia': 'Signs of pneumonia detected.',
-        'covid-19': 'COVID-19 related patterns observed.',
-        'tuberculosis': 'TB-related abnormalities detected.',
-        'effusion': 'Pleural effusion present.',
-        'cardiomegaly': 'Enlarged heart detected.',
-      },
-      wound: {
-        'healthy': 'Wound appears to be healing normally.',
-        'infected': 'Signs of infection detected.',
-        'necrotic': 'Necrotic tissue present.',
-        'granulating': 'Granulation tissue forming - good sign.',
-        'epithelializing': 'Epithelialization in progress.',
-      },
-      general: {
-        'normal': 'No significant abnormalities detected.',
-        'abnormal': 'Abnormalities detected requiring further evaluation.',
-        'urgent': 'Urgent findings - seek immediate medical attention.',
-      },
-    };
-
-    const typeDescriptions = descriptions[analysisType] || descriptions.general;
-    return typeDescriptions[label.toLowerCase()] || 'Analysis completed. Review findings.';
-  }
-
-  private getSeverityColor(confidence: number): string {
-    if (confidence > 0.8) return '#EF4444'; // Red - high confidence concerning finding
-    if (confidence > 0.6) return '#F59E0B'; // Yellow - medium confidence
-    return '#10B981'; // Green - low confidence or normal
-  }
-
-  private calculateSeverity(findings: Finding[]): 'low' | 'medium' | 'high' {
-    const highRiskLabels = ['melanoma', 'carcinoma', 'covid-19', 'tuberculosis', 'infected', 'necrotic'];
-    
-    for (const finding of findings) {
-      if (finding.confidence > 0.7) {
-        const label = finding.name.toLowerCase();
-        if (highRiskLabels.some(risk => label.includes(risk))) {
-          return 'high';
-        }
-      }
-    }
-    
-    const avgConfidence = findings.reduce((sum, f) => sum + f.confidence, 0) / findings.length;
-    return avgConfidence > 0.6 ? 'medium' : 'low';
-  }
-
-  private generateRecommendations(findings: Finding[], analysisType: string): Recommendation[] {
-    const recommendations: Recommendation[] = [];
-    
-    // Always add general disclaimer
-    recommendations.push({
-      id: 'disclaimer',
-      type: 'monitoring',
-      title: 'Important Disclaimer',
-      description: 'AI analysis is for informational purposes only. Always consult with qualified healthcare professionals for medical diagnosis.',
-      priority: 0,
-    });
-
-    // Add specific recommendations based on findings
-    findings.forEach((finding, index) => {
-      if (finding.confidence > 0.6) {
-        recommendations.push({
-          id: `rec-${index}`,
-          type: finding.confidence > 0.8 ? 'doctor' : 'monitoring',
-          title: `${finding.name} - Next Steps`,
-          description: `Based on ${finding.confidence * 100}% confidence: ${finding.description}`,
-          priority: finding.confidence > 0.8 ? 1 : 2,
-          actionUrl: finding.confidence > 0.8 ? '/doctors' : undefined,
-        });
-      }
-    });
-
-    // Add type-specific recommendations
-    if (analysisType === 'skin' && findings.some(f => f.name.toLowerCase().includes('melanoma'))) {
-      recommendations.push({
-        id: 'skin-specialist',
-        type: 'doctor',
-        title: 'Dermatologist Consultation',
-        description: 'Schedule appointment with dermatologist within 2 weeks',
-        priority: 1,
-        actionUrl: '/doctors?specialty=Dermatology',
-      });
-    }
-
-    if (analysisType === 'xray' && findings.some(f => f.name.toLowerCase().includes('pneumonia'))) {
-      recommendations.push({
-        id: 'pulmonologist',
-        type: 'doctor',
-        title: 'Pulmonologist Referral',
-        description: 'Consult pulmonologist for further evaluation',
-        priority: 1,
-        actionUrl: '/doctors?specialty=Pulmonology',
-      });
-    }
-
-    return recommendations.sort((a, b) => a.priority - b.priority);
-  }
-
-  // Mock analysis for development/fallback
-  private mockAnalysis(
-    imageFile: File,
-    analysisType: string,
-    startTime: number
-  ): AnalysisResult {
-    const mockFindings: Record<string, Finding[]> = {
-      skin: [
-        {
-          id: 'mock-1',
-          name: 'Nevus (Mole)',
-          confidence: 0.87,
-          description: 'Benign pigmented lesion. Regular monitoring recommended.',
-          color: '#10B981',
-        },
-        {
-          id: 'mock-2',
-          name: 'Seborrheic Keratosis',
-          confidence: 0.23,
-          description: 'Common benign skin growth.',
-          color: '#F59E0B',
-        },
-      ],
-      xray: [
-        {
-          id: 'mock-1',
-          name: 'Normal',
-          confidence: 0.92,
-          description: 'Chest X-ray appears within normal limits.',
-          color: '#10B981',
-        },
-      ],
-      wound: [
-        {
-          id: 'mock-1',
-          name: 'Healing Normally',
-          confidence: 0.78,
-          description: 'Wound shows signs of proper healing.',
-          color: '#10B981',
-        },
-      ],
-      general: [
-        {
-          id: 'mock-1',
-          name: 'No Significant Findings',
-          confidence: 0.85,
-          description: 'Image analysis shows no concerning features.',
-          color: '#10B981',
-        },
-      ],
-    };
-
-    return {
-      id: `mock-${Date.now()}`,
-      imageId: imageFile.name,
-      findings: mockFindings[analysisType] || mockFindings.general,
-      confidence: 0.85,
-      recommendations: [
-        {
-          id: 'mock-rec-1',
-          type: 'monitoring',
-          title: 'Regular Follow-up',
-          description: 'Schedule follow-up in 6 months for routine check.',
-          priority: 3,
-        },
-      ],
-      severity: 'low',
-      timestamp: new Date(),
-      aiModel: 'Mock Analysis Engine',
-      processingTime: Date.now() - startTime,
-      metadata: {
-        isMock: true,
-        analysisType,
-        timestamp: new Date().toISOString(),
-      },
-    };
-  }
-
-  // Get available models
   getAvailableModels(): ModelInfo[] {
-    return Object.values(MODELS).map((model, index) => ({
-      id: `model-${index}`,
-      name: model.name,
-      description: model.description,
-      accuracy: 85 + Math.random() * 10, // Simulated accuracy
-      specialty: model.specialties,
-      inputSize: model.inputSize,
-      supportedFormats: ['jpg', 'jpeg', 'png', 'bmp'],
-    }));
+    return [
+      {
+        id: 'groq-vision',
+        name: 'Groq Vision (multimodal LLM)',
+        description: 'General-purpose AI visual assessment — not a specialized diagnostic model.',
+        accuracy: 0,
+        inputSize: 'any',
+        specialty: ['skin', 'xray', 'wound', 'general'],
+        version: '1.0',
+      },
+    ];
   }
 
-  // Check API status
-  async checkAPIStatus(): Promise<{
-    available: boolean;
-    models: string[];
-    rateLimit: number;
-  }> {
+  async checkAPIStatus(): Promise<{ available: boolean; models: string[] }> {
     try {
-      const response = await axios.get(
-        'https://api-inference.huggingface.co/status',
-        {
-          headers: {
-            'Authorization': `Bearer ${this.apiToken}`,
-          },
-        }
-      );
-      
-      return {
-        available: true,
-        models: Object.values(MODELS).map(m => m.modelId),
-        rateLimit: response.data.rate_limit || 10000,
-      };
-    } catch (error) {
-      return {
-        available: false,
-        models: [],
-        rateLimit: 0,
-      };
+      const response = await axios.get(`${API_URL}/ai/status`, { timeout: 5000 });
+      const available = !!response.data?.available;
+      return { available, models: available ? ['groq-vision'] : [] };
+    } catch {
+      return { available: false, models: [] };
     }
   }
 }

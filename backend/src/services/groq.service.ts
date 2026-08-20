@@ -68,6 +68,101 @@ export class GroqService {
     }
     return content;
   }
+
+  // Groq's multimodal models (Llama 4 Scout/Maverick) accept image content
+  // blocks on the same chat-completions endpoint used for text.
+  private readonly visionModel = process.env.GROQ_VISION_MODEL || 'meta-llama/llama-4-scout-17b-16e-instruct';
+
+  async analyzeImage(
+    imageDataUri: string,
+    analysisType: 'skin' | 'xray' | 'wound' | 'general'
+  ): Promise<ImageAnalysisResult> {
+    if (!this.apiKey) {
+      throw new Error('GROQ_API_KEY not configured');
+    }
+
+    const typeContext: Record<string, string> = {
+      xray: 'a chest X-ray or other radiographic image',
+      skin: 'a photo of a skin condition or lesion',
+      wound: 'a photo of a wound or injury',
+      general: 'a general medical/health-related photo',
+    };
+
+    const prompt = `You are looking at ${typeContext[analysisType] || 'a medical image'}.
+
+You are a general-purpose vision-language AI, NOT a specialized, clinically-validated
+radiology or dermatology model. You have not been trained or certified on medical
+imaging datasets. Give a cautious, descriptive visual assessment only.
+
+Respond with ONLY a JSON object matching this exact shape, no other text:
+{
+  "overallImpression": "one or two sentence plain-language summary of what's visible",
+  "findings": [
+    { "name": "short finding label", "detail": "one sentence describing what you observe", "notability": "routine" | "worth-discussing" | "seek-prompt-care", "confidence": <integer 0-100, your own certainty that THIS specific observation is accurate, not a diagnostic accuracy score> }
+  ],
+  "recommendations": ["short actionable next step", "..."],
+  "urgent": boolean (true only if something looks like it could need prompt/emergency medical attention)
+}
+
+List 2-5 findings. If the image quality is too poor to assess, or it isn't a
+medical image at all, say so plainly in overallImpression and return an empty
+findings array. Never state a definitive diagnosis — describe only what is
+visually observable and how notable it is.`;
+
+    const response = await axios.post<{ choices?: { message?: { content?: string } }[] }>(
+      GROQ_API_URL,
+      {
+        model: this.visionModel,
+        messages: [
+          {
+            role: 'user',
+            content: [
+              { type: 'text', text: prompt },
+              { type: 'image_url', image_url: { url: imageDataUri } },
+            ],
+          },
+        ],
+        temperature: 0.2,
+        max_tokens: 800,
+        response_format: { type: 'json_object' },
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        timeout: 30000,
+      }
+    );
+
+    const content = response.data?.choices?.[0]?.message?.content;
+    if (!content) {
+      throw new Error('Empty response from Groq vision model');
+    }
+
+    let parsed: any;
+    try {
+      parsed = JSON.parse(content);
+    } catch {
+      throw new Error('Vision model returned non-JSON content');
+    }
+
+    return {
+      overallImpression: parsed.overallImpression || 'Unable to generate an assessment.',
+      findings: Array.isArray(parsed.findings) ? parsed.findings : [],
+      recommendations: Array.isArray(parsed.recommendations) ? parsed.recommendations : [],
+      urgent: !!parsed.urgent,
+      model: this.visionModel,
+    };
+  }
+}
+
+export interface ImageAnalysisResult {
+  overallImpression: string;
+  findings: { name: string; detail: string; notability: 'routine' | 'worth-discussing' | 'seek-prompt-care'; confidence: number }[];
+  recommendations: string[];
+  urgent: boolean;
+  model: string;
 }
 
 export const groqService = new GroqService();
