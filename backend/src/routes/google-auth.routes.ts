@@ -26,7 +26,7 @@ router.get('/callback', async (req: Request, res: Response) => {
   const { code, state, error } = req.query;
 
   if (error) {
-    return res.redirect(`${FRONTEND_URL}/doctor/dashboard?calendar=error`);
+    return res.redirect(`${FRONTEND_URL}/doctor-dashboard?calendar=error`);
   }
   if (!code || typeof code !== 'string' || !state || typeof state !== 'string') {
     return res.status(400).send('Missing code or state');
@@ -38,17 +38,17 @@ router.get('/callback', async (req: Request, res: Response) => {
       // Google only returns a refresh_token the first time a user consents.
       // If the doctor already connected before and is reconnecting, Google may
       // omit it — ask them to revoke access at myaccount.google.com and retry.
-      return res.redirect(`${FRONTEND_URL}/doctor/dashboard?calendar=no_refresh_token`);
+      return res.redirect(`${FRONTEND_URL}/doctor-dashboard?calendar=no_refresh_token`);
     }
 
     const doctorRepo = AppDataSource.getRepository(Doctor);
     const doctorId = parseInt(state);
     await doctorRepo.update({ id: doctorId }, { googleRefreshToken: tokens.refresh_token });
 
-    return res.redirect(`${FRONTEND_URL}/doctor/dashboard?calendar=connected`);
+    return res.redirect(`${FRONTEND_URL}/doctor-dashboard?calendar=connected`);
   } catch (err) {
     console.error('Google OAuth callback error:', err);
-    return res.redirect(`${FRONTEND_URL}/doctor/dashboard?calendar=error`);
+    return res.redirect(`${FRONTEND_URL}/doctor-dashboard?calendar=error`);
   }
 });
 

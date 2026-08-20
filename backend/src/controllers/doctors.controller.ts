@@ -80,11 +80,25 @@ export class DoctorsController {
 
     return doctors.map((doc) => {
       const hospital = doc.hospitalId ? hospitalById.get(doc.hospitalId) : undefined;
+      // Never send the raw Google OAuth refresh token to any client — this
+      // spread previously leaked it verbatim on every public, unauthenticated
+      // doctor lookup. Only whether a calendar is connected is ever needed
+      // client-side.
+      const { googleRefreshToken, ...safeDoc } = doc as any;
       return {
-        ...doc,
+        ...safeDoc,
+        googleCalendarConnected: !!googleRefreshToken,
         hospital_name: hospital?.name || null,
         hospital_city: hospital?.city || null,
         hospital_state: hospital?.state || null,
+        hospital_address: hospital?.address || null,
+        // Real coordinates, so the frontend can compute a real distance to
+        // THIS doctor's actual hospital instead of a hardcoded reference
+        // point (see patient/Portal.tsx — it was measuring distance to a
+        // fixed Mumbai coordinate for every doctor regardless of where
+        // they actually are).
+        hospital_latitude: hospital?.latitude != null ? Number(hospital.latitude) : null,
+        hospital_longitude: hospital?.longitude != null ? Number(hospital.longitude) : null,
       };
     });
   }

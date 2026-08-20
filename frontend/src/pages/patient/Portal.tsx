@@ -106,6 +106,7 @@ export const PatientPortal: React.FC = () => {
   
   // Location and filters
   const [userLocation, setUserLocation] = useState<any>(null);
+  const [usingFallbackLocation, setUsingFallbackLocation] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSpecialty, setSelectedSpecialty] = useState('all');
   const [showFilters, setShowFilters] = useState(false);
@@ -150,8 +151,12 @@ export const PatientPortal: React.FC = () => {
       const location = await getCurrentLocation();
       setUserLocation(location);
     } catch (error) {
-      console.log('Using default location (Mumbai)');
+      // Silently defaulting to Mumbai without telling the patient made
+      // "distance to doctor" look wrong/random for anyone not actually in
+      // Mumbai — now it's a visible, dismissable notice instead.
+      console.log('Location unavailable — defaulting to Mumbai and flagging it in the UI');
       setUserLocation({ lat: 19.0760, lng: 72.8777 });
+      setUsingFallbackLocation(true);
     } finally {
       setLocationLoading(false);
     }
@@ -189,17 +194,22 @@ export const PatientPortal: React.FC = () => {
       }
       if (doctorsRes.data.success) {
         const rawDoctors: any[] = doctorsRes.data.data?.doctors || [];
-        const doctorsWithDistance = rawDoctors.map((doc: any) => ({
-          ...doc,
-          distance: userLocation ? calculateDistance(
-            userLocation.lat, userLocation.lng,
-            19.0760, 72.8777
-          ) : undefined,
-          availableToday: false, // filled in below from real slot data
-          nextSlot: undefined as string | undefined,
-          hospitalName: doc.hospital_name || 'City Hospital',
-          hospitalAddress: doc.hospital_address || 'Mumbai'
-        }));
+        const doctorsWithDistance = rawDoctors.map((doc: any) => {
+          // Real distance to THIS doctor's actual hospital — was previously
+          // always measured to a hardcoded Mumbai coordinate regardless of
+          // the doctor, which is what made "nearby" results feel random.
+          const hasRealCoords = userLocation && doc.hospital_latitude != null && doc.hospital_longitude != null;
+          return {
+            ...doc,
+            distance: hasRealCoords
+              ? calculateDistance(userLocation.lat, userLocation.lng, doc.hospital_latitude, doc.hospital_longitude)
+              : undefined,
+            availableToday: false, // filled in below from real slot data
+            nextSlot: undefined as string | undefined,
+            hospitalName: doc.hospital_name || 'Independent practice',
+            hospitalAddress: doc.hospital_address || doc.hospital_city || ''
+          };
+        });
         setDoctors(doctorsWithDistance);
 
         // Check each doctor's real availability today instead of guessing —
@@ -538,9 +548,9 @@ export const PatientPortal: React.FC = () => {
                   leftIcon={<Search className="w-4 h-4 text-gray-400" />}
                 />
                 {userLocation && !locationLoading && (
-                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-xs text-gray-500 flex items-center gap-1">
+                  <div className={`absolute right-3 top-1/2 transform -translate-y-1/2 text-xs flex items-center gap-1 ${usingFallbackLocation ? 'text-amber-600' : 'text-gray-500'}`}>
                     <Navigation className="w-3 h-3" />
-                    Using your location
+                    {usingFallbackLocation ? "Location unavailable — showing distance from Mumbai" : 'Using your location'}
                   </div>
                 )}
               </div>

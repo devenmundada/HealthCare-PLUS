@@ -55,8 +55,10 @@ export const DoctorDashboard: React.FC = () => {
 
   const [isAcceptingPatients, setIsAcceptingPatients] = useState(true);
   const [togglingAvailability, setTogglingAvailability] = useState(false);
+  const [calendarConnected, setCalendarConnected] = useState(false);
+  const [calendarBanner, setCalendarBanner] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
-  useEffect(() => {
+  const refetchDoctorProfile = useCallback(() => {
     if (!doctorId) return;
     axios
       .get(`${API_URL}/doctors/${doctorId}`)
@@ -65,9 +67,42 @@ export const DoctorDashboard: React.FC = () => {
         if (d && typeof d.isAcceptingPatients === 'boolean') {
           setIsAcceptingPatients(d.isAcceptingPatients);
         }
+        if (d) setCalendarConnected(!!d.googleCalendarConnected);
       })
       .catch(() => {});
   }, [doctorId]);
+
+  useEffect(() => {
+    refetchDoctorProfile();
+  }, [refetchDoctorProfile]);
+
+  // The OAuth callback (backend) redirects back here with ?calendar=... —
+  // there was previously no button to even start this flow AND the
+  // redirect target was wrong ('/doctor/dashboard' vs the real
+  // '/doctor-dashboard' route), so a doctor could never actually connect
+  // their calendar at all. Both are fixed; this surfaces the result.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const result = params.get('calendar');
+    if (!result) return;
+
+    if (result === 'connected') {
+      setCalendarBanner({ type: 'success', message: 'Google Calendar connected — video appointments will now get a real Meet link when you confirm them.' });
+      refetchDoctorProfile();
+    } else if (result === 'no_refresh_token') {
+      setCalendarBanner({ type: 'error', message: "Google didn't grant a reusable connection this time. Revoke Healthcare+'s access at myaccount.google.com/permissions and try connecting again." });
+    } else if (result === 'error') {
+      setCalendarBanner({ type: 'error', message: "Couldn't connect Google Calendar — please try again." });
+    }
+
+    // Clean the query param out of the URL without a full reload.
+    window.history.replaceState({}, '', window.location.pathname);
+  }, [refetchDoctorProfile]);
+
+  const connectGoogleCalendar = () => {
+    if (!doctorId) return;
+    window.location.href = `${API_URL}/auth/google/connect/${doctorId}`;
+  };
 
   const toggleAvailability = async () => {
     if (!doctorId) return;
@@ -183,6 +218,14 @@ export const DoctorDashboard: React.FC = () => {
             <p className="text-neutral-500">Welcome back, Dr. {user?.name}</p>
           </div>
           <div className="flex items-center gap-3">
+            <Badge variant={calendarConnected ? 'success' : 'default'}>
+              {calendarConnected ? 'Google Calendar Connected' : 'Calendar Not Connected'}
+            </Badge>
+            {!calendarConnected && (
+              <Button variant="secondary" size="sm" disabled={!doctorId} onClick={connectGoogleCalendar} leftIcon={<Calendar className="w-4 h-4" />}>
+                Connect Google Calendar
+              </Button>
+            )}
             <Badge variant={isAcceptingPatients ? 'success' : 'default'}>
               {isAcceptingPatients ? 'Accepting Patients' : 'Unavailable'}
             </Badge>
@@ -197,6 +240,23 @@ export const DoctorDashboard: React.FC = () => {
             </Button>
           </div>
         </div>
+
+        {calendarBanner && (
+          <div className={`mb-6 p-4 rounded-lg flex items-start gap-3 ${
+            calendarBanner.type === 'success'
+              ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800'
+              : 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800'
+          }`}>
+            {calendarBanner.type === 'success' ? (
+              <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+            ) : (
+              <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+            )}
+            <p className={`text-sm ${calendarBanner.type === 'success' ? 'text-green-800 dark:text-green-300' : 'text-red-700 dark:text-red-300'}`}>
+              {calendarBanner.message}
+            </p>
+          </div>
+        )}
 
         {profileError && (
           <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-center gap-3">
