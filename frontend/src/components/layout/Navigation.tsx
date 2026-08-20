@@ -45,6 +45,14 @@ export const Navigation: React.FC = () => {
     const { isAuthenticated, user, logout } = useAuth();
     const navigate = useNavigate();
 
+    // Doctors and patients each have their own dashboard route — there is
+    // no generic "/appointments" page, so route each role to the real one.
+    const dashboardPath =
+        user?.role === 'doctor' ? '/doctor-dashboard' :
+        user?.role === 'patient' ? '/patient-portal' :
+        '/dashboard';
+    const dashboardLabel = user?.role === 'doctor' ? 'My Appointments' : 'Appointments';
+
     // Toggle dark mode
     const toggleDarkMode = () => {
         setDarkMode(!darkMode);
@@ -158,13 +166,13 @@ export const Navigation: React.FC = () => {
                         {/* Desktop Auth Section */}
                         {isAuthenticated && user ? (
                             <div className="hidden sm:flex items-center space-x-4">
-                                {/* Appointments Link */}
+                                {/* Appointments Link — role-aware, points at the real dashboard */}
                                 <NavLink
-                                    to="/appointments"
+                                    to={dashboardPath}
                                     className="flex items-center px-3 py-2 rounded-lg text-sm font-medium text-neutral-600 hover:bg-neutral-50 dark:text-neutral-300 dark:hover:bg-neutral-800 transition-colors"
                                 >
                                     <Calendar className="w-4 h-4 mr-2" />
-                                    Appointments
+                                    {dashboardLabel}
                                 </NavLink>
 
                                 {/* User Dropdown */}
@@ -203,7 +211,7 @@ export const Navigation: React.FC = () => {
                                         </NavLink>
 
                                         <NavLink
-                                            to="/health"
+                                            to="/health-assessment"
                                             className="flex items-center px-4 py-2 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700"
                                             onClick={() => setIsMenuOpen(false)}
                                         >
@@ -305,6 +313,15 @@ export const Navigation: React.FC = () => {
 
                                         {/* User Links */}
                                         <NavLink
+                                            to={dashboardPath}
+                                            onClick={() => setIsMenuOpen(false)}
+                                            className="flex items-center px-3 py-2 rounded-lg text-sm font-medium text-neutral-600 hover:bg-neutral-50 dark:text-neutral-300 dark:hover:bg-neutral-800"
+                                        >
+                                            <Calendar className="w-4 h-4 mr-2" />
+                                            {dashboardLabel}
+                                        </NavLink>
+
+                                        <NavLink
                                             to="/profile"
                                             onClick={() => setIsMenuOpen(false)}
                                             className="flex items-center px-3 py-2 rounded-lg text-sm font-medium text-neutral-600 hover:bg-neutral-50 dark:text-neutral-300 dark:hover:bg-neutral-800"
@@ -314,7 +331,7 @@ export const Navigation: React.FC = () => {
                                         </NavLink>
 
                                         <NavLink
-                                            to="/health"
+                                            to="/health-assessment"
                                             onClick={() => setIsMenuOpen(false)}
                                             className="flex items-center px-3 py-2 rounded-lg text-sm font-medium text-neutral-600 hover:bg-neutral-50 dark:text-neutral-300 dark:hover:bg-neutral-800"
                                         >
