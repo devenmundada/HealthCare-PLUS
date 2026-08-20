@@ -35,14 +35,23 @@ export class Hospital {
   @Column({ length: 100, nullable: true })
   email: string;
 
-  @Column({ name: 'total_beds', nullable: true })
+  @Column({ length: 20, nullable: true, default: 'private' })
+  type: string; // 'government' | 'private' | 'trust'
+
+  @Column({ name: 'total_beds', nullable: true, default: 0 })
   totalBeds: number;
 
-  @Column({ name: 'icu_beds', nullable: true })
+  @Column({ name: 'icu_beds', nullable: true, default: 0 })
   icuBeds: number;
 
   @Column({ name: 'emergency_contact', length: 20, nullable: true })
   emergencyContact: string;
+
+  @Column({ name: 'ayushman_empaneled', default: false })
+  ayushmanEmpaneled: boolean;
+
+  @Column('decimal', { precision: 3, scale: 2, nullable: true, default: 4.2 })
+  rating: number;
 
   @Column('text', { array: true, nullable: true })
   specialties: string[];

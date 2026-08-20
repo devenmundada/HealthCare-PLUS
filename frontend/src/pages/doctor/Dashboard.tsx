@@ -8,7 +8,7 @@ import { Calendar, Clock, Video, Phone, MapPin, Users, Stethoscope, AlertTriangl
 import axios from 'axios';
 import { useRealtime } from '../../contexts/RealtimeContext';
 
-const API_URL = 'https://healthcare-backend-tylz.onrender.com/api';
+const API_URL = import.meta.env.VITE_API_URL || 'https://healthcare-backend-tylz.onrender.com/api';
 
 interface Appointment {
   id: number;

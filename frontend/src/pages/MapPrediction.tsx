@@ -42,32 +42,57 @@ interface IndianCity {
 }
 
 const MapPrediction: React.FC = () => {
-  const [selectedCity, setSelectedCity] = useState<IndianCity>({
-    id: '2',
-    name: 'Delhi',
-    state: 'Delhi',
-    latitude: 28.7041,
-    longitude: 77.1025,
-  });
+  // No hardcoded default city — we start with nothing selected and try the
+  // user's real location first. A manually picked city overrides that.
+  const [selectedCity, setSelectedCity] = useState<IndianCity | null>(null);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [locating, setLocating] = useState<boolean>(true);
+  const [locationDenied, setLocationDenied] = useState<boolean>(false);
 
   const [hospitals, setHospitals] = useState<IndianHospital[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedHospital, setSelectedHospital] = useState<IndianHospital | null>(null);
 
-  // Fetch real Indian hospitals when city changes
+  // On mount, try to use the browser's real geolocation instead of defaulting
+  // to any particular city.
+  useEffect(() => {
+    if (!navigator.geolocation) {
+      setLocating(false);
+      setLocationDenied(true);
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setUserLocation({ lat: position.coords.latitude, lng: position.coords.longitude });
+        setLocating(false);
+      },
+      () => {
+        setLocationDenied(true);
+        setLocating(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  }, []);
+
+  // Fetch real Indian hospitals near the user's actual location, or near a
+  // manually picked city if they chose one instead.
   useEffect(() => {
     const fetchHospitals = async () => {
+      if (!selectedCity && !userLocation) return;
+
       setLoading(true);
       setError(null);
       try {
-        // Use the real IndianHealthAPI service
-        const realHospitals = await IndianHealthAPI.getHospitalsByCity(selectedCity.name);
+        const realHospitals = selectedCity
+          ? await IndianHealthAPI.getHospitalsByCity(selectedCity.name)
+          : await IndianHealthAPI.getHospitalsNearby(userLocation!.lat, userLocation!.lng);
+
         setHospitals(realHospitals);
-        
-        // If we have hospitals, select the first one
-        if (realHospitals.length > 0) {
-          setSelectedHospital(realHospitals[0]);
+        setSelectedHospital(realHospitals.length > 0 ? realHospitals[0] : null);
+
+        if (realHospitals.length === 0) {
+          setError('No hospitals found near this location yet. Try selecting a nearby city instead.');
         }
       } catch (err) {
         setError('Failed to fetch hospitals. Please try again.');
@@ -78,11 +103,19 @@ const MapPrediction: React.FC = () => {
     };
 
     fetchHospitals();
-  }, [selectedCity]);
+  }, [selectedCity, userLocation]);
 
   const handleCitySelect = (city: IndianCity) => {
+    // A manual city pick always takes priority over device location.
+    setUserLocation(null);
     setSelectedCity(city);
   };
+
+  const mapCenter: [number, number] | null = selectedCity
+    ? [selectedCity.latitude, selectedCity.longitude]
+    : userLocation
+    ? [userLocation.lat, userLocation.lng]
+    : null;
 
   const handleGetDirections = (hospital: IndianHospital) => {
     if (hospital.latitude && hospital.longitude) {
@@ -118,6 +151,19 @@ const MapPrediction: React.FC = () => {
           />
         </div>
 
+        {/* Location status */}
+        {locating && (
+          <div className="mb-6 flex justify-center items-center p-4 bg-blue-50 rounded-lg text-blue-700">
+            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600 mr-3"></div>
+            Detecting your location…
+          </div>
+        )}
+        {!locating && locationDenied && !selectedCity && (
+          <div className="mb-6 p-4 bg-yellow-50 border-l-4 border-yellow-500 text-yellow-800 rounded">
+            Couldn't access your location. Please select a city below to see hospitals near you.
+          </div>
+        )}
+
         {/* Loading and Error States */}
         {loading && (
           <div className="flex justify-center items-center p-8">
@@ -144,8 +190,15 @@ const MapPrediction: React.FC = () => {
           {/* Map Container */}
           <div className="lg:col-span-2">
             <div className="bg-white rounded-xl shadow-lg p-4 h-[500px]">
+              {!mapCenter ? (
+                <div className="h-full w-full flex items-center justify-center text-gray-500 text-center px-6">
+                  {locating
+                    ? 'Detecting your location…'
+                    : 'Enable location access or select a city to see hospitals on the map.'}
+                </div>
+              ) : (
               <MapContainer
-                center={[selectedCity.latitude, selectedCity.longitude]}
+                center={mapCenter}
                 zoom={12}
                 className="h-full w-full rounded-lg"
               >
@@ -153,10 +206,10 @@ const MapPrediction: React.FC = () => {
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                   attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 />
-                
-                {/* Mark selected city */}
+
+                {/* Mark selected city or the user's real location */}
                 <Marker
-                  position={[selectedCity.latitude, selectedCity.longitude]}
+                  position={mapCenter}
                   icon={L.divIcon({
                     html: `<div style="
                       background-color: #3B82F6;
@@ -177,11 +230,15 @@ const MapPrediction: React.FC = () => {
                   })}
                 >
                   <Popup>
-                    <div className="font-semibold">{selectedCity.name}, {selectedCity.state}</div>
-                    <div className="text-sm text-gray-600">Selected City</div>
+                    <div className="font-semibold">
+                      {selectedCity ? `${selectedCity.name}, ${selectedCity.state}` : 'Your Location'}
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      {selectedCity ? 'Selected City' : 'Detected via device GPS'}
+                    </div>
                   </Popup>
                 </Marker>
-                
+
                 {/* Real hospital markers */}
                 {hospitals.map((hospital) => (
                   <Marker
@@ -223,6 +280,7 @@ const MapPrediction: React.FC = () => {
                   </Marker>
                 ))}
               </MapContainer>
+              )}
             </div>
           </div>
 
@@ -230,7 +288,7 @@ const MapPrediction: React.FC = () => {
           <div className="lg:col-span-1">
             <div className="bg-white rounded-xl shadow-lg p-6 h-[500px] overflow-y-auto">
               <h2 className="text-2xl font-bold text-gray-900 mb-6">
-                Hospitals in {selectedCity.name}
+                Hospitals {selectedCity ? `in ${selectedCity.name}` : 'Near You'}
                 <span className="ml-2 text-sm font-normal text-gray-500">
                   ({hospitals.length} found)
                 </span>

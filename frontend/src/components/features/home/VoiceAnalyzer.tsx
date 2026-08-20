@@ -158,7 +158,7 @@ const VoiceAnalyzer: React.FC = () => {
       console.log('📤 Sending to voice analysis API on port 3001...')
 
       const response = await axios.post(
-        'https://healthcare-backend-tylz.onrender.com/api/voice/analyze',
+        `${import.meta.env.VITE_API_URL || 'https://healthcare-backend-tylz.onrender.com/api'}/voice/analyze`,
         formData,
         { 
           headers: { 'Content-Type': 'multipart/form-data' },

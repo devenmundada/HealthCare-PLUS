@@ -138,9 +138,9 @@ export const Doctors: React.FC = () => {
               emergency: doc.specialty === 'Emergency Medicine' || false
             },
             hospital: {
-              name: doc.hospital_name || 'Apollo Hospital',
-              city: doc.hospital_city || 'Mumbai',
-              distance: Math.floor(Math.random() * 20 + 1) + ' km'
+              name: doc.hospital_name || 'Hospital not assigned',
+              city: doc.hospital_city || '',
+              distance: ''
             },
             schedule: {
               days: doc.available_days || ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
@@ -441,7 +441,9 @@ export const Doctors: React.FC = () => {
                             <div>
                               <div className="font-medium">{doctor.hospital.name}</div>
                               <div className="text-sm text-neutral-500">
-                                {doctor.hospital.city} • {doctor.hospital.distance} away
+                                {[doctor.hospital.city, doctor.hospital.distance ? `${doctor.hospital.distance} away` : null]
+                                  .filter(Boolean)
+                                  .join(' • ')}
                               </div>
                             </div>
                           </div>

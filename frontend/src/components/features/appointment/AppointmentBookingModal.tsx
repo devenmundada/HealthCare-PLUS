@@ -44,6 +44,7 @@ const AppointmentBookingModal: React.FC<AppointmentBookingModalProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [bookingSuccess, setBookingSuccess] = useState<{
     meetLink?: string | null;
+    calendarNote?: string | null;
     message: string;
   } | null>(null);
 
@@ -149,13 +150,18 @@ const AppointmentBookingModal: React.FC<AppointmentBookingModalProps> = ({
       const response = await realtimeService.bookAppointment(payload);
       const appointment = response?.data ?? response;
 
-      let message = `Appointment booked successfully with ${activeDoctor.name} on ${selectedDate} at ${selectedTime}.`;
-      if (consultationType === "video" && appointment?.meetingLink) {
-        message += ` Your Google Meet link is ready.`;
-      }
+      const message = `Appointment booked successfully with ${activeDoctor.name} on ${selectedDate} at ${selectedTime}.`;
 
       setBookingSuccess({
         meetLink: appointment?.meetingLink ?? null,
+        // Only claim a calendar event exists when the backend actually returned
+        // a meet link — otherwise say plainly why there isn't one.
+        calendarNote:
+          consultationType === "video"
+            ? appointment?.meetingLink
+              ? "A Google Meet link was created and added to the doctor's calendar. You've been invited by email."
+              : "This doctor hasn't enabled video consultations (Google Calendar not connected) yet — your appointment is booked, but no meeting link was created. Please contact the clinic for details."
+            : null,
         message,
       });
     } catch (err: any) {
@@ -213,9 +219,17 @@ const AppointmentBookingModal: React.FC<AppointmentBookingModalProps> = ({
                   Join Google Meet
                 </a>
               )}
-              <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
-                The event has been added to your Google Calendar.
-              </p>
+              {bookingSuccess.calendarNote && (
+                <p
+                  className={`mt-2 text-sm ${
+                    bookingSuccess.meetLink
+                      ? "text-neutral-600 dark:text-neutral-400"
+                      : "text-amber-700 dark:text-amber-400"
+                  }`}
+                >
+                  {bookingSuccess.calendarNote}
+                </p>
+              )}
             </div>
             <button onClick={handleClose} className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
               Done

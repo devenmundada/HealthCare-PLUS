@@ -12,43 +12,48 @@ export class GoogleCalendarService {
       process.env.GOOGLE_REDIRECT_URI
     );
 
-    // If we have a refresh token, use it
-    if (process.env.GOOGLE_REFRESH_TOKEN) {
-      this.oauth2Client.setCredentials({
-        refresh_token: process.env.GOOGLE_REFRESH_TOKEN
-      });
-    }
-
     this.calendar = google.calendar({ version: 'v3', auth: this.oauth2Client });
   }
 
   /**
-   * Get authentication URL for first-time setup
+   * Build a fresh client authorized as a specific doctor, using their stored
+   * refresh token. Each doctor has their own Google account/calendar, so we
+   * can't share one OAuth2Client instance across requests for different doctors.
    */
-  getAuthUrl(): string {
+  private clientFor(refreshToken: string): any {
+    const client = new google.auth.OAuth2(
+      process.env.GOOGLE_CLIENT_ID,
+      process.env.GOOGLE_CLIENT_SECRET,
+      process.env.GOOGLE_REDIRECT_URI
+    );
+    client.setCredentials({ refresh_token: refreshToken });
+    return google.calendar({ version: 'v3', auth: client });
+  }
+
+  /**
+   * Get authentication URL for a doctor to connect their Google Calendar.
+   * `state` carries the doctor's id through the redirect so the callback
+   * knows whose account to save the refresh token against.
+   */
+  getAuthUrl(state: string): string {
     const scopes = [
       'https://www.googleapis.com/auth/calendar',
       'https://www.googleapis.com/auth/calendar.events',
     ];
-    
+
     return this.oauth2Client.generateAuthUrl({
       access_type: 'offline',
       scope: scopes,
-      prompt: 'consent' // Force to get refresh token
+      prompt: 'consent', // Force to get a refresh token every time
+      state,
     });
   }
 
   /**
-   * Exchange code for tokens (first-time setup)
+   * Exchange the one-time code Google sends back for tokens.
    */
   async getTokensFromCode(code: string) {
     const { tokens } = await this.oauth2Client.getToken(code);
-    this.oauth2Client.setCredentials(tokens);
-    
-    // Save refresh token to .env (you'd do this manually)
-    console.log('Refresh Token:', tokens.refresh_token);
-    console.log('Add this to your .env file as GOOGLE_REFRESH_TOKEN');
-    
     return tokens;
   }
 
@@ -61,9 +66,18 @@ export class GoogleCalendarService {
     startTime: Date,
     endTime: Date,
     patientEmail?: string,
-    doctorEmail?: string
+    doctorEmail?: string,
+    doctorRefreshToken?: string | null
   ) {
+    if (!doctorRefreshToken) {
+      return {
+        success: false,
+        error: 'Doctor has not connected Google Calendar',
+      };
+    }
+
     try {
+      const calendar = this.clientFor(doctorRefreshToken);
       const start = startTime instanceof Date ? startTime : new Date(startTime);
       const end = endTime instanceof Date ? endTime : new Date(endTime);
 
@@ -97,7 +111,7 @@ export class GoogleCalendarService {
         },
       };
 
-      const response = await this.calendar.events.insert({
+      const response = await calendar.events.insert({
         calendarId: 'primary',
         requestBody: event,
         conferenceDataVersion: 1,

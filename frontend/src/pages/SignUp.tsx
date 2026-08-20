@@ -6,7 +6,7 @@ import { GlassCard } from '../components/layout/GlassCard';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Badge } from '../components/ui/Badge';
-import { api } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 import { 
   User, 
   Mail, 
@@ -41,6 +41,7 @@ interface ValidationErrors {
 
 export const SignUp: React.FC = () => {
   const navigate = useNavigate();
+  const { signup } = useAuth();
   const [formData, setFormData] = useState<SignUpForm>({
     name: '',
     email: '',
@@ -115,30 +116,25 @@ export const SignUp: React.FC = () => {
     setIsLoading(true);
 
     try {
-      // Send data to backend API using the API service
-      const response = await api.post('/auth/signup', {
+      // Use the AuthContext signup so the app's auth state updates immediately
+      // (previously this called the API directly and wrote localStorage by hand,
+      // which left the rest of the app thinking the user was still logged out).
+      const success = await signup({
         name: formData.name,
         email: formData.email,
         phone: formData.phone,
         password: formData.password,
       });
 
-      const data = response.data;
-
-      if (response.status === 201 || response.status === 200) {
-        // Success
+      if (success) {
         setSignUpSuccess(true);
-        
-        // Store token in localStorage if provided
-        if (data.token) {
-          localStorage.setItem('auth_token', data.token);
-          localStorage.setItem('user', JSON.stringify(data.user));
-        }
 
         // Redirect after 3 seconds
         setTimeout(() => {
           navigate('/');
         }, 3000);
+      } else {
+        setErrors({ email: 'Unable to create account. This email may already be registered.' });
       }
     } catch (error) {
       console.error('Sign up error:', error);

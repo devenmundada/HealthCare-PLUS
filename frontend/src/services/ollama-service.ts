@@ -1,6 +1,7 @@
 import axios from 'axios';
 
 const OLLAMA_BASE_URL = 'http://localhost:11434/api';
+const BACKEND_API_URL = import.meta.env.VITE_API_URL || 'https://healthcare-backend-tylz.onrender.com/api';
 
 export interface OllamaResponse {
   model: string;
@@ -40,7 +41,7 @@ class OllamaService {
       // First check backend proxy
       if (this.useProxy) {
         try {
-          const proxyStatus = await axios.get('https://healthcare-backend-tylz.onrender.com/api/ai/status', { timeout: 3000 });
+          const proxyStatus = await axios.get(`${BACKEND_API_URL}/ai/status`, { timeout: 3000 });
           if (proxyStatus.data.available) {
             this.isAvailable = true;
             console.log('✅ Backend AI proxy is available');
@@ -99,7 +100,7 @@ class OllamaService {
   // Generate using backend proxy
   async generateWithProxy(prompt: string): Promise<string> {
     try {
-      const response = await axios.post('https://healthcare-backend-tylz.onrender.com/api/ai/chat', {
+      const response = await axios.post(`${BACKEND_API_URL}/ai/chat`, {
         message: prompt
       }, {
         timeout: 30000

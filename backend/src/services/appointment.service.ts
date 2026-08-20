@@ -145,7 +145,8 @@ export class AppointmentService {
         data.scheduledTime,
         endTime,
         patientEmail,
-        doctorEmail
+        doctorEmail,
+        doctor.googleRefreshToken
       );
       if (meetResult.success) {
         meetLink = meetResult.meetLink;
@@ -462,7 +463,7 @@ export class AppointmentService {
   }
 
   async getRefreshToken() {
-    const authUrl = this.calendarService.getAuthUrl();
+    const authUrl = this.calendarService.getAuthUrl('manual-setup');
     console.log('Visit this URL to authorize:', authUrl);
     console.log('After authorization, you\'ll get a code. Use it to get refresh token.');
     return { authUrl };

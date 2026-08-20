@@ -16,6 +16,7 @@ import { NotificationService } from './services/notification.service';
 import triageRoutes from './routes/triage.routes';
 import { initializeServices } from './services';
 import { AppDataSource } from './config/database.config';
+import { seedInitialData } from './config/seed';
 import aiRoutes from './routes/ai.routes';
 import appointmentRoutes from './routes/appointment.routes';
 import { AlertService } from './services/alert.service'; // ✅ ADD THIS
@@ -24,8 +25,9 @@ console.log('1. Imports started...');
 console.log('1.5 Initializing database connection...');
 
 AppDataSource.initialize()
-  .then(() => {
+  .then(async () => {
     console.log('✅ Database connected successfully');
+    await seedInitialData();
   })
   .catch((error) => {
     console.error('❌ Database connection failed:', error);
@@ -84,6 +86,12 @@ console.log('17. patientApiRoutes imported');
 
 import doctorsRoutes from './routes/doctors.routes';
 console.log('18. doctorsRoutes imported');
+
+import hospitalsRoutes from './routes/hospitals.routes';
+console.log('18.5. hospitalsRoutes imported');
+
+import googleAuthRoutes from './routes/google-auth.routes';
+console.log('18.6. googleAuthRoutes imported');
 
 console.log('✅ All imports successful');
 
@@ -198,6 +206,12 @@ console.log('40. Patient API routes mounted');
 
 app.use(`${apiPrefix}/doctors`, doctorsRoutes);
 console.log('41. Doctors routes mounted');
+
+app.use(`${apiPrefix}/india/hospitals`, hospitalsRoutes);
+console.log('41.5. Hospitals routes mounted');
+
+app.use(`${apiPrefix}/auth/google`, googleAuthRoutes);
+console.log('41.6. Google auth routes mounted');
 
 app.use(`${apiPrefix}/notifications`, notificationRoutes);
 console.log('42. Notification routes mounted');

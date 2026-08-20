@@ -19,7 +19,7 @@ import {
   XCircle
 } from 'lucide-react';
 
-const API_URL = 'https://healthcare-backend-tylz.onrender.com/api';
+const API_URL = import.meta.env.VITE_API_URL || 'https://healthcare-backend-tylz.onrender.com/api';
 
 interface Patient {
   id: string;

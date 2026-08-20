@@ -7,7 +7,7 @@ import { MapPin, Navigation, Star, Clock, Filter, X } from 'lucide-react';
 import locationService from '../../../services/location.service';
 import axios from 'axios';
 
-const API_URL = 'https://healthcare-backend-tylz.onrender.com/api';
+const API_URL = import.meta.env.VITE_API_URL || 'https://healthcare-backend-tylz.onrender.com/api';
 
 interface Doctor {
   id: number;
@@ -221,7 +221,8 @@ export const SmartDoctorFinder: React.FC = () => {
                 className="w-full"
               />
             </div>
-          </div        </GlassCard>
+          </div>
+        </GlassCard>
       )}
 
       {/* Results Count */}

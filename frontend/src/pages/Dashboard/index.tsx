@@ -22,7 +22,7 @@ import { MOCK_TRIAGE_PATIENTS } from '../../mocks/triage';
 import { MOCK_AMBULANCES } from '../../mocks/ambulances';
 import axios from 'axios';
 
-const API_URL = 'https://healthcare-backend-tylz.onrender.com/api';
+const API_URL = import.meta.env.VITE_API_URL || 'https://healthcare-backend-tylz.onrender.com/api';
 
 interface ApiDoctor {
   id: number;

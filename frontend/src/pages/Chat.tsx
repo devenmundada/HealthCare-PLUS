@@ -1,17 +1,3 @@
-// Add these lines at the VERY BEGINNING of Chat.tsx, before imports:
-console.log('🚀 Chat.tsx is loading');
-console.log('Auth token:', localStorage.getItem('authToken'));
-console.log('User:', localStorage.getItem('user'));
-
-// Then check if we're in protected route
-if (typeof window !== 'undefined') {
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('debug')) {
-        localStorage.setItem('authToken', 'debug-token-' + Date.now());
-        localStorage.setItem('user', JSON.stringify({ id: 1, name: 'Debug User' }));
-    }
-}
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Container } from '../components/layout/Container';
 import { Card } from '../components/ui/Card';

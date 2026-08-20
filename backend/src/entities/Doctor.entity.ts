@@ -59,6 +59,9 @@ export class Doctor {
   @Column({ name: 'available_hours', length: 100, nullable: true })
   availableHours: string;
 
+  @Column({ name: 'google_refresh_token', type: 'text', nullable: true })
+  googleRefreshToken: string | null;
+
   @Column({ name: 'created_at', type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
 

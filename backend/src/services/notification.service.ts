@@ -8,13 +8,11 @@ import {
   NOTIFICATION_TEMPLATES 
 } from '../types/notification.types';
 import { v4 as uuidv4 } from 'uuid';
-import Queue from 'bull';
 
 export class NotificationService {
   private emailService: EmailService;
   private smsService: SMSService;
   private socketService: SocketService;
-  private notificationQueue: Queue.Queue;
   private notifications: Map<string, Notification>;
 
   constructor(socketService: SocketService) {
@@ -23,38 +21,31 @@ export class NotificationService {
     this.socketService = socketService;
     this.notifications = new Map();
 
-    // Initialize queue for async notifications
-    this.notificationQueue = new Queue('notifications', {
-      redis: {
-        host: process.env.REDIS_HOST || 'localhost',
-        port: parseInt(process.env.REDIS_PORT || '6379')
-      }
-    });
-
-    this.processQueue();
     console.log('🔔 Notification service initialized');
   }
 
-  private processQueue() {
-    this.notificationQueue.process(async (job) => {
-      const { notification, channel } = job.data;
-      
+  // Dispatches a single notification. Runs directly (no Redis/queue dependency —
+  // this app doesn't provision Redis, and a queue that can't reach it would hang
+  // every caller indefinitely). Failures here must never block the caller
+  // (e.g. appointment booking), so errors are logged and swallowed.
+  private async dispatch(notification: Notification, channel: NotificationChannel) {
+    try {
       switch (channel) {
         case 'email':
-          return await this.emailService.sendEmail(notification);
+          return await this.emailService.sendEmail(notification as any);
         case 'sms':
-          return await this.smsService.sendSMS(notification);
+          return await this.smsService.sendSMS(notification as any);
         case 'push':
-          // Will implement push notifications
           console.log('Push notification:', notification);
           return { success: true };
         case 'inapp':
           this.socketService.sendNotificationToUser(notification.userId, notification);
           return { success: true };
       }
-    });
-
-    console.log('📨 Notification queue processor started');
+    } catch (error) {
+      console.warn(`⚠️ Notification ${notification.id} via ${channel} failed (non-fatal):`, error);
+      return { success: false };
+    }
   }
 
   async sendNotification(
@@ -83,23 +74,18 @@ export class NotificationService {
 
     this.notifications.set(notificationId, notification);
 
-    // Add to queue for processing
-    await this.notificationQueue.add({
-      notification,
-      channel
-    }, {
-      priority: priority === 'emergency' ? 1 : 
-                priority === 'high' ? 2 : 
-                priority === 'medium' ? 3 : 4,
-      attempts: 3,
-      backoff: {
-        type: 'exponential',
-        delay: 2000
-      }
-    });
+    // Fire-and-forget: don't let a slow/broken email or SMS provider block
+    // whatever triggered this notification (e.g. booking an appointment).
+    this.dispatch(notification, channel)
+      .then((result) => {
+        notification.status = result?.success ? 'sent' : 'failed';
+      })
+      .catch(() => {
+        notification.status = 'failed';
+      });
 
-    console.log(`📨 Notification ${notificationId} queued for ${userId} via ${channel}`);
-    
+    console.log(`📨 Notification ${notificationId} dispatched for ${userId} via ${channel}`);
+
     return notificationId;
   }
 
