@@ -8,6 +8,12 @@ export class Hospital {
   @PrimaryGeneratedColumn()
   id: number;
 
+  // Links this hospital to the admin account that manages it (signed up
+  // with role='hospital'). Nullable because the 20 seeded hospitals have no
+  // real admin yet.
+  @Column({ name: 'user_id', type: 'int', nullable: true, unique: true })
+  userId: number | null;
+
   @Column({ length: 200 })
   name: string;
 
@@ -43,6 +49,15 @@ export class Hospital {
 
   @Column({ name: 'icu_beds', nullable: true, default: 0 })
   icuBeds: number;
+
+  @Column({ name: 'operation_theatres', nullable: true, default: 0 })
+  operationTheatres: number;
+
+  @Column({ name: 'ambulances_total', nullable: true, default: 0 })
+  ambulancesTotal: number;
+
+  @Column({ name: 'ambulances_available', nullable: true, default: 0 })
+  ambulancesAvailable: number;
 
   @Column({ name: 'emergency_contact', length: 20, nullable: true })
   emergencyContact: string;

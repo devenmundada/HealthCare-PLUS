@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { In } from 'typeorm';
+import { In, IsNull } from 'typeorm';
 import { AppDataSource } from '../config/database.config';
 import { Doctor } from '../entities/Doctor.entity';
 import { Hospital } from '../entities/Hospital.entity';
@@ -7,6 +7,21 @@ import { Hospital } from '../entities/Hospital.entity';
 export class DoctorsController {
   private doctorRepository = AppDataSource.getRepository(Doctor);
   private hospitalRepository = AppDataSource.getRepository(Hospital);
+
+  // GET /api/doctors/unclaimed
+  // Doctor profiles with no login account linked yet — used by the signup
+  // form so a real person can pick "I am Dr. X" instead of a fragile
+  // exact-email match that silently creates an orphaned duplicate on typo.
+  async getUnclaimedDoctors(req: Request, res: Response) {
+    try {
+      const unclaimed = await this.doctorRepository.find({ where: { userId: IsNull() } });
+      const enriched = await this.withHospitalInfo(unclaimed);
+      return res.json({ success: true, data: enriched });
+    } catch (error: any) {
+      console.error('Get unclaimed doctors error:', error);
+      return res.status(500).json({ success: false, error: error.message });
+    }
+  }
 
   // GET /api/doctors/doctor-for-user/:userId
   // Resolves the Doctor profile linked to a logged-in user, the same way
@@ -57,8 +72,10 @@ export class DoctorsController {
     try {
       console.log('📊 Fetching all doctors from database...');
 
-      const { specialty, city } = req.query;
-      let doctors = await this.doctorRepository.find();
+      const { specialty, city, hospitalId } = req.query;
+      let doctors = hospitalId
+        ? await this.doctorRepository.find({ where: { hospitalId: parseInt(hospitalId as string) } })
+        : await this.doctorRepository.find();
 
       if (specialty && typeof specialty === 'string') {
         doctors = doctors.filter((d) => d.specialty === specialty);
