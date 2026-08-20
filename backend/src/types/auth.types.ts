@@ -18,6 +18,7 @@ export interface CreateUserDto {
   phone: string;
   password: string;
   role?: 'patient' | 'doctor' | 'admin';
+  specialty?: string; // used only when role === 'doctor' and no existing Doctor profile matches the email
 }
 
 export interface LoginDto {

@@ -8,6 +8,31 @@ export class DoctorsController {
   private doctorRepository = AppDataSource.getRepository(Doctor);
   private hospitalRepository = AppDataSource.getRepository(Hospital);
 
+  // GET /api/doctors/doctor-for-user/:userId
+  // Resolves the Doctor profile linked to a logged-in user, the same way
+  // /appointments/patient-for-user/:userId resolves a Patient profile.
+  async getDoctorForUser(req: Request, res: Response) {
+    try {
+      const userId = parseInt(req.params.userId);
+      if (isNaN(userId)) {
+        return res.status(400).json({ success: false, error: 'Valid user ID required' });
+      }
+
+      const doctor = await this.doctorRepository.findOne({ where: { userId } });
+      if (!doctor) {
+        return res.status(404).json({
+          success: false,
+          error: 'No doctor profile linked to this account yet.'
+        });
+      }
+
+      return res.json({ success: true, data: { doctorId: doctor.id } });
+    } catch (error: any) {
+      console.error('Get doctor for user error:', error);
+      return res.status(500).json({ success: false, error: error.message });
+    }
+  }
+
   // Attach real hospital name/city/state to each doctor instead of leaving the
   // frontend to fall back to hardcoded placeholder hospital data.
   private async withHospitalInfo(doctors: Doctor[]) {

@@ -8,6 +8,12 @@ export class Doctor {
   @PrimaryGeneratedColumn()
   id: number;
 
+  // Links this doctor profile to a login account (users.role = 'doctor').
+  // Nullable because most seeded doctors have no account yet — they're
+  // linked lazily the first time someone signs up with a matching email.
+  @Column({ name: 'user_id', type: 'int', nullable: true, unique: true })
+  userId: number | null;
+
   @Column({ length: 100 })
   name: string;
 

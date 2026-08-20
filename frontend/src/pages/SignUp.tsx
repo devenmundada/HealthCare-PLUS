@@ -28,6 +28,8 @@ interface SignUpForm {
   password: string;
   confirmPassword: string;
   agreeToTerms: boolean;
+  role: 'patient' | 'doctor';
+  specialty: string;
 }
 
 interface ValidationErrors {
@@ -49,6 +51,8 @@ export const SignUp: React.FC = () => {
     password: '',
     confirmPassword: '',
     agreeToTerms: false,
+    role: 'patient',
+    specialty: '',
   });
   
   const [errors, setErrors] = useState<ValidationErrors>({});
@@ -124,6 +128,8 @@ export const SignUp: React.FC = () => {
         email: formData.email,
         phone: formData.phone,
         password: formData.password,
+        role: formData.role,
+        specialty: formData.role === 'doctor' ? formData.specialty : undefined,
       });
 
       if (success) {
@@ -277,6 +283,62 @@ export const SignUp: React.FC = () => {
             <div>
               <GlassCard className="p-8">
                 <form onSubmit={handleSubmit} className="space-y-6">
+                  {/* Account Type */}
+                  <div>
+                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                      I am signing up as a
+                    </label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setFormData((prev) => ({ ...prev, role: 'patient' }))}
+                        disabled={isLoading}
+                        className={`p-3 rounded-lg border text-sm font-medium transition-colors ${
+                          formData.role === 'patient'
+                            ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300'
+                            : 'border-neutral-300 dark:border-neutral-600 text-neutral-600 dark:text-neutral-400 hover:border-primary-300'
+                        }`}
+                      >
+                        Patient
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFormData((prev) => ({ ...prev, role: 'doctor' }))}
+                        disabled={isLoading}
+                        className={`p-3 rounded-lg border text-sm font-medium transition-colors ${
+                          formData.role === 'doctor'
+                            ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300'
+                            : 'border-neutral-300 dark:border-neutral-600 text-neutral-600 dark:text-neutral-400 hover:border-primary-300'
+                        }`}
+                      >
+                        Doctor
+                      </button>
+                    </div>
+                    {formData.role === 'doctor' && (
+                      <p className="text-xs text-neutral-500 mt-2">
+                        If your name/email matches an existing doctor profile on the platform, your account
+                        will be linked to it automatically. Otherwise a new profile is created.
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Specialty (doctor only) */}
+                  {formData.role === 'doctor' && (
+                    <div>
+                      <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                        Specialty
+                      </label>
+                      <Input
+                        type="text"
+                        name="specialty"
+                        value={formData.specialty}
+                        onChange={handleChange}
+                        placeholder="e.g. Cardiology (only used if no existing profile matches your email)"
+                        disabled={isLoading}
+                      />
+                    </div>
+                  )}
+
                   {/* Name Field */}
                   <div>
                     <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">

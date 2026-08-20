@@ -39,10 +39,23 @@ export const DoctorDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'today' | 'upcoming' | 'past'>('today');
   const [respondingId, setRespondingId] = useState<number | null>(null);
   const [contactOpenId, setContactOpenId] = useState<number | null>(null);
+  const [doctorId, setDoctorId] = useState<number | null>(null);
+  const [profileError, setProfileError] = useState<string | null>(null);
+
+  // The logged-in User's id and the Doctor profile's id are different rows —
+  // resolve the real one before fetching anything appointment-related.
+  useEffect(() => {
+    if (!user?.id) return;
+    axios
+      .get(`${API_URL}/doctors/doctor-for-user/${user.id}`)
+      .then((res) => setDoctorId(res.data?.data?.doctorId ?? null))
+      .catch(() => setProfileError('No doctor profile is linked to this account yet.'));
+  }, [user?.id]);
 
   const fetchAppointments = useCallback(async () => {
+    if (!doctorId) return;
     try {
-      const response = await axios.get(`${API_URL}/appointments/doctor/${user?.id}`);
+      const response = await axios.get(`${API_URL}/appointments/doctor/${doctorId}`);
       if (response.data.success) {
         setAppointments(response.data.data);
       }
@@ -51,11 +64,12 @@ export const DoctorDashboard: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [user?.id]);
+  }, [doctorId]);
 
   useEffect(() => {
-    fetchAppointments();
-  }, [fetchAppointments]);
+    if (doctorId) fetchAppointments();
+    else if (profileError) setLoading(false);
+  }, [fetchAppointments, doctorId, profileError]);
 
   // Live-refresh when a new booking request comes in or another session
   // (e.g. this doctor logged in on another tab) changes an appointment's
@@ -134,6 +148,13 @@ export const DoctorDashboard: React.FC = () => {
             <Button variant="secondary" size="sm">Mark Unavailable</Button>
           </div>
         </div>
+
+        {profileError && (
+          <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-center gap-3">
+            <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0" />
+            <p className="text-sm text-red-700 dark:text-red-300">{profileError}</p>
+          </div>
+        )}
 
         {/* Pending Requests Banner */}
         {pendingCount > 0 && (

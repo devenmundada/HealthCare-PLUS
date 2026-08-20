@@ -24,6 +24,8 @@ export interface SignupData {
   email: string;
   phone: string;
   password: string;
+  role?: 'patient' | 'doctor';
+  specialty?: string; // only used when role === 'doctor'
 }
 
 interface AuthContextType {

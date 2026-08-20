@@ -1,6 +1,7 @@
 import { AppDataSource } from '../config/database.config';
 import { User } from '../entities/User.entity';
 import { Patient } from '../entities/Patient.entity';
+import { Doctor } from '../entities/Doctor.entity';
 import { CreateUserDto, LoginDto, AuthResponse, JwtPayload, User as UserType } from '../types/auth.types';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
@@ -8,6 +9,7 @@ import jwt from 'jsonwebtoken';
 export class AuthService {
   private userRepository = AppDataSource.getRepository(User);
   private patientRepository = AppDataSource.getRepository(Patient);
+  private doctorRepository = AppDataSource.getRepository(Doctor);
 
   async signup(userData: CreateUserDto): Promise<AuthResponse> {
     try {
@@ -48,6 +50,37 @@ export class AuthService {
           currentMedications: []
         });
         await this.patientRepository.save(patient);
+      }
+
+      // If role is doctor, link this account to a Doctor profile — either
+      // an existing one matching this email (e.g. a seeded/pre-loaded
+      // doctor whose real owner is now signing up), or a fresh minimal
+      // profile if none exists yet.
+      if (user.role === 'doctor') {
+        let doctor = await this.doctorRepository.findOne({ where: { email: userData.email } });
+        if (doctor && doctor.userId && doctor.userId !== user.id) {
+          // Someone else already claimed this doctor profile — don't silently
+          // reassign it. Extremely unlikely (email is unique on users too)
+          // but fail loudly rather than let two accounts fight over one profile.
+          throw new Error('This doctor profile is already linked to another account');
+        }
+        if (doctor) {
+          doctor.userId = user.id;
+          await this.doctorRepository.save(doctor);
+        } else {
+          doctor = this.doctorRepository.create({
+            userId: user.id,
+            name: user.name,
+            email: user.email,
+            phone: user.phone,
+            specialty: userData.specialty || 'General Physician',
+            experienceYears: 0,
+            isVerified: false,
+            qualification: [],
+            languages: [],
+          });
+          await this.doctorRepository.save(doctor);
+        }
       }
 
       // Generate JWT token
