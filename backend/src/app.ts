@@ -131,13 +131,19 @@ app.use(cors(corsOptions));
 console.log('21. CORS middleware added');
 
 // Rate limiting
+// 100 req/15min (the original value here) is far too tight for a real app
+// page: the homepage alone fires off requests for doctors, weather,
+// hospitals, insights, and appointments in parallel, and Command Center /
+// Doctors pages add more on top. A handful of reloads exhausted it during
+// testing and silently looked like "the data is broken" — this is what
+// actually caused doctors to stop showing up, not a data or code bug.
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
-  message: 'Too many requests from th IP, please try again later.',
+  max: 1000,
+  message: 'Too many requests from this IP, please try again in a few minutes.',
   standardHeaders: true,
   legacyHeaders: false,
-}); 
+});
 app.use('/api/', limiter);
 console.log('22. Rate limiting added');
 

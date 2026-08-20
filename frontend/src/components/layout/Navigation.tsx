@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { Logo } from '../shared/Logo';
 import { Button } from '../ui/Button';
@@ -40,7 +40,14 @@ const navigation = [
 
 export const Navigation: React.FC = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const [darkMode, setDarkMode] = useState(false);
+    // Never persisted before — every reload silently reset to light mode
+    // regardless of what was chosen. Read the saved choice (or fall back to
+    // the OS preference) on first render instead of always starting false.
+    const [darkMode, setDarkMode] = useState(() => {
+        const saved = localStorage.getItem('theme');
+        if (saved) return saved === 'dark';
+        return window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false;
+    });
     const [emergencyAlerts, _setEmergencyAlerts] = useState(0);
     const { isAuthenticated, user, logout } = useAuth();
     const navigate = useNavigate();
@@ -64,14 +71,16 @@ export const Navigation: React.FC = () => {
         (item) => item.name !== 'Command Center' || user?.role === 'hospital'
     );
 
-    // Toggle dark mode
+    // Apply + persist whenever darkMode changes, including the very first
+    // render — this is what actually makes the initial state (read above)
+    // take visual effect, and what survives the next reload.
+    useEffect(() => {
+        document.documentElement.classList.toggle('dark', darkMode);
+        localStorage.setItem('theme', darkMode ? 'dark' : 'light');
+    }, [darkMode]);
+
     const toggleDarkMode = () => {
-        setDarkMode(!darkMode);
-        if (!darkMode) {
-            document.documentElement.classList.add('dark');
-        } else {
-            document.documentElement.classList.remove('dark');
-        }
+        setDarkMode((prev) => !prev);
     };
 
     // Auth handlers
