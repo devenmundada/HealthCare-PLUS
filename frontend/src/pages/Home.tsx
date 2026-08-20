@@ -234,8 +234,7 @@ export const Home: React.FC = () => {
           if (isAuthenticated) {
             logout();
           } else {
-            // In a real app, this would open a login modal
-            window.location.href = '/signup';
+            navigate('/login');
           }
         }}
         className="border-primary-200 dark:border-primary-800 text-primary-700 dark:text-primary-300"
@@ -248,9 +247,7 @@ export const Home: React.FC = () => {
   // Conditional Content Component
   const AuthConditionalContent: React.FC = () => {
     const { isAuthenticated, user } = useAuth();
-    // Provide default empty arrays to prevent undefined errors
-    // These would normally come from the backend/API
-    const appointments: Array<{
+    const [appointments, setAppointments] = useState<Array<{
       id: string | number;
       type: string;
       status: string;
@@ -259,8 +256,8 @@ export const Home: React.FC = () => {
       date: string;
       time: string;
       duration: string;
-    }> = [];
-    const notifications: Array<{
+    }>>([]);
+    const [notifications, setNotifications] = useState<Array<{
       id: string | number;
       type: string;
       title: string;
@@ -268,7 +265,73 @@ export const Home: React.FC = () => {
       timestamp: string;
       read: boolean;
       priority: string;
-    }> = [];
+    }>>([]);
+    const [loadingAppointments, setLoadingAppointments] = useState(false);
+
+    // Pull this user's real upcoming appointments from the backend, then
+    // derive a lightweight notification feed from them (reminders/status
+    // updates) rather than depending on the SMS/emergency notification
+    // system, which tracks a different kind of record.
+    useEffect(() => {
+      if (!isAuthenticated || !user) return;
+
+      const API_URL = import.meta.env.VITE_API_URL || 'https://healthcare-backend-tylz.onrender.com/api';
+
+      const load = async () => {
+        setLoadingAppointments(true);
+        try {
+          const patientRes = await fetch(`${API_URL}/appointments/patient-for-user/${user.id}`);
+          if (!patientRes.ok) return;
+          const patientJson = await patientRes.json();
+          const patientId = patientJson?.data?.patientId ?? patientJson?.data?.id;
+          if (!patientId) return;
+
+          const apptRes = await fetch(`${API_URL}/appointments/patient/${patientId}`);
+          const apptJson = await apptRes.json();
+          const raw: any[] = apptJson?.data || [];
+
+          const upcoming = raw
+            .filter((a) => new Date(a.scheduledTime).getTime() >= Date.now() - 60 * 60 * 1000)
+            .sort((a, b) => new Date(a.scheduledTime).getTime() - new Date(b.scheduledTime).getTime());
+
+          setAppointments(
+            upcoming.map((a) => ({
+              id: a.id,
+              type: a.appointmentType === 'online' ? 'Video Consultation' : 'In-person',
+              status: a.status === 'scheduled' ? 'Scheduled' : a.status === 'completed' ? 'Completed' : a.status === 'cancelled' ? 'Cancelled' : a.status,
+              doctor: a.doctorName ? `Dr. ${a.doctorName}` : 'Doctor',
+              specialization: a.doctorSpecialty || '',
+              date: new Date(a.scheduledTime).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }),
+              time: new Date(a.scheduledTime).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }),
+              duration: `${a.duration || 30} min`,
+            }))
+          );
+
+          setNotifications(
+            upcoming.slice(0, 5).map((a) => ({
+              id: `apt-${a.id}`,
+              type: 'Appointment',
+              title:
+                a.status === 'pending_confirmation'
+                  ? 'Awaiting doctor confirmation'
+                  : a.status === 'scheduled'
+                  ? 'Appointment confirmed'
+                  : 'Appointment update',
+              message: `${a.doctorName ? `Dr. ${a.doctorName}` : 'Your doctor'} — ${new Date(a.scheduledTime).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} at ${new Date(a.scheduledTime).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}`,
+              timestamp: a.createdAt || a.scheduledTime,
+              read: true,
+              priority: 'normal',
+            }))
+          );
+        } catch (err) {
+          console.error('Failed to load appointments for dashboard:', err);
+        } finally {
+          setLoadingAppointments(false);
+        }
+      };
+
+      load();
+    }, [isAuthenticated, user?.id]);
 
     if (!isAuthenticated || !user) {
       return (
@@ -301,14 +364,14 @@ export const Home: React.FC = () => {
               <Button
                 size="lg"
                 leftIcon={<LogIn className="w-5 h-5" />}
-                onClick={() => {/* In real app, this would open login modal */ }}
+                onClick={() => navigate('/login')}
               >
                 Sign In to Continue
               </Button>
               <Button
                 variant="secondary"
                 size="lg"
-                onClick={() => {/* In real app, this would open signup */ }}
+                onClick={() => navigate('/signup')}
               >
                 Create Account
               </Button>
@@ -407,7 +470,7 @@ export const Home: React.FC = () => {
                       </div>
                     </div>
 
-                    <Button variant="ghost" size="sm">
+                    <Button variant="ghost" size="sm" onClick={() => navigate('/patient-portal')}>
                       Details
                     </Button>
                   </div>
@@ -415,7 +478,13 @@ export const Home: React.FC = () => {
               ))}
             </div>
 
-            {appointments.length === 0 && (
+            {loadingAppointments && appointments.length === 0 && (
+              <GlassCard className="p-8 text-center">
+                <Calendar className="w-8 h-8 text-neutral-400 mx-auto animate-pulse" />
+              </GlassCard>
+            )}
+
+            {!loadingAppointments && appointments.length === 0 && (
               <GlassCard className="p-8 text-center">
                 <Calendar className="w-12 h-12 text-neutral-400 mx-auto mb-4" />
                 <h4 className="text-lg font-bold text-neutral-900 dark:text-white mb-2">
@@ -574,6 +643,7 @@ export const Home: React.FC = () => {
                   size="lg"
                   leftIcon={<Video className="w-5 h-5" />}
                   className="px-8 py-3 text-lg border-2"
+                  onClick={() => setShowAppointmentModal(true)}
                 >
                   Video Consultation
                 </Button>
