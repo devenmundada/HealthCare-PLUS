@@ -119,7 +119,7 @@ export const AlertBanner: React.FC = () => {
                 <div className="flex items-center justify-between mb-1">
                   <h4 className="font-bold text-sm">{alert.message}</h4>
                   <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full">
-                    {alert.type.replace('_', ' ')}
+                    {alert.type?.replace('_', ' ') || 'Alert'}
                   </span>
                 </div>
                 

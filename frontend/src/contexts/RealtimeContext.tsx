@@ -8,6 +8,8 @@ interface RealtimeContextType {
   patients: any[];
   doctors: any[];
   emergencies: any[];
+  notifications: any[];
+  latestNotification?: any;
   refreshData: () => Promise<void>;
 }
 
@@ -20,6 +22,8 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [patients, setPatients] = useState<any[]>([]);
   const [doctors, setDoctors] = useState<any[]>([]);
   const [emergencies, setEmergencies] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [latestNotification, setLatestNotification] = useState<any>(null);
   const [hospitalId, setHospitalId] = useState<number | null>(null);
 
   // A hospital account should only see its own beds/doctors here, not
@@ -46,7 +50,7 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       // extra object. This mismatch meant beds/patients here were always
       // empty regardless of what the backend actually had.
       setBeds(bedsRes.data || []);
-      setPatients(patientsRes.data || []);
+      setPatients(Array.isArray(patientsRes.data) ? patientsRes.data : (patientsRes.data?.patients || []));
       setDoctors(doctorsRes.data?.doctors || []);
     } catch (error) {
       console.error('Failed to refresh data:', error);
@@ -78,6 +82,11 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setEmergencies(prev => [data, ...prev].slice(0, 10));
     });
 
+    realtimeService.on('notification:new', (data: any) => {
+      setNotifications(prev => [data, ...prev].slice(0, 50));
+      setLatestNotification(data);
+    });
+
     setConnected(true);
     refreshData();
 
@@ -96,7 +105,7 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, [hospitalId]);
 
   return (
-    <RealtimeContext.Provider value={{ connected, beds, patients, doctors, emergencies, refreshData }}>
+    <RealtimeContext.Provider value={{ connected, beds, patients, doctors, emergencies, notifications, latestNotification, refreshData }}>
       {children}
     </RealtimeContext.Provider>
   );
