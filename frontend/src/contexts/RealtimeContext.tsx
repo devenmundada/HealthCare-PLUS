@@ -11,6 +11,7 @@ interface RealtimeContextType {
   notifications: any[];
   latestNotification?: any;
   refreshData: () => Promise<void>;
+  clearLatestNotification: () => void;
 }
 
 const RealtimeContext = createContext<RealtimeContextType | undefined>(undefined);
@@ -104,8 +105,10 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hospitalId]);
 
+  const clearLatestNotification = () => setLatestNotification(null);
+
   return (
-    <RealtimeContext.Provider value={{ connected, beds, patients, doctors, emergencies, notifications, latestNotification, refreshData }}>
+    <RealtimeContext.Provider value={{ connected, beds, patients, doctors, emergencies, notifications, latestNotification, refreshData, clearLatestNotification }}>
       {children}
     </RealtimeContext.Provider>
   );

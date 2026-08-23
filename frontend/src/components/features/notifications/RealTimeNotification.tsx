@@ -31,7 +31,7 @@ const playNotificationSound = () => {
 
 export const RealTimeNotification: React.FC = () => {
   const [toast, setToast] = useState<any>(null);
-  const { notifications = [], emergencies = [], latestNotification } = useRealtime() as any;
+  const { notifications = [], emergencies = [], latestNotification, clearLatestNotification } = useRealtime() as any;
   const [showNotifications, setShowNotifications] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
@@ -44,9 +44,13 @@ export const RealTimeNotification: React.FC = () => {
         setToast(null);
       }, 5000);
       
+      if (clearLatestNotification) {
+        clearLatestNotification();
+      }
+      
       return () => clearTimeout(timer);
     }
-  }, [latestNotification]);
+  }, [latestNotification, clearLatestNotification]);
 
   useEffect(() => {
     if (notifications?.length > 0 || emergencies?.length > 0) {
