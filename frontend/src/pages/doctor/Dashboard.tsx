@@ -58,6 +58,15 @@ export const DoctorDashboard: React.FC = () => {
   const [calendarConnected, setCalendarConnected] = useState(false);
   const [calendarBanner, setCalendarBanner] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
+  // Settings modal states
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [savingSettings, setSavingSettings] = useState(false);
+  const [doctorSettings, setDoctorSettings] = useState({
+    availableDays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+    availableHours: '09:00-17:00',
+    consultationDuration: 30
+  });
+
   const refetchDoctorProfile = useCallback(() => {
     if (!doctorId) return;
     axios
@@ -67,7 +76,14 @@ export const DoctorDashboard: React.FC = () => {
         if (d && typeof d.isAcceptingPatients === 'boolean') {
           setIsAcceptingPatients(d.isAcceptingPatients);
         }
-        if (d) setCalendarConnected(!!d.googleCalendarConnected);
+        if (d) {
+          setCalendarConnected(!!d.googleCalendarConnected);
+          setDoctorSettings({
+            availableDays: d.availableDays || ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+            availableHours: d.availableHours || '09:00-17:00',
+            consultationDuration: d.consultationDuration || 30
+          });
+        }
       })
       .catch(() => {});
   }, [doctorId]);
@@ -116,6 +132,21 @@ export const DoctorDashboard: React.FC = () => {
       alert("Couldn't update your availability — please try again.");
     } finally {
       setTogglingAvailability(false);
+    }
+  };
+
+  const saveSettings = async () => {
+    if (!doctorId) return;
+    setSavingSettings(true);
+    try {
+      await axios.patch(`${API_URL}/doctors/${doctorId}/availability`, doctorSettings);
+      setShowSettingsModal(false);
+      alert('Settings updated successfully!');
+    } catch (error) {
+      console.error('Failed to save settings:', error);
+      alert("Couldn't save settings — please try again.");
+    } finally {
+      setSavingSettings(false);
     }
   };
 
@@ -237,6 +268,14 @@ export const DoctorDashboard: React.FC = () => {
               leftIcon={togglingAvailability ? <Loader2 className="w-4 h-4 animate-spin" /> : undefined}
             >
               {isAcceptingPatients ? 'Mark Unavailable' : 'Mark Available'}
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={!doctorId}
+              onClick={() => setShowSettingsModal(true)}
+            >
+              Settings
             </Button>
           </div>
         </div>
@@ -453,6 +492,74 @@ export const DoctorDashboard: React.FC = () => {
           )}
         </GlassCard>
       </Container>
+
+      {/* Settings Modal */}
+      {showSettingsModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="bg-white dark:bg-neutral-900 rounded-xl max-w-md w-full p-6 shadow-xl">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold">Doctor Settings</h3>
+              <button onClick={() => setShowSettingsModal(false)} className="text-neutral-500 hover:text-neutral-700">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Available Days</label>
+                <div className="flex flex-wrap gap-2">
+                  {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => (
+                    <label key={day} className="flex items-center gap-1 cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        checked={doctorSettings.availableDays.includes(day)}
+                        onChange={(e) => {
+                          const newDays = e.target.checked 
+                            ? [...doctorSettings.availableDays, day]
+                            : doctorSettings.availableDays.filter(d => d !== day);
+                          setDoctorSettings({...doctorSettings, availableDays: newDays});
+                        }}
+                      />
+                      <span className="text-sm">{day.slice(0, 3)}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">Available Hours (e.g. 09:00-17:00)</label>
+                <input 
+                  type="text" 
+                  value={doctorSettings.availableHours}
+                  onChange={(e) => setDoctorSettings({...doctorSettings, availableHours: e.target.value})}
+                  className="w-full p-2 border rounded-md dark:bg-neutral-800 dark:border-neutral-700"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">Slot Duration (minutes)</label>
+                <select 
+                  value={doctorSettings.consultationDuration}
+                  onChange={(e) => setDoctorSettings({...doctorSettings, consultationDuration: Number(e.target.value)})}
+                  className="w-full p-2 border rounded-md dark:bg-neutral-800 dark:border-neutral-700"
+                >
+                  <option value={15}>15 minutes</option>
+                  <option value={30}>30 minutes</option>
+                  <option value={45}>45 minutes</option>
+                  <option value={60}>60 minutes</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 mt-8">
+              <Button variant="secondary" onClick={() => setShowSettingsModal(false)}>Cancel</Button>
+              <Button onClick={saveSettings} disabled={savingSettings}>
+                {savingSettings ? 'Saving...' : 'Save Settings'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

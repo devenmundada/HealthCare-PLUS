@@ -67,7 +67,8 @@ export class GoogleCalendarService {
     endTime: Date,
     patientEmail?: string,
     doctorEmail?: string,
-    doctorRefreshToken?: string | null
+    doctorRefreshToken?: string | null,
+    isOnline: boolean = true
   ) {
     if (!doctorRefreshToken) {
       return {
@@ -81,9 +82,9 @@ export class GoogleCalendarService {
       const start = startTime instanceof Date ? startTime : new Date(startTime);
       const end = endTime instanceof Date ? endTime : new Date(endTime);
 
-      const event = {
+      const event: any = {
         summary: `Medical Consultation: Dr. ${doctorName} & ${patientName}`,
-        description: `Online medical consultation between Dr. ${doctorName} and ${patientName}`,
+        description: `${isOnline ? 'Online' : 'In-person'} medical consultation between Dr. ${doctorName} and ${patientName}`,
         start: {
           dateTime: start.toISOString(),
           timeZone: 'Asia/Kolkata',
@@ -91,12 +92,6 @@ export class GoogleCalendarService {
         end: {
           dateTime: end.toISOString(),
           timeZone: 'Asia/Kolkata',
-        },
-        conferenceData: {
-          createRequest: {
-            requestId: `${Date.now()}-${Math.random().toString(36).substring(7)}`,
-            conferenceSolutionKey: { type: 'hangoutsMeet' },
-          },
         },
         attendees: [
           ...(patientEmail ? [{ email: patientEmail }] : []),
@@ -111,6 +106,15 @@ export class GoogleCalendarService {
         },
       };
 
+      if (isOnline) {
+        event.conferenceData = {
+          createRequest: {
+            requestId: `${Date.now()}-${Math.random().toString(36).substring(7)}`,
+            conferenceSolutionKey: { type: 'hangoutsMeet' },
+          },
+        };
+      }
+
       const response = await calendar.events.insert({
         calendarId: 'primary',
         requestBody: event,
@@ -119,12 +123,13 @@ export class GoogleCalendarService {
       });
 
       // Extract Meet link: hangoutLink may be deprecated, use conferenceData.entryPoints as fallback
-      const meetLink =
+      const meetLink = isOnline ? (
         response.data.hangoutLink ||
         response.data.conferenceData?.entryPoints?.find(
           (ep: { entryPointType?: string }) => ep.entryPointType === 'video'
         )?.uri ||
-        null;
+        null
+      ) : null;
 
       return {
         success: true,

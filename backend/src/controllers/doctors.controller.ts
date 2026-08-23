@@ -12,17 +12,35 @@ export class DoctorsController {
   async updateAvailability(req: Request, res: Response) {
     try {
       const id = parseInt(req.params.id);
-      const { isAcceptingPatients } = req.body;
-      if (isNaN(id) || typeof isAcceptingPatients !== 'boolean') {
-        return res.status(400).json({ success: false, error: 'Valid doctor id and boolean isAcceptingPatients required' });
+      const { isAcceptingPatients, availableDays, availableHours, consultationDuration } = req.body;
+      if (isNaN(id)) {
+        return res.status(400).json({ success: false, error: 'Valid doctor id required' });
       }
       const doctor = await this.doctorRepository.findOne({ where: { id } });
       if (!doctor) {
         return res.status(404).json({ success: false, error: 'Doctor not found' });
       }
-      doctor.isAcceptingPatients = isAcceptingPatients;
+      
+      if (typeof isAcceptingPatients === 'boolean') {
+        doctor.isAcceptingPatients = isAcceptingPatients;
+      }
+      if (Array.isArray(availableDays)) {
+        doctor.availableDays = availableDays;
+      }
+      if (typeof availableHours === 'string') {
+        doctor.availableHours = availableHours;
+      }
+      if (typeof consultationDuration === 'number') {
+        doctor.consultationDuration = consultationDuration;
+      }
+
       await this.doctorRepository.save(doctor);
-      return res.json({ success: true, data: { isAcceptingPatients: doctor.isAcceptingPatients } });
+      return res.json({ success: true, data: { 
+        isAcceptingPatients: doctor.isAcceptingPatients,
+        availableDays: doctor.availableDays,
+        availableHours: doctor.availableHours,
+        consultationDuration: doctor.consultationDuration
+      } });
     } catch (error: any) {
       console.error('Update doctor availability error:', error);
       return res.status(500).json({ success: false, error: error.message });

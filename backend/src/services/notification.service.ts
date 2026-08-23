@@ -33,17 +33,17 @@ export class NotificationService {
   // is the Patient or Doctor row's own id (not the login User's id — see
   // how appointment.service.ts calls sendNotification), so this needs an
   // actual DB lookup, not just the id passed through.
-  private async resolveContact(userId: string, userType: string): Promise<{ email?: string; phone?: string }> {
+  private async resolveContact(userId: string, userType: string): Promise<{ email?: string; phone?: string; socketUserId?: string }> {
     const id = parseInt(userId, 10);
     if (isNaN(id)) return {};
 
     if (userType === 'patient') {
       const patient = await this.patientRepository.findOne({ where: { id }, relations: ['user'] });
-      return { email: patient?.user?.email, phone: patient?.user?.phone };
+      return { email: patient?.user?.email, phone: patient?.user?.phone, socketUserId: patient?.user?.id?.toString() };
     }
     if (userType === 'doctor') {
       const doctor = await this.doctorRepository.findOne({ where: { id } });
-      return { email: doctor?.email, phone: doctor?.phone };
+      return { email: doctor?.email, phone: doctor?.phone, socketUserId: doctor?.userId?.toString() };
     }
     return {};
   }
@@ -59,9 +59,10 @@ export class NotificationService {
   // failed with "No recipients defined" regardless of SMTP/Twilio configuration.
   private async dispatch(notification: Notification, channel: NotificationChannel) {
     try {
+      const { email, phone, socketUserId } = await this.resolveContact(notification.userId, notification.userType);
+      
       switch (channel) {
         case 'email': {
-          const { email } = await this.resolveContact(notification.userId, notification.userType);
           if (!email) {
             console.warn(`⚠️ No email on file for ${notification.userType} ${notification.userId}, skipping email notification`);
             return { success: false };
@@ -74,7 +75,6 @@ export class NotificationService {
           });
         }
         case 'sms': {
-          const { phone } = await this.resolveContact(notification.userId, notification.userType);
           if (!phone) {
             console.warn(`⚠️ No phone on file for ${notification.userType} ${notification.userId}, skipping SMS notification`);
             return { success: false };
@@ -88,7 +88,12 @@ export class NotificationService {
           console.log('Push notification:', notification);
           return { success: true };
         case 'inapp':
-          this.socketService.sendNotificationToUser(notification.userId, notification);
+          if (socketUserId) {
+            this.socketService.sendNotificationToUser(socketUserId, notification);
+          } else {
+            // Fallback just in case
+            this.socketService.sendNotificationToUser(notification.userId, notification);
+          }
           return { success: true };
       }
     } catch (error) {

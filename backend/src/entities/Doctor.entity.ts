@@ -72,6 +72,9 @@ export class Doctor {
   @Column({ name: 'available_hours', length: 100, nullable: true })
   availableHours: string;
 
+  @Column({ name: 'consultation_duration', default: 30 })
+  consultationDuration: number;
+
   @Column({ name: 'google_refresh_token', type: 'text', nullable: true })
   googleRefreshToken: string | null;
 

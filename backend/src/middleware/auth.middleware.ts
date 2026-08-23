@@ -4,11 +4,7 @@ import { AuthService } from '../services/auth.service';
 const authService = new AuthService();
 
 export interface AuthRequest extends Request {
-  user?: {
-    id: number;
-    email: string;
-    role: string;
-  };
+  user?: any;
 }
 
 export const authenticate = (req: AuthRequest, res: Response, next: NextFunction) => {
@@ -31,7 +27,7 @@ export const authenticate = (req: AuthRequest, res: Response, next: NextFunction
       });
     }
 
-    req.user = decoded;
+    req.user = decoded as any;
     next();
   } catch (error) {
     return res.status(401).json({

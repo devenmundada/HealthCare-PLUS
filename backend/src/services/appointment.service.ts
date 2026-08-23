@@ -32,14 +32,37 @@ export class AppointmentService {
   /**
    * Get available time slots for a doctor on a given date
    */
-  async getAvailableSlots(doctorId: number, date: Date): Promise<TimeSlot[]> {
+  async getAvailableSlots(doctorId: number, date: Date | string): Promise<TimeSlot[]> {
     const doctor = await this.doctorRepository.findOne({ where: { id: doctorId } });
     if (!doctor) throw new Error('Doctor not found');
 
-    // Get doctor's working hours (default 9 AM - 5 PM)
-    const startHour = 9;
-    const endHour = 17;
-    const slotDuration = 30;
+    const dateObj = new Date(date);
+    const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
+    const availableDays = doctor.availableDays || ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+    if (!availableDays.includes(dayName)) {
+      return [];
+    }
+
+    let startHour = 9;
+    let endHour = 17;
+    if (doctor.availableHours) {
+      const parts = doctor.availableHours.split('-');
+      if (parts.length === 2) {
+        const parseTime = (timeStr: string) => {
+          const match = timeStr.trim().match(/(\d+)(?::\d+)?\s*(AM|PM)?/i);
+          if (!match) return null;
+          let hour = parseInt(match[1], 10);
+          const ampm = match[2]?.toUpperCase();
+          if (ampm === 'PM' && hour < 12) hour += 12;
+          if (ampm === 'AM' && hour === 12) hour = 0;
+          return hour;
+        };
+        startHour = parseTime(parts[0]) ?? 9;
+        endHour = parseTime(parts[1]) ?? 17;
+      }
+    }
+
+    const slotDuration = doctor.consultationDuration || 30;
 
     const startOfDay = new Date(date);
     startOfDay.setHours(startHour, 0, 0, 0);
@@ -61,6 +84,8 @@ export class AppointmentService {
     while (currentSlot < endOfDay) {
       const slotEnd = new Date(currentSlot);
       slotEnd.setMinutes(slotEnd.getMinutes() + slotDuration);
+
+      if (slotEnd > endOfDay) break;
 
       const isBooked = existingAppointments.some(apt => {
         const aptStart = new Date(apt.scheduledTime);
@@ -130,7 +155,7 @@ export class AppointmentService {
     }
 
     // Calculate end time
-    const duration = data.duration || 30;
+    const duration = data.duration || doctor.consultationDuration || 30;
     const endTime = new Date(data.scheduledTime);
     endTime.setMinutes(endTime.getMinutes() + duration);
 
@@ -391,10 +416,10 @@ export class AppointmentService {
     if (status === 'completed') appointment.actualTime = new Date();
 
     // Doctor just confirmed a pending request: this is when we actually
-    // generate the Google Meet link/calendar event, not at booking time —
+    // generate the Google Calendar event, not at booking time —
     // a patient should never hold a meeting link for a visit that wasn't
     // accepted yet.
-    if (status === 'confirmed' && appointment.appointmentType === 'online' && !appointment.meetingLink) {
+    if (status === 'confirmed' && !appointment.meetingLink) {
       const endTime = appointment.endTime || new Date(new Date(appointment.scheduledTime).getTime() + (appointment.duration || 30) * 60000);
       const meetResult = await this.calendarService.createMeetingEvent(
         appointment.patient?.user?.name || 'Patient',
@@ -403,9 +428,10 @@ export class AppointmentService {
         endTime,
         appointment.patient?.user?.email,
         appointment.doctor?.email,
-        appointment.doctor?.googleRefreshToken
+        appointment.doctor?.googleRefreshToken,
+        appointment.appointmentType === 'online' // Only add Meet link if online
       );
-      if (meetResult.success) {
+      if (meetResult.success && meetResult.meetLink) {
         appointment.meetingLink = meetResult.meetLink;
       }
     }

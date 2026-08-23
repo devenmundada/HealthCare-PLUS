@@ -189,7 +189,6 @@ const AppointmentBookingModal: React.FC<AppointmentBookingModalProps> = ({
         hospitalId: (activeDoctor as any).hospitalId ?? undefined,
         appointmentType: consultationType === "video" ? "online" : "in-person",
         scheduledTime: selectedTime, // already an ISO string from the real slot
-        duration: 30,
         symptoms: [],
       };
 
