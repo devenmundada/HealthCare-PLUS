@@ -1,7 +1,7 @@
 import { SocketService } from './socket.service';
 import { NotificationService } from './notification.service';
 import { PatientAlert, AlertType, AlertPriority } from '../types/alert.types';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 
 // Typescript error fix for "Object literal may only specify known properties":
 // Patch: For properties like 'scheduledTime', 'vitals', allow them with [key: string]: any in the alert.details type
@@ -47,7 +47,7 @@ export class AlertService {
     scheduledTime: Date
   ): Promise<void> {
     const alert: PatientAlert = {
-      id: uuidv4(),
+      id: randomUUID(),
       patientId,
       patientName,
       type: 'new_appointment',
@@ -81,7 +81,7 @@ export class AlertService {
     estimatedArrival?: Date
   ): Promise<void> {
     const alert: PatientAlert = {
-      id: uuidv4(),
+      id: randomUUID(),
       patientId,
       patientName,
       type: 'emergency_triage',
@@ -116,7 +116,7 @@ export class AlertService {
     priority: number
   ): Promise<void> {
     const alert: PatientAlert = {
-      id: uuidv4(),
+      id: randomUUID(),
       patientId,
       patientName,
       type: 'bed_request',
@@ -148,7 +148,7 @@ export class AlertService {
     priority?: number
   ): Promise<void> {
     const alert: PatientAlert = {
-      id: uuidv4(),
+      id: randomUUID(),
       patientId,
       patientName,
       type: 'doctor_assignment',
@@ -179,7 +179,7 @@ export class AlertService {
     location: string
   ): Promise<void> {
     const alert: PatientAlert = {
-      id: uuidv4(),
+      id: randomUUID(),
       patientId,
       patientName,
       type: 'patient_arrival',
@@ -208,7 +208,7 @@ export class AlertService {
     doctorId?: number
   ): Promise<void> {
     const alert: PatientAlert = {
-      id: uuidv4(),
+      id: randomUUID(),
       patientId,
       patientName,
       type: 'critical_vitals',

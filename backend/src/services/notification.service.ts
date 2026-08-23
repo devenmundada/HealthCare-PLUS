@@ -10,7 +10,7 @@ import {
   NotificationPriority,
   NOTIFICATION_TEMPLATES
 } from '../types/notification.types';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 
 export class NotificationService {
   private emailService: EmailService;
@@ -111,7 +111,7 @@ export class NotificationService {
     message: string,
     data?: Record<string, any>
   ): Promise<string> {
-    const notificationId = uuidv4();
+    const notificationId = randomUUID();
     
     const notification: Notification = {
       id: notificationId,

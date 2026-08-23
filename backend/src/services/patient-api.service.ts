@@ -1,4 +1,4 @@
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 
 export interface Patient {
   id: string;
@@ -152,7 +152,7 @@ export class PatientAPIService {
 
   async createPatient(data: any): Promise<Patient> {
     try {
-      const patientId = `pat-${uuidv4().substring(0, 8)}`;
+      const patientId = `pat-${randomUUID().substring(0, 8)}`;
       const now = new Date();
 
       let dateOfBirth = data.dateOfBirth;
