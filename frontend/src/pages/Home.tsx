@@ -523,7 +523,7 @@ export const Home: React.FC = () => {
                 </p>
                 <Button
                   leftIcon={<Plus className="w-4 h-4" />}
-                  onClick={() => setShowAppointmentModal(true)}
+                  onClick={() => navigate('/patient-portal')}
                 >
                   Book Appointment
                 </Button>

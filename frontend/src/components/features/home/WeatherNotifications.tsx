@@ -40,11 +40,12 @@ export const WeatherNotifications: React.FC = () => {
 
   // Quick-switch shortcuts — real coordinates, fetched live from the API below.
   const presetCities = [
-    { name: 'San Francisco, CA', lat: 37.7749, lon: -122.4194 },
-    { name: 'New York, NY', lat: 40.7128, lon: -74.0060 },
-    { name: 'Chicago, IL', lat: 41.8781, lon: -87.6298 },
-    { name: 'Miami, FL', lat: 25.7617, lon: -80.1918 },
-    { name: 'Denver, CO', lat: 39.7392, lon: -104.9903 }
+    { name: 'Mumbai, MH', lat: 19.0760, lon: 72.8777 },
+    { name: 'Delhi', lat: 28.7041, lon: 77.1025 },
+    { name: 'Bengaluru, KA', lat: 12.9716, lon: 77.5946 },
+    { name: 'Chennai, TN', lat: 13.0827, lon: 80.2707 },
+    { name: 'Kolkata, WB', lat: 22.5726, lon: 88.3639 },
+    { name: 'Hyderabad, TG', lat: 17.3850, lon: 78.4867 }
   ];
 
   // Get weather icon based on condition
