@@ -259,30 +259,32 @@ export const Doctors: React.FC = () => {
               />
             </div>
 
-            <div>
+            <div className="relative">
               <select
                 value={selectedSpecialty}
                 onChange={(e) => setSelectedSpecialty(e.target.value)}
-                className="w-full bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-lg px-4 py-2 text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="w-full appearance-none bg-white/50 dark:bg-slate-800/50 backdrop-blur-md border border-slate-200/50 dark:border-slate-700/50 rounded-xl px-5 py-3 pr-10 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-primary-500/50 shadow-sm cursor-pointer"
               >
                 {specialties.map(specialty => (
-                  <option key={specialty} value={specialty === 'All Specialties' ? 'all' : specialty}>
+                  <option key={specialty} value={specialty === 'All Specialties' ? 'all' : specialty} className="bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 py-2">
                     {specialty}
                   </option>
                 ))}
               </select>
+              <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 pointer-events-none" />
             </div>
 
-            <div>
+            <div className="relative">
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as any)}
-                className="w-full bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-lg px-4 py-2 text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="w-full appearance-none bg-white/50 dark:bg-slate-800/50 backdrop-blur-md border border-slate-200/50 dark:border-slate-700/50 rounded-xl px-5 py-3 pr-10 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-primary-500/50 shadow-sm cursor-pointer"
               >
-                <option value="rating">Highest Rated</option>
-                <option value="experience">Most Experienced</option>
-                <option value="fee">Lowest Fee</option>
+                <option value="rating" className="bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 py-2">Highest Rated</option>
+                <option value="experience" className="bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 py-2">Most Experienced</option>
+                <option value="fee" className="bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 py-2">Lowest Fee</option>
               </select>
+              <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 pointer-events-none" />
             </div>
           </div>
 

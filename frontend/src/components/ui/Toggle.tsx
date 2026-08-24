@@ -33,10 +33,10 @@ export const Toggle: React.FC<ToggleProps> = ({
 
   return (
     <Switch.Group>
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-4">
         <div className="flex flex-col">
           {label && (
-            <Switch.Label className="font-medium text-neutral-900 dark:text-white">
+            <Switch.Label className="font-medium text-neutral-900 dark:text-white cursor-pointer">
               {label}
             </Switch.Label>
           )}
