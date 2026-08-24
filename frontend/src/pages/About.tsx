@@ -60,24 +60,31 @@ export const About: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen py-12">
-      <Container>
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-50 via-white to-primary-50/30 dark:from-[#0B1221] dark:via-[#0F172A] dark:to-[#1E293B] py-16">
+        {/* Animated background elements */}
+        <div className="absolute top-0 left-0 right-0 h-[300px] bg-gradient-to-b from-primary-100/40 to-transparent dark:from-primary-900/20 pointer-events-none z-0"></div>
+        <div className="absolute -top-40 -right-40 w-96 h-96 bg-primary-400/20 dark:bg-primary-500/10 rounded-full mix-blend-multiply dark:mix-blend-lighten filter blur-[100px] animate-blob z-0"></div>
+        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-blue-400/20 dark:bg-blue-500/10 rounded-full mix-blend-multiply dark:mix-blend-lighten filter blur-[100px] animate-blob animation-delay-2000 z-0"></div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[40rem] h-[40rem] bg-indigo-400/10 dark:bg-indigo-500/10 rounded-full mix-blend-multiply dark:mix-blend-lighten filter blur-[120px] pointer-events-none z-0"></div>
+
+      <Container className="relative z-10">
         {/* Hero Section */}
-        <div className="text-center max-w-4xl mx-auto mb-16">
-          <h1 className="text-4xl md:text-5xl font-bold text-neutral-900 dark:text-white mb-6">
-            Redefining Healthcare with AI
+        <div className="text-center max-w-4xl mx-auto mb-20 fade-in-up">
+          <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-6 leading-[1.1]">
+            Redefining Healthcare
+            <span className="bg-gradient-to-r from-primary-600 to-blue-600 dark:from-primary-400 dark:to-blue-400 bg-clip-text text-transparent block mt-2 pb-2">with AI</span>
           </h1>
-          <p className="text-xl text-neutral-600 dark:text-neutral-400 mb-8">
+          <p className="text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto font-light leading-relaxed mb-8">
             We're building the future of medical technology—where artificial intelligence 
             enhances human expertise to deliver better patient outcomes.
           </p>
-          <div className="flex flex-wrap justify-center gap-4">
-            <Button variant="secondary">
-              <Globe className="w-4 h-4 mr-2" />
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button size="lg" className="bg-primary-600 hover:bg-primary-700 text-white shadow-[0_8px_30px_rgb(0,194,203,0.3)] dark:shadow-[0_8px_30px_rgb(0,194,203,0.2)] rounded-xl px-8 py-4 text-lg font-medium transition-all hover:-translate-y-1">
+              <Globe className="w-5 h-5 mr-2" />
               Global Impact Report
             </Button>
-            <Button>
-              <Users className="w-4 h-4 mr-2" />
+            <Button variant="secondary" size="lg" className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border border-slate-200 dark:border-slate-700 hover:bg-white dark:hover:bg-slate-700 shadow-sm rounded-xl px-8 py-4 text-lg font-medium transition-all hover:-translate-y-1 text-slate-700 dark:text-slate-200">
+              <Users className="w-5 h-5 mr-2" />
               Join Our Mission
             </Button>
           </div>
@@ -139,17 +146,17 @@ export const About: React.FC = () => {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {values.map((value, index) => (
-              <Card key={index} className="p-6 text-center">
-                <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-primary-50 dark:bg-primary-900/30 flex items-center justify-center">
+              <div key={index} className="bg-white/40 dark:bg-slate-800/40 backdrop-blur-xl border border-white/50 dark:border-slate-700/50 rounded-[2rem] shadow-sm hover:shadow-xl transition-all duration-300 p-8 text-center group hover:-translate-y-1">
+                <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-primary-100 to-blue-100 dark:from-primary-900/30 dark:to-blue-900/30 flex items-center justify-center transform group-hover:rotate-3 transition-transform duration-300">
                   {value.icon}
                 </div>
                 <h3 className="text-xl font-bold text-neutral-900 dark:text-white mb-3">
                   {value.title}
                 </h3>
-                <p className="text-neutral-600 dark:text-neutral-400">
+                <p className="text-neutral-600 dark:text-neutral-400 font-light">
                   {value.description}
                 </p>
-              </Card>
+              </div>
             ))}
           </div>
         </div>
@@ -197,24 +204,24 @@ export const About: React.FC = () => {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {team.map((member, index) => (
-              <Card key={index} className="p-6 hover-lift">
+              <div key={index} className="bg-white/40 dark:bg-slate-800/40 backdrop-blur-xl border border-white/50 dark:border-slate-700/50 rounded-[2rem] shadow-sm hover:shadow-xl transition-all duration-300 p-6 group hover:-translate-y-1">
                 <div className="flex items-start mb-4">
-                  <div className="w-12 h-12 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center mr-4">
+                  <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary-100 to-blue-100 dark:from-primary-900/30 dark:to-blue-900/30 flex items-center justify-center mr-4 group-hover:scale-105 transition-transform">
                     <Users className="w-6 h-6 text-primary-600" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-neutral-900 dark:text-white">
+                    <h3 className="font-bold text-lg text-neutral-900 dark:text-white">
                       {member.name}
                     </h3>
-                    <p className="text-primary-600 dark:text-primary-400">
+                    <p className="text-primary-600 dark:text-primary-400 font-medium">
                       {member.role}
                     </p>
                   </div>
                 </div>
                 <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                  Expertise: {member.expertise}
+                  <span className="font-medium text-neutral-700 dark:text-neutral-300">Expertise:</span> {member.expertise}
                 </p>
-              </Card>
+              </div>
             ))}
           </div>
         </div>

@@ -478,29 +478,29 @@ export const PatientPortal: React.FC = () => {
 
             {/* Quick Actions */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <GlassCard hoverable className="p-8 text-center bg-white/60 dark:bg-neutral-800/60" onClick={() => setPortalTab('find-doctors')}>
+              <div className="bg-white/40 dark:bg-slate-800/40 backdrop-blur-xl border border-white/50 dark:border-slate-700/50 rounded-[2rem] shadow-sm hover:shadow-xl transition-all duration-300 p-8 text-center group hover:-translate-y-1 cursor-pointer" onClick={() => setPortalTab('find-doctors')}>
                 <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-primary-100 to-blue-100 dark:from-primary-900/30 dark:to-blue-900/30 flex items-center justify-center border-4 border-white dark:border-neutral-800 shadow-md">
                   <Calendar className="w-8 h-8 text-primary-600" />
                 </div>
                 <h3 className="font-bold text-xl text-neutral-900 dark:text-white mb-2">Book Appointment</h3>
                 <p className="text-sm text-neutral-500 dark:text-neutral-400">Find and book with nearby doctors</p>
-              </GlassCard>
+              </div>
 
-              <GlassCard hoverable className="p-8 text-center bg-white/60 dark:bg-neutral-800/60" onClick={() => setPortalTab('appointments')}>
+              <div className="bg-white/40 dark:bg-slate-800/40 backdrop-blur-xl border border-white/50 dark:border-slate-700/50 rounded-[2rem] shadow-sm hover:shadow-xl transition-all duration-300 p-8 text-center group hover:-translate-y-1 cursor-pointer" onClick={() => setPortalTab('appointments')}>
                 <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 flex items-center justify-center border-4 border-white dark:border-neutral-800 shadow-md">
                   <Clock className="w-8 h-8 text-green-600" />
                 </div>
                 <h3 className="font-bold text-xl text-neutral-900 dark:text-white mb-2">My Appointments</h3>
                 <p className="text-sm text-neutral-500 dark:text-neutral-400">View and manage your visits</p>
-              </GlassCard>
+              </div>
 
-              <GlassCard hoverable className="p-8 text-center bg-white/60 dark:bg-neutral-800/60" onClick={() => setPortalTab('records')}>
+              <div className="bg-white/40 dark:bg-slate-800/40 backdrop-blur-xl border border-white/50 dark:border-slate-700/50 rounded-[2rem] shadow-sm hover:shadow-xl transition-all duration-300 p-8 text-center group hover:-translate-y-1 cursor-pointer" onClick={() => setPortalTab('records')}>
                 <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-purple-100 to-fuchsia-100 dark:from-purple-900/30 dark:to-fuchsia-900/30 flex items-center justify-center border-4 border-white dark:border-neutral-800 shadow-md">
                   <FileText className="w-8 h-8 text-purple-600" />
                 </div>
                 <h3 className="font-bold text-xl text-neutral-900 dark:text-white mb-2">Health Records</h3>
                 <p className="text-sm text-neutral-500 dark:text-neutral-400">Access your medical history</p>
-              </GlassCard>
+              </div>
             </div>
 
             {/* Recommended Doctors Preview */}
@@ -777,18 +777,20 @@ export const PatientPortal: React.FC = () => {
                   return (
                   <div
                     key={apt.id}
-                    className={`p-4 border rounded-lg hover:shadow-md transition-shadow ${
-                      apt.status === 'pending_confirmation' ? 'border-amber-300 bg-amber-50/40 dark:border-amber-700 dark:bg-amber-900/10' : ''
+                    className={`p-6 rounded-[2rem] border transition-all duration-300 group hover:shadow-xl hover:-translate-y-1 ${
+                      apt.status === 'pending_confirmation' 
+                        ? 'border-amber-200/50 bg-amber-50/30 dark:border-amber-700/50 dark:bg-amber-900/20 backdrop-blur-md' 
+                        : 'border-white/50 dark:border-slate-700/50 bg-white/40 dark:bg-slate-800/40 backdrop-blur-xl shadow-sm'
                     }`}
                   >
-                    <div className="flex items-start justify-between flex-wrap gap-3">
+                    <div className="flex items-start justify-between flex-wrap gap-4">
                       <div>
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-bold text-lg">Dr. {apt.doctorName}</h3>
-                          <Badge variant={statusInfo.variant} size="sm">{statusInfo.label}</Badge>
+                        <div className="flex items-center gap-3 mb-1">
+                          <h3 className="font-bold text-xl text-slate-900 dark:text-white">Dr. {apt.doctorName}</h3>
+                          <Badge variant={statusInfo.variant} size="sm" className="rounded-full shadow-sm">{statusInfo.label}</Badge>
                         </div>
-                        <p className="text-medical-cyan text-sm">{apt.doctorSpecialty}</p>
-                        <div className="flex items-center gap-4 mt-2 text-sm text-neutral-500">
+                        <p className="text-primary-600 dark:text-primary-400 font-medium mb-3">{apt.doctorSpecialty}</p>
+                        <div className="flex items-center gap-4 mt-2 text-sm text-slate-600 dark:text-slate-400 bg-white/50 dark:bg-slate-900/50 p-2 rounded-xl w-fit">
                           <div className="flex items-center gap-1">
                             <Clock className="w-4 h-4" />
                             {new Date(apt.scheduledTime).toLocaleString()}
@@ -813,13 +815,14 @@ export const PatientPortal: React.FC = () => {
                         )}
                       </div>
                       <div className="flex gap-2">
-                        {isConfirmed && apt.appointmentType === 'online' && apt.meetingLink && (
-                          <Button
-                            size="sm"
-                            leftIcon={<Video className="w-4 h-4" />}
-                            onClick={() => window.open(apt.meetingLink, '_blank')}
-                          >
-                            Join
+                        {isConfirmed && apt.meetingLink && apt.appointmentType === 'online' && (
+                          <Button size="sm" leftIcon={<Video className="w-4 h-4" />} className="rounded-xl shadow-md bg-primary-600 hover:bg-primary-700 text-white">
+                            Join Video Call
+                          </Button>
+                        )}
+                        {isConfirmed && apt.appointmentType === 'in_person' && (
+                          <Button size="sm" variant="secondary" leftIcon={<Navigation className="w-4 h-4" />} className="rounded-xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-md">
+                            Get Directions
                           </Button>
                         )}
                       </div>
@@ -837,14 +840,14 @@ export const PatientPortal: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <button
               onClick={() => setShowMedicalHistory(true)}
-              className="p-6 text-center hover:shadow-lg transition-all hover:-translate-y-1 bg-white rounded-xl border"
+              className="p-6 text-center transition-all duration-300 hover:shadow-xl hover:-translate-y-1 bg-white/40 dark:bg-slate-800/40 backdrop-blur-xl border border-white/50 dark:border-slate-700/50 rounded-[2rem]"
             >
               <FileText className="w-12 h-12 mx-auto mb-3 text-medical-cyan" />
               <h3 className="font-bold text-lg">Medical History</h3>
               <p className="text-sm text-gray-500">View your allergies, conditions & past appointments</p>
             </button>
 
-            <div className="p-6 text-center bg-white rounded-xl border opacity-60 relative">
+            <div className="p-6 text-center bg-white/40 dark:bg-slate-800/40 backdrop-blur-xl border border-white/50 dark:border-slate-700/50 rounded-[2rem] opacity-60 relative">
               <span className="absolute top-3 right-3 text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">Coming soon</span>
               <svg className="w-12 h-12 mx-auto mb-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -853,7 +856,7 @@ export const PatientPortal: React.FC = () => {
               <p className="text-sm text-gray-500">Doctors don't yet issue digital prescriptions here</p>
             </div>
 
-            <div className="p-6 text-center bg-white rounded-xl border opacity-60 relative">
+            <div className="p-6 text-center bg-white/40 dark:bg-slate-800/40 backdrop-blur-xl border border-white/50 dark:border-slate-700/50 rounded-[2rem] opacity-60 relative">
               <span className="absolute top-3 right-3 text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">Coming soon</span>
               <svg className="w-12 h-12 mx-auto mb-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />

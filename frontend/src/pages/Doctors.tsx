@@ -224,21 +224,31 @@ export const Doctors: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen py-8">
-      <Container>
-        {/* Hero Section */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-neutral-900 dark:text-white mb-4">
-            Find Trusted Healthcare Providers
-          </h1>
-          <p className="text-lg text-neutral-600 dark:text-neutral-400 max-w-3xl mx-auto">
-            Connect with verified doctors, specialists, and healthcare professionals.
-            All doctors are thoroughly vetted and rated by patients.
-          </p>
-        </div>
+      <div className="relative overflow-hidden bg-gradient-to-br from-slate-50 via-white to-primary-50/30 dark:from-[#0B1221] dark:via-[#0F172A] dark:to-[#1E293B] py-16">
+        {/* Animated background elements */}
+        <div className="absolute top-0 left-0 right-0 h-[300px] bg-gradient-to-b from-primary-100/40 to-transparent dark:from-primary-900/20 pointer-events-none z-0"></div>
+        <div className="absolute -top-40 -right-40 w-96 h-96 bg-primary-400/20 dark:bg-primary-500/10 rounded-full mix-blend-multiply dark:mix-blend-lighten filter blur-[100px] animate-blob z-0"></div>
+        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-blue-400/20 dark:bg-blue-500/10 rounded-full mix-blend-multiply dark:mix-blend-lighten filter blur-[100px] animate-blob animation-delay-2000 z-0"></div>
+
+        <Container className="relative z-10">
+          {/* Hero Section */}
+          <div className="text-center mb-16 fade-in-up">
+            <Badge variant="outline" className="px-5 py-2.5 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border-primary-200/50 dark:border-primary-800/50 rounded-full shadow-sm w-max mb-6">
+              <Users className="w-4 h-4 mr-2 text-primary-600 dark:text-primary-400" />
+              <span className="text-sm font-medium tracking-wide text-slate-800 dark:text-slate-200">Our Medical Network</span>
+            </Badge>
+            <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-6">
+              Find Trusted
+              <span className="bg-gradient-to-r from-primary-600 to-blue-600 dark:from-primary-400 dark:to-blue-400 bg-clip-text text-transparent block mt-2 pb-2">Healthcare Providers</span>
+            </h1>
+            <p className="text-xl text-slate-600 dark:text-slate-400 max-w-3xl mx-auto font-light leading-relaxed">
+              Connect with verified doctors, specialists, and healthcare professionals.
+              All doctors are thoroughly vetted and rated by patients.
+            </p>
+          </div>
 
         {/* Search and Filters */}
-        <Card className="p-6 mb-8">
+        <div className="bg-white/40 dark:bg-slate-800/40 backdrop-blur-xl border border-white/50 dark:border-slate-700/50 rounded-[2rem] shadow-sm p-8 mb-12 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             <div className="lg:col-span-2">
               <Input
@@ -294,7 +304,7 @@ export const Doctors: React.FC = () => {
               </span>
             </div>
           </div>
-        </Card>
+        </div>
 
         {loading && (
           <div className="flex justify-center items-center py-12">
@@ -344,9 +354,9 @@ export const Doctors: React.FC = () => {
           <>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {filteredDoctors.map((doctor) => (
-                <MedicalCard
+                <div
                   key={doctor.id}
-                  className="hover-lift"
+                  className="bg-white/40 dark:bg-slate-800/40 backdrop-blur-xl border border-white/50 dark:border-slate-700/50 rounded-[2rem] shadow-sm hover:shadow-2xl transition-all duration-300 group hover:-translate-y-1 overflow-hidden"
                 >
                   <div className="flex flex-col lg:flex-row">
                     {/* Doctor Photo & Basic Info */}
@@ -562,7 +572,7 @@ export const Doctors: React.FC = () => {
                       ))}
                     </div>
                   )}
-                </MedicalCard>
+                </div>
               ))}
             </div>
 
@@ -616,8 +626,8 @@ export const Doctors: React.FC = () => {
             }}
           />
         )}
-      </Container>
-    </div>
+        </Container>
+      </div>
   );
 };
 

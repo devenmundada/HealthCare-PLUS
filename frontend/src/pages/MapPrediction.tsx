@@ -131,14 +131,20 @@ const MapPrediction: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-800 p-4">
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-8 text-center">
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">
-            Find Real Indian Hospitals
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-50 via-white to-primary-50/30 dark:from-[#0B1221] dark:via-[#0F172A] dark:to-[#1E293B] py-16">
+        {/* Animated background elements */}
+        <div className="absolute top-0 left-0 right-0 h-[300px] bg-gradient-to-b from-primary-100/40 to-transparent dark:from-primary-900/20 pointer-events-none z-0"></div>
+        <div className="absolute -top-40 -right-40 w-96 h-96 bg-primary-400/20 dark:bg-primary-500/10 rounded-full mix-blend-multiply dark:mix-blend-lighten filter blur-[100px] animate-blob z-0"></div>
+        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-blue-400/20 dark:bg-blue-500/10 rounded-full mix-blend-multiply dark:mix-blend-lighten filter blur-[100px] animate-blob animation-delay-2000 z-0"></div>
+
+      <div className="max-w-7xl mx-auto relative z-10 px-4">
+        <div className="mb-16 text-center fade-in-up">
+          <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-6">
+            Find Real
+            <span className="bg-gradient-to-r from-primary-600 to-blue-600 dark:from-primary-400 dark:to-blue-400 bg-clip-text text-transparent block mt-2 pb-2">Indian Hospitals</span>
           </h1>
-          <p className="text-gray-600 dark:text-gray-300">
-            Search for hospitals across India with real contact information
+          <p className="text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto font-light leading-relaxed">
+            Search for hospitals across India with real contact information, directions, and instant booking availability.
           </p>
         </div>
 
@@ -189,7 +195,7 @@ const MapPrediction: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Map Container */}
           <div className="lg:col-span-2">
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 h-[500px]">
+            <div className="bg-white/40 dark:bg-slate-800/40 backdrop-blur-xl border border-white/50 dark:border-slate-700/50 rounded-[2rem] shadow-lg p-4 h-[500px]">
               {!mapCenter ? (
                 <div className="h-full w-full flex items-center justify-center text-gray-500 dark:text-gray-400 text-center px-6">
                   {locating
@@ -286,7 +292,7 @@ const MapPrediction: React.FC = () => {
 
           {/* Hospital Details Panel */}
           <div className="lg:col-span-1">
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 h-[500px] overflow-y-auto">
+            <div className="bg-white/40 dark:bg-slate-800/40 backdrop-blur-xl border border-white/50 dark:border-slate-700/50 rounded-[2rem] shadow-lg p-6 h-[500px] overflow-y-auto">
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
                 Hospitals {selectedCity ? `in ${selectedCity.name}` : 'Near You'}
                 <span className="ml-2 text-sm font-normal text-gray-500 dark:text-gray-400">
@@ -309,10 +315,10 @@ const MapPrediction: React.FC = () => {
                   {hospitals.map((hospital) => (
                     <div
                       key={hospital.id}
-                      className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                      className={`p-5 rounded-2xl border cursor-pointer transition-all duration-300 ${
                         selectedHospital?.id === hospital.id
-                          ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30'
-                          : 'border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-gray-700'
+                          ? 'border-primary-500 bg-white/60 dark:bg-slate-800/80 shadow-md ring-2 ring-primary-500/20'
+                          : 'border-white/50 dark:border-slate-700/50 bg-white/20 dark:bg-slate-800/20 hover:bg-white/60 dark:hover:bg-slate-800/60 hover:shadow-lg'
                       }`}
                       onClick={() => setSelectedHospital(hospital)}
                     >
@@ -382,7 +388,7 @@ const MapPrediction: React.FC = () => {
         </div>
 
         {/* Info Panel */}
-        <div className="mt-8 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-700 rounded-xl p-6 border border-blue-100 dark:border-gray-600">
+        <div className="mt-12 bg-white/40 dark:bg-slate-800/40 backdrop-blur-xl rounded-[2rem] p-8 border border-white/50 dark:border-slate-700/50 shadow-sm relative z-10">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
             About Real Indian Hospital Data
           </h3>
