@@ -131,12 +131,12 @@ export const SignUp: React.FC = () => {
       newErrors.email = 'Please enter a valid email address';
     }
 
-    // Phone validation (basic)
-    const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
+    // Phone validation (exactly 10 digits)
+    const cleanedPhone = formData.phone.replace(/\D/g, '');
     if (!formData.phone) {
       newErrors.phone = 'Phone number is required';
-    } else if (!phoneRegex.test(formData.phone.replace(/[\s\-\(\)]/g, ''))) {
-      newErrors.phone = 'Please enter a valid phone number';
+    } else if (cleanedPhone.length !== 10) {
+      newErrors.phone = 'Phone number must be exactly 10 digits';
     }
 
     // Password validation
@@ -253,10 +253,9 @@ export const SignUp: React.FC = () => {
   };
 
   const handlePhoneChange = (value: string) => {
-    // Format phone number as user types
-    const cleaned = value.replace(/\D/g, '');
-    const formatted = cleaned.replace(/(\d{3})(\d{3})(\d{4})/, '($1) $2-$3');
-    setFormData(prev => ({ ...prev, phone: formatted }));
+    // Restrict phone number to exactly 10 digits
+    const cleaned = value.replace(/\D/g, '').slice(0, 10);
+    setFormData(prev => ({ ...prev, phone: cleaned }));
     
     if (errors.phone) {
       setErrors(prev => ({ ...prev, phone: undefined }));
@@ -545,9 +544,10 @@ export const SignUp: React.FC = () => {
                     <Input
                       type="tel"
                       name="phone"
+                      maxLength={10}
                       value={formData.phone}
                       onChange={(e) => handlePhoneChange(e.target.value)}
-                      placeholder="(123) 456-7890"
+                      placeholder="10-digit mobile number"
                       leftIcon={<Phone className="w-4 h-4" />}
                       error={errors.phone}
                       disabled={isLoading}
