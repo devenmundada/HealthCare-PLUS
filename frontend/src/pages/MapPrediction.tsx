@@ -131,20 +131,20 @@ const MapPrediction: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white p-4">
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-800 p-4">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8 text-center">
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">
             Find Real Indian Hospitals
           </h1>
-          <p className="text-gray-600">
+          <p className="text-gray-600 dark:text-gray-300">
             Search for hospitals across India with real contact information
           </p>
         </div>
 
         {/* City Selection */}
         <div className="mb-8">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">Select Your City in India</h2>
+          <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-4">Select Your City in India</h2>
           <IndianCitySelector
             onCitySelect={handleCitySelect}
             selectedCity={selectedCity}
@@ -153,13 +153,13 @@ const MapPrediction: React.FC = () => {
 
         {/* Location status */}
         {locating && (
-          <div className="mb-6 flex justify-center items-center p-4 bg-blue-50 rounded-lg text-blue-700">
-            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600 mr-3"></div>
+          <div className="mb-6 flex justify-center items-center p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg text-blue-700 dark:text-blue-300">
+            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600 dark:border-blue-400 mr-3"></div>
             Detecting your location…
           </div>
         )}
         {!locating && locationDenied && !selectedCity && (
-          <div className="mb-6 p-4 bg-yellow-50 border-l-4 border-yellow-500 text-yellow-800 rounded">
+          <div className="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/30 border-l-4 border-yellow-500 text-yellow-800 dark:text-yellow-200 rounded">
             Couldn't access your location. Please select a city below to see hospitals near you.
           </div>
         )}
@@ -167,19 +167,19 @@ const MapPrediction: React.FC = () => {
         {/* Loading and Error States */}
         {loading && (
           <div className="flex justify-center items-center p-8">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            <span className="ml-3 text-gray-700">Loading real Indian hospitals...</span>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400"></div>
+            <span className="ml-3 text-gray-700 dark:text-gray-300">Loading real Indian hospitals...</span>
           </div>
         )}
 
         {error && (
-          <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6">
+          <div className="bg-red-50 dark:bg-red-900/30 border-l-4 border-red-500 p-4 mb-6">
             <div className="flex">
               <div className="flex-shrink-0">
-                <span className="text-red-500">⚠️</span>
+                <span className="text-red-500 dark:text-red-400">⚠️</span>
               </div>
               <div className="ml-3">
-                <p className="text-sm text-red-700">{error}</p>
+                <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
               </div>
             </div>
           </div>
@@ -189,9 +189,9 @@ const MapPrediction: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Map Container */}
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-xl shadow-lg p-4 h-[500px]">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 h-[500px]">
               {!mapCenter ? (
-                <div className="h-full w-full flex items-center justify-center text-gray-500 text-center px-6">
+                <div className="h-full w-full flex items-center justify-center text-gray-500 dark:text-gray-400 text-center px-6">
                   {locating
                     ? 'Detecting your location…'
                     : 'Enable location access or select a city to see hospitals on the map.'}
@@ -286,10 +286,10 @@ const MapPrediction: React.FC = () => {
 
           {/* Hospital Details Panel */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-xl shadow-lg p-6 h-[500px] overflow-y-auto">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 h-[500px] overflow-y-auto">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
                 Hospitals {selectedCity ? `in ${selectedCity.name}` : 'Near You'}
-                <span className="ml-2 text-sm font-normal text-gray-500">
+                <span className="ml-2 text-sm font-normal text-gray-500 dark:text-gray-400">
                   ({hospitals.length} found)
                 </span>
               </h2>
@@ -297,10 +297,10 @@ const MapPrediction: React.FC = () => {
               {hospitals.length === 0 && !loading ? (
                 <div className="text-center py-12">
                   <div className="text-4xl mb-4">🏥</div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
                     No hospitals found
                   </h3>
-                  <p className="text-gray-600">
+                  <p className="text-gray-600 dark:text-gray-400">
                     Try selecting a different city in India
                   </p>
                 </div>
@@ -311,18 +311,18 @@ const MapPrediction: React.FC = () => {
                       key={hospital.id}
                       className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
                         selectedHospital?.id === hospital.id
-                          ? 'border-blue-500 bg-blue-50'
-                          : 'border-gray-200 hover:border-blue-300 hover:bg-blue-25'
+                          ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30'
+                          : 'border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-gray-700'
                       }`}
                       onClick={() => setSelectedHospital(hospital)}
                     >
                       <div className="flex justify-between items-start">
                         <div>
-                          <h3 className="font-bold text-gray-900">{hospital.name}</h3>
-                          <p className="text-sm text-gray-600 mt-1">{hospital.address}</p>
+                          <h3 className="font-bold text-gray-900 dark:text-white">{hospital.name}</h3>
+                          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{hospital.address}</p>
                           
                           <div className="flex flex-wrap gap-2 mt-3">
-                            <span className="px-2 py-1 bg-gray-100 text-gray-800 text-xs font-medium rounded-full">
+                            <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-xs font-medium rounded-full">
                               {hospital.type}
                             </span>
                             {hospital.ayushmanBharat && (
@@ -361,12 +361,12 @@ const MapPrediction: React.FC = () => {
                       </div>
                       
                       {hospital.phone && (
-                        <div className="mt-3 pt-3 border-t border-gray-100">
-                          <p className="text-sm">
+                        <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+                          <p className="text-sm dark:text-gray-300">
                             <span className="font-medium">Contact:</span>{' '}
                             <a 
                               href={`tel:${hospital.phone}`}
-                              className="text-blue-600 hover:text-blue-800 hover:underline"
+                              className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline"
                             >
                               {hospital.phone}
                             </a>
@@ -382,40 +382,40 @@ const MapPrediction: React.FC = () => {
         </div>
 
         {/* Info Panel */}
-        <div className="mt-8 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
-          <h3 className="text-lg font-semibold text-gray-900 mb-3">
+        <div className="mt-8 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-700 rounded-xl p-6 border border-blue-100 dark:border-gray-600">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
             About Real Indian Hospital Data
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="flex items-start">
-              <div className="bg-blue-100 p-2 rounded-lg mr-3">
-                <span className="text-blue-600">🏥</span>
+              <div className="bg-blue-100 dark:bg-blue-900/40 p-2 rounded-lg mr-3">
+                <span className="text-blue-600 dark:text-blue-400">🏥</span>
               </div>
               <div>
-                <h4 className="font-medium text-gray-900">Real Hospitals</h4>
-                <p className="text-sm text-gray-600 mt-1">
+                <h4 className="font-medium text-gray-900 dark:text-white">Real Hospitals</h4>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                   Showing actual hospitals from the Indian healthcare database
                 </p>
               </div>
             </div>
             <div className="flex items-start">
-              <div className="bg-green-100 p-2 rounded-lg mr-3">
-                <span className="text-green-600">📍</span>
+              <div className="bg-green-100 dark:bg-green-900/40 p-2 rounded-lg mr-3">
+                <span className="text-green-600 dark:text-green-400">📍</span>
               </div>
               <div>
-                <h4 className="font-medium text-gray-900">Accurate Locations</h4>
-                <p className="text-sm text-gray-600 mt-1">
+                <h4 className="font-medium text-gray-900 dark:text-white">Accurate Locations</h4>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                   Real addresses and coordinates for Indian hospitals
                 </p>
               </div>
             </div>
             <div className="flex items-start">
-              <div className="bg-purple-100 p-2 rounded-lg mr-3">
-                <span className="text-purple-600">📞</span>
+              <div className="bg-purple-100 dark:bg-purple-900/40 p-2 rounded-lg mr-3">
+                <span className="text-purple-600 dark:text-purple-400">📞</span>
               </div>
               <div>
-                <h4 className="font-medium text-gray-900">Verified Contacts</h4>
-                <p className="text-sm text-gray-600 mt-1">
+                <h4 className="font-medium text-gray-900 dark:text-white">Verified Contacts</h4>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                   Real phone numbers you can actually call
                 </p>
               </div>
