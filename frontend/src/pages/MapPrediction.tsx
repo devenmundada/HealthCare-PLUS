@@ -149,8 +149,8 @@ const MapPrediction: React.FC = () => {
         </div>
 
         {/* City Selection */}
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-4">Select Your City in India</h2>
+        <div className="mb-8 text-center flex flex-col items-center">
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6">Select Your City in India</h2>
           <IndianCitySelector
             onCitySelect={handleCitySelect}
             selectedCity={selectedCity}

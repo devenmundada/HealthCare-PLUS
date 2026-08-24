@@ -36,37 +36,45 @@ const IndianCitySelector: React.FC<IndianCitySelectorProps> = ({ onCitySelect, s
 
   return (
     <div className="w-full max-w-md mx-auto">
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+      <div className="mb-4 text-center">
+        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
           Select Indian City
         </label>
-        <input
-          type="text"
-          placeholder="Search city or state..."
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
+        <div className="relative">
+          <input
+            type="text"
+            placeholder="Search city or state..."
+            className="w-full pl-4 pr-10 py-3 bg-white/50 dark:bg-slate-800/50 backdrop-blur-md border border-slate-200/50 dark:border-slate-700/50 rounded-xl text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50 shadow-sm transition-all"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 opacity-50">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-900 dark:text-white">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+          </div>
+        </div>
       </div>
 
-      <div className="space-y-2 max-h-60 overflow-y-auto">
+      <div className="space-y-3 max-h-[22rem] overflow-y-auto pr-2 custom-scrollbar">
         {filteredCities.map((city) => (
           <div
             key={city.id}
-            className={`p-4 rounded-lg cursor-pointer transition-all ${
+            className={`p-4 rounded-2xl cursor-pointer transition-all duration-300 backdrop-blur-md border shadow-sm hover:shadow-md hover:-translate-y-0.5 ${
               selectedCity?.id === city.id
-                ? 'bg-blue-50 border-2 border-blue-500'
-                : 'bg-white border border-gray-200 hover:bg-gray-50'
+                ? 'bg-primary-50/50 dark:bg-primary-900/30 border-primary-500 dark:border-primary-500 ring-1 ring-primary-500'
+                : 'bg-white/40 dark:bg-slate-800/40 border-white/50 dark:border-slate-700/50 hover:bg-white/60 dark:hover:bg-slate-800/60'
             }`}
             onClick={() => onCitySelect(city)}
           >
             <div className="flex justify-between items-center">
               <div>
-                <h3 className="font-medium text-gray-900">{city.name}</h3>
-                <p className="text-sm text-gray-600">{city.state}</p>
+                <h3 className="font-bold text-slate-900 dark:text-white mb-0.5">{city.name}</h3>
+                <p className="text-sm font-medium text-slate-500 dark:text-slate-400">{city.state}</p>
               </div>
-              <div className="text-sm text-gray-500">
-                {city.latitude.toFixed(4)}, {city.longitude.toFixed(4)}
+              <div className="text-xs font-mono text-slate-400 dark:text-slate-500 bg-white/50 dark:bg-slate-900/50 px-2 py-1 rounded-md">
+                {city.latitude.toFixed(2)}°, {city.longitude.toFixed(2)}°
               </div>
             </div>
           </div>
@@ -74,8 +82,13 @@ const IndianCitySelector: React.FC<IndianCitySelectorProps> = ({ onCitySelect, s
       </div>
 
       {selectedCity && (
-        <div className="mt-4 p-4 bg-green-50 rounded-lg border border-green-200">
-          <p className="text-sm font-medium text-green-800">
+        <div className="mt-6 p-4 bg-emerald-50/50 dark:bg-emerald-900/20 backdrop-blur-sm rounded-xl border border-emerald-200/50 dark:border-emerald-800/50 flex items-center gap-3 shadow-sm">
+          <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center flex-shrink-0">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-600 dark:text-emerald-400">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          </div>
+          <p className="text-sm font-medium text-emerald-800 dark:text-emerald-300">
             Selected: <span className="font-bold">{selectedCity.name}, {selectedCity.state}</span>
           </p>
         </div>
