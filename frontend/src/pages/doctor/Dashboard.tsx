@@ -314,77 +314,79 @@ export const DoctorDashboard: React.FC = () => {
 
         {/* Pending Requests Banner */}
         {pendingCount > 0 && (
-          <div className="mb-6 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg flex items-center gap-3">
-            <Clock className="w-5 h-5 text-amber-600 flex-shrink-0" />
-            <p className="text-sm text-amber-800 dark:text-amber-300">
-              You have <strong>{pendingCount}</strong> appointment request{pendingCount > 1 ? 's' : ''} waiting for your response.
+          <div className="mb-8 p-5 bg-amber-50/50 dark:bg-amber-900/20 backdrop-blur-md border border-amber-200/50 dark:border-amber-700/50 rounded-[2rem] flex items-center gap-4 shadow-sm">
+            <div className="w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center flex-shrink-0">
+              <Clock className="w-6 h-6 text-amber-600 dark:text-amber-400" />
+            </div>
+            <p className="text-amber-800 dark:text-amber-300 font-medium">
+              You have <span className="font-bold text-amber-900 dark:text-amber-200 text-lg">{pendingCount}</span> appointment request{pendingCount > 1 ? 's' : ''} waiting for your response.
             </p>
           </div>
         )}
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <GlassCard className="p-5">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/40 dark:to-blue-800/40 rounded-xl">
-                <Calendar className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+          <div className="bg-white/40 dark:bg-slate-800/40 backdrop-blur-xl border border-white/50 dark:border-slate-700/50 rounded-[2rem] shadow-sm hover:shadow-xl transition-all duration-300 p-6 group hover:-translate-y-1">
+            <div className="flex items-center gap-5">
+              <div className="p-4 bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/40 dark:to-blue-800/40 rounded-2xl group-hover:scale-110 transition-transform duration-300">
+                <Calendar className="w-8 h-8 text-blue-600 dark:text-blue-400" />
               </div>
               <div>
-                <p className="text-3xl font-bold text-neutral-900 dark:text-white">{appointments.filter(a => new Date(a.scheduledTime).toDateString() === new Date().toDateString()).length}</p>
-                <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400">Today's Appointments</p>
+                <p className="text-4xl font-bold text-slate-900 dark:text-white mb-1">{appointments.filter(a => new Date(a.scheduledTime).toDateString() === new Date().toDateString()).length}</p>
+                <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Today's Appointments</p>
               </div>
             </div>
-          </GlassCard>
+          </div>
 
-          <GlassCard className="p-5">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-gradient-to-br from-green-100 to-green-200 dark:from-green-900/40 dark:to-green-800/40 rounded-xl">
-                <Video className="w-6 h-6 text-green-600 dark:text-green-400" />
+          <div className="bg-white/40 dark:bg-slate-800/40 backdrop-blur-xl border border-white/50 dark:border-slate-700/50 rounded-[2rem] shadow-sm hover:shadow-xl transition-all duration-300 p-6 group hover:-translate-y-1">
+            <div className="flex items-center gap-5">
+              <div className="p-4 bg-gradient-to-br from-green-100 to-emerald-200 dark:from-green-900/40 dark:to-emerald-800/40 rounded-2xl group-hover:scale-110 transition-transform duration-300">
+                <Video className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
               </div>
               <div>
-                <p className="text-3xl font-bold text-neutral-900 dark:text-white">{appointments.filter(a => a.appointmentType === 'online').length}</p>
-                <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400">Online Consultations</p>
+                <p className="text-4xl font-bold text-slate-900 dark:text-white mb-1">{appointments.filter(a => a.appointmentType === 'online').length}</p>
+                <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Online Consultations</p>
               </div>
             </div>
-          </GlassCard>
+          </div>
 
-          <GlassCard className="p-5">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-gradient-to-br from-purple-100 to-purple-200 dark:from-purple-900/40 dark:to-purple-800/40 rounded-xl">
-                <Users className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+          <div className="bg-white/40 dark:bg-slate-800/40 backdrop-blur-xl border border-white/50 dark:border-slate-700/50 rounded-[2rem] shadow-sm hover:shadow-xl transition-all duration-300 p-6 group hover:-translate-y-1">
+            <div className="flex items-center gap-5">
+              <div className="p-4 bg-gradient-to-br from-purple-100 to-fuchsia-200 dark:from-purple-900/40 dark:to-fuchsia-800/40 rounded-2xl group-hover:scale-110 transition-transform duration-300">
+                <Users className="w-8 h-8 text-purple-600 dark:text-purple-400" />
               </div>
               <div>
-                <p className="text-3xl font-bold text-neutral-900 dark:text-white">{appointments.length}</p>
-                <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400">Total Patients</p>
+                <p className="text-4xl font-bold text-slate-900 dark:text-white mb-1">{appointments.length}</p>
+                <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Total Patients</p>
               </div>
             </div>
-          </GlassCard>
+          </div>
 
-          <GlassCard className="p-5">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-gradient-to-br from-yellow-100 to-yellow-200 dark:from-yellow-900/40 dark:to-yellow-800/40 rounded-xl">
-                <Clock className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
+          <div className="bg-white/40 dark:bg-slate-800/40 backdrop-blur-xl border border-white/50 dark:border-slate-700/50 rounded-[2rem] shadow-sm hover:shadow-xl transition-all duration-300 p-6 group hover:-translate-y-1">
+            <div className="flex items-center gap-5">
+              <div className="p-4 bg-gradient-to-br from-yellow-100 to-amber-200 dark:from-yellow-900/40 dark:to-amber-800/40 rounded-2xl group-hover:scale-110 transition-transform duration-300">
+                <Clock className="w-8 h-8 text-amber-600 dark:text-amber-400" />
               </div>
               <div>
-                <p className="text-3xl font-bold text-neutral-900 dark:text-white">4.5</p>
-                <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400">Avg. Rating</p>
+                <p className="text-4xl font-bold text-slate-900 dark:text-white mb-1">4.5</p>
+                <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Avg. Rating</p>
               </div>
             </div>
-          </GlassCard>
+          </div>
         </div>
 
         {/* Appointments Section */}
-        <GlassCard className="p-6 md:p-8">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-            <h2 className="text-2xl font-bold text-neutral-900 dark:text-white">Your Appointments</h2>
-            <div className="flex bg-neutral-100 dark:bg-neutral-800/50 p-1 rounded-lg">
-              <Button variant={activeTab === 'today' ? 'primary' : 'ghost'} size="sm" onClick={() => setActiveTab('today')} className="rounded-md">
+        <div className="bg-white/40 dark:bg-slate-800/40 backdrop-blur-xl border border-white/50 dark:border-slate-700/50 rounded-[2rem] shadow-xl p-8 md:p-10 mb-12">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+            <h2 className="text-3xl font-bold text-slate-900 dark:text-white">Your Appointments</h2>
+            <div className="flex bg-white/50 dark:bg-slate-900/50 backdrop-blur-md p-1.5 rounded-[1.5rem] border border-white/30 dark:border-slate-700/30">
+              <Button variant={activeTab === 'today' ? 'primary' : 'ghost'} size="sm" onClick={() => setActiveTab('today')} className={`rounded-[1.2rem] px-6 ${activeTab === 'today' ? 'shadow-md' : ''}`}>
                 Today
               </Button>
-              <Button variant={activeTab === 'upcoming' ? 'primary' : 'ghost'} size="sm" onClick={() => setActiveTab('upcoming')} className="rounded-md">
+              <Button variant={activeTab === 'upcoming' ? 'primary' : 'ghost'} size="sm" onClick={() => setActiveTab('upcoming')} className={`rounded-[1.2rem] px-6 ${activeTab === 'upcoming' ? 'shadow-md' : ''}`}>
                 Upcoming
               </Button>
-              <Button variant={activeTab === 'past' ? 'primary' : 'ghost'} size="sm" onClick={() => setActiveTab('past')} className="rounded-md">
+              <Button variant={activeTab === 'past' ? 'primary' : 'ghost'} size="sm" onClick={() => setActiveTab('past')} className={`rounded-[1.2rem] px-6 ${activeTab === 'past' ? 'shadow-md' : ''}`}>
                 Past
               </Button>
             </div>
@@ -408,23 +410,25 @@ export const DoctorDashboard: React.FC = () => {
                 return (
                   <div
                     key={apt.id}
-                    className={`p-5 border border-neutral-200 dark:border-neutral-700/50 rounded-xl hover:shadow-lg transition-all duration-200 bg-white/50 dark:bg-neutral-800/30 ${
-                      isPending ? 'border-amber-300 dark:border-amber-700 bg-amber-50/40 dark:bg-amber-900/10' : ''
+                    className={`p-6 border rounded-[1.5rem] hover:shadow-xl transition-all duration-300 hover:-translate-y-1 ${
+                      isPending 
+                        ? 'border-amber-300 dark:border-amber-700 bg-amber-50/60 dark:bg-amber-900/20 backdrop-blur-md' 
+                        : 'border-white/50 dark:border-slate-700/50 bg-white/60 dark:bg-slate-800/40 backdrop-blur-xl'
                     }`}
                   >
-                    <div className="flex items-start justify-between flex-wrap gap-3">
+                    <div className="flex items-start justify-between flex-wrap gap-4">
                       <div>
                         <div className="flex items-center gap-3 mb-2">
-                          <h3 className="font-bold text-lg text-neutral-900 dark:text-white">{apt.patientName}</h3>
-                          <Badge variant={statusInfo.variant} size="sm">{statusInfo.label}</Badge>
+                          <h3 className="font-bold text-xl text-slate-900 dark:text-white">{apt.patientName}</h3>
+                          <Badge variant={statusInfo.variant} size="sm" className="rounded-full shadow-sm">{statusInfo.label}</Badge>
                         </div>
-                        <div className="flex items-center gap-4 mt-2 text-sm text-neutral-500">
-                          <div className="flex items-center gap-1">
-                            <Clock className="w-4 h-4" />
+                        <div className="flex items-center gap-4 mt-3 text-sm text-slate-600 dark:text-slate-400 bg-white/50 dark:bg-slate-900/50 p-2.5 rounded-xl w-fit border border-white/20 dark:border-slate-700/30">
+                          <div className="flex items-center gap-1.5 font-medium">
+                            <Clock className="w-4 h-4 text-primary-500" />
                             {new Date(apt.scheduledTime).toLocaleString()}
                           </div>
-                          <div className="flex items-center gap-1">
-                            {apt.appointmentType === 'online' ? <Video className="w-4 h-4" /> : <MapPin className="w-4 h-4" />}
+                          <div className="flex items-center gap-1.5 font-medium">
+                            {apt.appointmentType === 'online' ? <Video className="w-4 h-4 text-emerald-500" /> : <MapPin className="w-4 h-4 text-primary-500" />}
                             {apt.appointmentType}
                           </div>
                         </div>
@@ -461,6 +465,7 @@ export const DoctorDashboard: React.FC = () => {
                             <Button
                               size="sm"
                               variant="clinical"
+                              className="rounded-xl shadow-md bg-primary-600 hover:bg-primary-700 text-white border-0"
                               leftIcon={isResponding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                               disabled={isResponding}
                               onClick={() => respondToAppointment(apt.id, 'confirmed')}
@@ -470,6 +475,7 @@ export const DoctorDashboard: React.FC = () => {
                             <Button
                               size="sm"
                               variant="danger"
+                              className="rounded-xl shadow-md border-0"
                               leftIcon={<X className="w-4 h-4" />}
                               disabled={isResponding}
                               onClick={() => respondToAppointment(apt.id, 'cancelled')}
@@ -479,13 +485,14 @@ export const DoctorDashboard: React.FC = () => {
                           </>
                         )}
                         {apt.appointmentType === 'online' && apt.meetingLink && (
-                          <Button size="sm" leftIcon={<Video className="w-4 h-4" />} onClick={() => handleStartMeeting(apt.meetingLink!)}>
+                          <Button size="sm" leftIcon={<Video className="w-4 h-4" />} className="rounded-xl shadow-md bg-emerald-600 hover:bg-emerald-700 text-white border-0" onClick={() => handleStartMeeting(apt.meetingLink!)}>
                             Join Meeting
                           </Button>
                         )}
                         <Button
                           variant="secondary"
                           size="sm"
+                          className="rounded-xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-md shadow-sm border border-slate-200 dark:border-slate-700"
                           leftIcon={<Phone className="w-4 h-4" />}
                           onClick={() => setContactOpenId(contactOpenId === apt.id ? null : apt.id)}
                         >
@@ -498,7 +505,7 @@ export const DoctorDashboard: React.FC = () => {
               })}
             </div>
           )}
-        </GlassCard>
+        </div>
       </Container>
       </div>
 
