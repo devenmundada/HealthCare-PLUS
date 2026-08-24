@@ -677,37 +677,37 @@ export const Home: React.FC = () => {
   return (
     <div className="min-h-screen">
       {/* Hero Section - Enhanced */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-primary-50 via-white to-blue-50 dark:from-neutral-900 dark:via-neutral-900 dark:to-blue-950/30 py-20 md:py-28">
+      <section className="relative overflow-hidden bg-gradient-to-br from-slate-50 via-white to-primary-50/30 dark:from-[#0B1221] dark:via-[#0F172A] dark:to-[#1E293B] py-24 md:py-32">
         {/* Animated background elements */}
-        <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-white/50 to-transparent dark:from-neutral-900/50"></div>
-        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-white/30 to-transparent dark:from-neutral-900/30"></div>
+        <div className="absolute top-0 left-0 right-0 h-[500px] bg-gradient-to-b from-primary-100/40 to-transparent dark:from-primary-900/20 pointer-events-none"></div>
+        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-white/30 to-transparent dark:from-[#0B1221]/30"></div>
 
         <Container>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center fade-in-up">
             <div className="space-y-8">
-              <div className="space-y-4">
-                <Badge variant="outline" className="px-4 py-2 bg-white/50 dark:bg-neutral-800/50 backdrop-blur-sm border-primary-200 dark:border-primary-800">
-                  <TrendingUp className="w-4 h-4 mr-2" />
-                  Trusted by 500+ Hospitals
+              <div className="space-y-6">
+                <Badge variant="outline" className="px-5 py-2.5 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border-primary-200/50 dark:border-primary-800/50 rounded-full shadow-sm w-max">
+                  <TrendingUp className="w-4 h-4 mr-2 text-primary-600 dark:text-primary-400" />
+                  <span className="text-sm font-medium tracking-wide text-slate-800 dark:text-slate-200">Trusted by 500+ Top Hospitals</span>
                 </Badge>
 
-                <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-neutral-900 dark:text-white leading-tight">
+                <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-[1.1]">
                   Your Health,
-                  <span className="gradient-text block mt-2">Our Priority</span>
+                  <span className="bg-gradient-to-r from-primary-600 to-blue-600 dark:from-primary-400 dark:to-blue-400 bg-clip-text text-transparent block mt-2 pb-2">Our Priority</span>
                 </h1>
 
-                <p className="text-xl text-neutral-600 dark:text-neutral-400 leading-relaxed max-w-2xl">
+                <p className="text-xl text-slate-600 dark:text-slate-400 leading-relaxed max-w-2xl font-light">
                   AI-powered healthcare platform connecting you with trusted medical professionals.
                   From instant consultations to advanced diagnostics, we're here for your health journey.
                 </p>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex flex-col sm:flex-row gap-4 pt-4">
                 <Button
                   size="lg"
                   leftIcon={<Calendar className="w-5 h-5" />}
                   onClick={() => setShowAppointmentModal(true)}
-                  className="btn-premium px-8 py-3 text-lg"
+                  className="bg-primary-600 hover:bg-primary-700 text-white shadow-[0_8px_30px_rgb(0,194,203,0.3)] dark:shadow-[0_8px_30px_rgb(0,194,203,0.2)] rounded-xl px-8 py-4 text-lg font-medium transition-all hover:-translate-y-1"
                 >
                   Book an Appointment
                 </Button>
@@ -715,7 +715,7 @@ export const Home: React.FC = () => {
                   variant="secondary"
                   size="lg"
                   leftIcon={<Video className="w-5 h-5" />}
-                  className="px-8 py-3 text-lg border-2"
+                  className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border border-slate-200 dark:border-slate-700 hover:bg-white dark:hover:bg-slate-700 shadow-sm rounded-xl px-8 py-4 text-lg font-medium transition-all hover:-translate-y-1 text-slate-700 dark:text-slate-200"
                   onClick={() => setShowAppointmentModal(true)}
                 >
                   Video Consultation
@@ -723,91 +723,92 @@ export const Home: React.FC = () => {
               </div>
 
               {/* Quick Stats - Enhanced */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-8">
-                <div className="text-center p-5 bg-white/70 dark:bg-neutral-800/70 rounded-xl backdrop-blur-sm border border-white/30 dark:border-neutral-700/30">
-                  <div className="text-2xl font-bold text-primary-600">24/7</div>
-                  <div className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">AI Support</div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-10">
+                <div className="flex flex-col text-left p-5 bg-white/40 dark:bg-slate-800/40 backdrop-blur-xl border border-white/50 dark:border-slate-700/50 rounded-2xl shadow-sm hover:bg-white/60 dark:hover:bg-slate-800/60 transition-colors">
+                  <div className="text-3xl font-extrabold text-primary-600 dark:text-primary-400 tracking-tight">24/7</div>
+                  <div className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-2 uppercase tracking-wider">AI Support</div>
                 </div>
-                <div className="text-center p-5 bg-white/70 dark:bg-neutral-800/70 rounded-xl backdrop-blur-sm border border-white/30 dark:border-neutral-700/30">
-                  <div className="text-2xl font-bold text-primary-600">500+</div>
-                  <div className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">Doctors</div>
+                <div className="flex flex-col text-left p-5 bg-white/40 dark:bg-slate-800/40 backdrop-blur-xl border border-white/50 dark:border-slate-700/50 rounded-2xl shadow-sm hover:bg-white/60 dark:hover:bg-slate-800/60 transition-colors">
+                  <div className="text-3xl font-extrabold text-primary-600 dark:text-primary-400 tracking-tight">500+</div>
+                  <div className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-2 uppercase tracking-wider">Doctors</div>
                 </div>
-                <div className="text-center p-5 bg-white/70 dark:bg-neutral-800/70 rounded-xl backdrop-blur-sm border border-white/30 dark:border-neutral-700/30">
-                  <div className="text-2xl font-bold text-primary-600">98.2%</div>
-                  <div className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">Success Rate</div>
+                <div className="flex flex-col text-left p-5 bg-white/40 dark:bg-slate-800/40 backdrop-blur-xl border border-white/50 dark:border-slate-700/50 rounded-2xl shadow-sm hover:bg-white/60 dark:hover:bg-slate-800/60 transition-colors">
+                  <div className="text-3xl font-extrabold text-primary-600 dark:text-primary-400 tracking-tight">98.2%</div>
+                  <div className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-2 uppercase tracking-wider">Success Rate</div>
                 </div>
-                <div className="text-center p-5 bg-white/70 dark:bg-neutral-800/70 rounded-xl backdrop-blur-sm border border-white/30 dark:border-neutral-700/30">
-                  <div className="text-2xl font-bold text-primary-600">2.4s</div>
-                  <div className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">Response Time</div>
+                <div className="flex flex-col text-left p-5 bg-white/40 dark:bg-slate-800/40 backdrop-blur-xl border border-white/50 dark:border-slate-700/50 rounded-2xl shadow-sm hover:bg-white/60 dark:hover:bg-slate-800/60 transition-colors">
+                  <div className="text-3xl font-extrabold text-primary-600 dark:text-primary-400 tracking-tight">2.4s</div>
+                  <div className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-2 uppercase tracking-wider">Response Time</div>
                 </div>
               </div>
             </div>
 
             <div className="relative">
-              {/* Animated background blobs */}
-              <div className="absolute -top-10 -right-10 w-80 h-80 bg-primary-300 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob"></div>
-              <div className="absolute -bottom-10 -left-10 w-80 h-80 bg-blue-300 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-2000"></div>
-              <div className="absolute top-20 -right-20 w-60 h-60 bg-cyan-300 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-4000"></div>
+              {/* Animated background blobs with wider spread and softer blur */}
+              <div className="absolute -top-10 -right-10 w-[28rem] h-[28rem] bg-primary-400/20 dark:bg-primary-500/10 rounded-full mix-blend-multiply dark:mix-blend-lighten filter blur-[100px] animate-blob"></div>
+              <div className="absolute -bottom-10 -left-10 w-[28rem] h-[28rem] bg-blue-400/20 dark:bg-blue-500/10 rounded-full mix-blend-multiply dark:mix-blend-lighten filter blur-[100px] animate-blob animation-delay-2000"></div>
+              
+              <div className="bg-white/30 dark:bg-slate-800/30 backdrop-blur-3xl p-2 border border-white/40 dark:border-slate-700/50 rounded-[2.5rem] shadow-2xl relative">
+                <div className="bg-white/70 dark:bg-slate-900/70 rounded-[2rem] p-8 md:p-12 h-full relative overflow-hidden shadow-inner">
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-primary-400/20 to-transparent rounded-full blur-3xl pointer-events-none"></div>
 
-              <div className="glass-card p-8 border-0 shadow-xl relative">
-                <div className="absolute -top-3 -right-3 w-6 h-6 rounded-full bg-primary-500 animate-pulse"></div>
+                  <div className="text-center space-y-10 relative z-10">
+                    <div className="w-24 h-24 mx-auto rounded-[2rem] bg-gradient-to-br from-primary-500 to-blue-600 flex items-center justify-center shadow-lg shadow-primary-500/30 transform rotate-3 hover:rotate-0 transition-transform duration-300">
+                      <Heart className="w-12 h-12 text-white transform -rotate-3 hover:rotate-0 transition-transform duration-300" />
+                    </div>
 
-                <div className="text-center space-y-6">
-                  <div className="w-24 h-24 mx-auto rounded-full bg-gradient-to-br from-primary-100 to-blue-100 dark:from-primary-900/30 dark:to-blue-900/30 flex items-center justify-center border-4 border-white/50 dark:border-neutral-800/50 shadow-lg">
-                    <Heart className="w-12 h-12 text-primary-600" />
-                  </div>
+                    <div className="space-y-4">
+                      <h3 className="text-3xl md:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+                        Start Your Health Journey
+                      </h3>
+                      <p className="text-slate-600 dark:text-slate-400 text-lg">
+                        Get personalized health insights in minutes
+                      </p>
+                    </div>
 
-                  <div className="space-y-3">
-                    <h3 className="text-2xl font-bold text-neutral-900 dark:text-white">
-                      Start Your Health Journey
-                    </h3>
-                    <p className="text-neutral-600 dark:text-neutral-400">
-                      Get personalized health insights in minutes
-                    </p>
-                  </div>
+                    <div className="space-y-4 pt-4">
+                      <button
+                        className="w-full group flex items-center p-5 bg-white dark:bg-slate-800/80 rounded-2xl border border-slate-100 dark:border-slate-700 hover:border-primary-200 dark:hover:border-primary-800 hover:shadow-lg transition-all text-left"
+                        onClick={() => navigate('/health-assessment')}
+                      >
+                        <div className="w-14 h-14 rounded-xl bg-primary-50 dark:bg-primary-900/30 flex items-center justify-center mr-5 group-hover:scale-110 transition-transform shadow-sm">
+                          <Stethoscope className="w-7 h-7 text-primary-600 dark:text-primary-400" />
+                        </div>
+                        <div className="flex-1">
+                          <div className="font-bold text-slate-900 dark:text-white text-lg group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">Health Assessment</div>
+                          <div className="text-sm text-slate-500 dark:text-slate-400 font-medium mt-1">3 min questionnaire</div>
+                        </div>
+                        <ChevronRight className="w-6 h-6 text-slate-300 group-hover:text-primary-600 group-hover:translate-x-1 transition-all" />
+                      </button>
 
-                  <div className="space-y-4">
-                    <Button
-                      variant="secondary"
-                      fullWidth
-                      leftIcon={<Stethoscope className="w-5 h-5" />}
-                      className="justify-start px-6 py-4 hover-lift"
-                      onClick={() => navigate('/health-assessment')}
-                      ariaLabel="Start health assessment"
-                    >
-                      <div className="text-left">
-                        <div className="font-medium">Health Assessment</div>
-                        <div className="text-xs text-neutral-500">3 min questionnaire</div>
-                      </div>
-                    </Button>
+                      <button
+                        className="w-full group flex items-center p-5 bg-white dark:bg-slate-800/80 rounded-2xl border border-slate-100 dark:border-slate-700 hover:border-blue-200 dark:hover:border-blue-800 hover:shadow-lg transition-all text-left"
+                        onClick={() => navigate('/chat')}
+                      >
+                        <div className="w-14 h-14 rounded-xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center mr-5 group-hover:scale-110 transition-transform shadow-sm">
+                          <MessageSquare className="w-7 h-7 text-blue-600 dark:text-blue-400" />
+                        </div>
+                        <div className="flex-1">
+                          <div className="font-bold text-slate-900 dark:text-white text-lg group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">Chat with AI Assistant</div>
+                          <div className="text-sm text-slate-500 dark:text-slate-400 font-medium mt-1">24/7 available</div>
+                        </div>
+                        <ChevronRight className="w-6 h-6 text-slate-300 group-hover:text-blue-600 group-hover:translate-x-1 transition-all" />
+                      </button>
 
-                    <Button
-                      variant="secondary"
-                      fullWidth
-                      leftIcon={<MessageSquare className="w-5 h-5" />}
-                      className="justify-start px-6 py-4 hover-lift"
-                      onClick={() => navigate('/chat')}
-                      ariaLabel="Chat with AI assistant"
-                    >
-                      <div className="text-left">
-                        <div className="font-medium">Chat with AI Assistant</div>
-                        <div className="text-xs text-neutral-500">24/7 available</div>
-                      </div>
-                    </Button>
-
-                    <Button
-                      variant="ghost"
-                      fullWidth
-                      leftIcon={<MapPin className="w-5 h-5" />}
-                      className="justify-start px-6 py-4"
-                      onClick={() => navigate('/map-prediction')}
-                      ariaLabel="Find nearby hospitals"
-                    >
-                      <div className="text-left">
-                        <div className="font-medium">Find Nearby Hospitals</div>
-                        <div className="text-xs text-neutral-500">Emergency services</div>
-                      </div>
-                    </Button>
+                      <button
+                        className="w-full group flex items-center p-5 bg-white dark:bg-slate-800/80 rounded-2xl border border-slate-100 dark:border-slate-700 hover:border-teal-200 dark:hover:border-teal-800 hover:shadow-lg transition-all text-left"
+                        onClick={() => navigate('/map')}
+                      >
+                        <div className="w-14 h-14 rounded-xl bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center mr-5 group-hover:scale-110 transition-transform shadow-sm">
+                          <MapPin className="w-7 h-7 text-teal-600 dark:text-teal-400" />
+                        </div>
+                        <div className="flex-1">
+                          <div className="font-bold text-slate-900 dark:text-white text-lg group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">Find Nearby Hospitals</div>
+                          <div className="text-sm text-slate-500 dark:text-slate-400 font-medium mt-1">Emergency services</div>
+                        </div>
+                        <ChevronRight className="w-6 h-6 text-slate-300 group-hover:text-teal-600 group-hover:translate-x-1 transition-all" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
