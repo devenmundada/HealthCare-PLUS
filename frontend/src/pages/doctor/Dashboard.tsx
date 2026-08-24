@@ -215,8 +215,14 @@ export const DoctorDashboard: React.FC = () => {
   const visibleEmergencies = emergencies.filter((e: any) => !acknowledgedAlertIds.includes(e.alertId));
 
   return (
-    <div className="min-h-screen bg-background-primary py-8">
-      <Container>
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-primary-50 via-white to-blue-50 dark:from-neutral-900 dark:via-neutral-900 dark:to-blue-950/30 py-8">
+      {/* Animated background blobs */}
+      <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-white/50 to-transparent dark:from-neutral-900/50 pointer-events-none z-0"></div>
+      <div className="absolute -top-40 -right-40 w-96 h-96 bg-primary-400 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob pointer-events-none z-0"></div>
+      <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-2000 pointer-events-none z-0"></div>
+      
+      <div className="relative z-10">
+        <Container>
         {/* Emergency Alerts */}
         {visibleEmergencies.length > 0 && (
           <div className="mb-6 space-y-2">
@@ -243,10 +249,12 @@ export const DoctorDashboard: React.FC = () => {
         )}
 
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-3xl font-bold">Doctor Dashboard</h1>
-            <p className="text-neutral-500">Welcome back, Dr. {user?.name}</p>
+            <h1 className="text-3xl md:text-4xl font-bold text-neutral-900 dark:text-white mb-1">
+              Doctor Dashboard
+            </h1>
+            <p className="text-neutral-500 dark:text-neutral-400">Welcome back, Dr. {user?.name}</p>
           </div>
           <div className="flex items-center gap-3">
             <Badge variant={calendarConnected ? 'success' : 'default'}>
@@ -316,67 +324,67 @@ export const DoctorDashboard: React.FC = () => {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <GlassCard className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Calendar className="w-5 h-5 text-blue-600" />
+          <GlassCard className="p-5">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/40 dark:to-blue-800/40 rounded-xl">
+                <Calendar className="w-6 h-6 text-blue-600 dark:text-blue-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold">{appointments.filter(a => new Date(a.scheduledTime).toDateString() === new Date().toDateString()).length}</p>
-                <p className="text-sm text-neutral-500">Today's Appointments</p>
+                <p className="text-3xl font-bold text-neutral-900 dark:text-white">{appointments.filter(a => new Date(a.scheduledTime).toDateString() === new Date().toDateString()).length}</p>
+                <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400">Today's Appointments</p>
               </div>
             </div>
           </GlassCard>
 
-          <GlassCard className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <Video className="w-5 h-5 text-green-600" />
+          <GlassCard className="p-5">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-gradient-to-br from-green-100 to-green-200 dark:from-green-900/40 dark:to-green-800/40 rounded-xl">
+                <Video className="w-6 h-6 text-green-600 dark:text-green-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold">{appointments.filter(a => a.appointmentType === 'online').length}</p>
-                <p className="text-sm text-neutral-500">Online Consultations</p>
+                <p className="text-3xl font-bold text-neutral-900 dark:text-white">{appointments.filter(a => a.appointmentType === 'online').length}</p>
+                <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400">Online Consultations</p>
               </div>
             </div>
           </GlassCard>
 
-          <GlassCard className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <Users className="w-5 h-5 text-purple-600" />
+          <GlassCard className="p-5">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-gradient-to-br from-purple-100 to-purple-200 dark:from-purple-900/40 dark:to-purple-800/40 rounded-xl">
+                <Users className="w-6 h-6 text-purple-600 dark:text-purple-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold">{appointments.length}</p>
-                <p className="text-sm text-neutral-500">Total Patients</p>
+                <p className="text-3xl font-bold text-neutral-900 dark:text-white">{appointments.length}</p>
+                <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400">Total Patients</p>
               </div>
             </div>
           </GlassCard>
 
-          <GlassCard className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-yellow-100 rounded-lg">
-                <Clock className="w-5 h-5 text-yellow-600" />
+          <GlassCard className="p-5">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-gradient-to-br from-yellow-100 to-yellow-200 dark:from-yellow-900/40 dark:to-yellow-800/40 rounded-xl">
+                <Clock className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold">4.5</p>
-                <p className="text-sm text-neutral-500">Avg. Rating</p>
+                <p className="text-3xl font-bold text-neutral-900 dark:text-white">4.5</p>
+                <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400">Avg. Rating</p>
               </div>
             </div>
           </GlassCard>
         </div>
 
         {/* Appointments Section */}
-        <GlassCard className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold">Your Appointments</h2>
-            <div className="flex gap-2">
-              <Button variant={activeTab === 'today' ? 'primary' : 'ghost'} size="sm" onClick={() => setActiveTab('today')}>
+        <GlassCard className="p-6 md:p-8">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+            <h2 className="text-2xl font-bold text-neutral-900 dark:text-white">Your Appointments</h2>
+            <div className="flex bg-neutral-100 dark:bg-neutral-800/50 p-1 rounded-lg">
+              <Button variant={activeTab === 'today' ? 'primary' : 'ghost'} size="sm" onClick={() => setActiveTab('today')} className="rounded-md">
                 Today
               </Button>
-              <Button variant={activeTab === 'upcoming' ? 'primary' : 'ghost'} size="sm" onClick={() => setActiveTab('upcoming')}>
+              <Button variant={activeTab === 'upcoming' ? 'primary' : 'ghost'} size="sm" onClick={() => setActiveTab('upcoming')} className="rounded-md">
                 Upcoming
               </Button>
-              <Button variant={activeTab === 'past' ? 'primary' : 'ghost'} size="sm" onClick={() => setActiveTab('past')}>
+              <Button variant={activeTab === 'past' ? 'primary' : 'ghost'} size="sm" onClick={() => setActiveTab('past')} className="rounded-md">
                 Past
               </Button>
             </div>
@@ -400,14 +408,14 @@ export const DoctorDashboard: React.FC = () => {
                 return (
                   <div
                     key={apt.id}
-                    className={`p-4 border rounded-lg hover:shadow-md transition-shadow ${
+                    className={`p-5 border border-neutral-200 dark:border-neutral-700/50 rounded-xl hover:shadow-lg transition-all duration-200 bg-white/50 dark:bg-neutral-800/30 ${
                       isPending ? 'border-amber-300 dark:border-amber-700 bg-amber-50/40 dark:bg-amber-900/10' : ''
                     }`}
                   >
                     <div className="flex items-start justify-between flex-wrap gap-3">
                       <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-bold text-lg">{apt.patientName}</h3>
+                        <div className="flex items-center gap-3 mb-2">
+                          <h3 className="font-bold text-lg text-neutral-900 dark:text-white">{apt.patientName}</h3>
                           <Badge variant={statusInfo.variant} size="sm">{statusInfo.label}</Badge>
                         </div>
                         <div className="flex items-center gap-4 mt-2 text-sm text-neutral-500">
@@ -492,6 +500,7 @@ export const DoctorDashboard: React.FC = () => {
           )}
         </GlassCard>
       </Container>
+      </div>
 
       {/* Settings Modal */}
       {showSettingsModal && (

@@ -321,55 +321,60 @@ export const PatientPortal: React.FC = () => {
   const upcomingCount = appointments.filter(apt => new Date(apt.scheduledTime) > new Date()).length;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-primary-50 via-white to-blue-50 dark:from-neutral-900 dark:via-neutral-900 dark:to-blue-950/30">
+      {/* Animated background blobs */}
+      <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-white/50 to-transparent dark:from-neutral-900/50 pointer-events-none z-0"></div>
+      <div className="absolute -top-40 -right-40 w-96 h-96 bg-primary-400 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob pointer-events-none z-0"></div>
+      <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-2000 pointer-events-none z-0"></div>
+
       {/* Header */}
-      <header className="bg-white shadow-sm sticky top-0 z-10">
+      <header className="bg-white/80 dark:bg-neutral-900/80 backdrop-blur-md shadow-sm border-b border-neutral-200 dark:border-neutral-800 sticky top-0 z-20">
         <Container>
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-8">
-              <h1 className="text-xl font-bold text-medical-cyan">Healthcare+</h1>
-              <nav className="hidden md:flex gap-2">
+              <h1 className="text-xl font-bold text-primary-600 dark:text-primary-400">Healthcare+</h1>
+              <nav className="hidden md:flex gap-2 bg-neutral-100 dark:bg-neutral-800/50 p-1 rounded-lg">
                 <button
                   onClick={() => setPortalTab('dashboard')}
-                  className={`px-3 py-2 rounded-lg text-sm transition-colors ${
+                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
                     portalTab === 'dashboard' 
-                      ? 'bg-medical-cyan text-white' 
-                      : 'hover:bg-gray-100 text-gray-700'
+                      ? 'bg-white dark:bg-neutral-700 text-primary-700 dark:text-primary-300 shadow-sm' 
+                      : 'hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-600 dark:text-neutral-400'
                   }`}
                 >
                   Dashboard
                 </button>
                 <button
                   onClick={() => setPortalTab('find-doctors')}
-                  className={`px-3 py-2 rounded-lg text-sm transition-colors ${
+                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
                     portalTab === 'find-doctors' 
-                      ? 'bg-medical-cyan text-white' 
-                      : 'hover:bg-gray-100 text-gray-700'
+                      ? 'bg-white dark:bg-neutral-700 text-primary-700 dark:text-primary-300 shadow-sm' 
+                      : 'hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-600 dark:text-neutral-400'
                   }`}
                 >
                   Find Doctors
                 </button>
                 <button
                   onClick={() => setPortalTab('appointments')}
-                  className={`px-3 py-2 rounded-lg text-sm transition-colors ${
+                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors flex items-center ${
                     portalTab === 'appointments' 
-                      ? 'bg-medical-cyan text-white' 
-                      : 'hover:bg-gray-100 text-gray-700'
+                      ? 'bg-white dark:bg-neutral-700 text-primary-700 dark:text-primary-300 shadow-sm' 
+                      : 'hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-600 dark:text-neutral-400'
                   }`}
                 >
                   My Appointments
                   {upcomingCount > 0 && (
-                    <Badge variant="danger" size="sm" className="ml-2">
+                    <Badge variant="danger" size="sm" className="ml-2 px-1.5 py-0.5 text-xs">
                       {upcomingCount}
                     </Badge>
                   )}
                 </button>
                 <button
                   onClick={() => setPortalTab('records')}
-                  className={`px-3 py-2 rounded-lg text-sm transition-colors ${
+                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
                     portalTab === 'records' 
-                      ? 'bg-medical-cyan text-white' 
-                      : 'hover:bg-gray-100 text-gray-700'
+                      ? 'bg-white dark:bg-neutral-700 text-primary-700 dark:text-primary-300 shadow-sm' 
+                      : 'hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-600 dark:text-neutral-400'
                   }`}
                 >
                   Health Records
@@ -393,12 +398,13 @@ export const PatientPortal: React.FC = () => {
         </Container>
       </header>
 
-      <Container className="py-8">
+      <Container className="py-8 relative z-10">
         {/* Welcome Banner */}
-        <div className="p-6 mb-8 bg-gradient-to-r from-medical-cyan to-blue-500 text-white rounded-xl shadow-lg">
-          <div className="flex items-center justify-between">
+        <div className="p-8 mb-8 bg-gradient-to-r from-primary-600 to-blue-600 text-white rounded-2xl shadow-xl relative overflow-hidden border border-white/20">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/3 blur-2xl pointer-events-none"></div>
+          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div>
-              <h2 className="text-2xl font-bold mb-2">
+              <h2 className="text-3xl font-bold mb-2">
                 Welcome back, {user?.name?.split(' ')[0] || 'User'}! 👋
               </h2>
               <p className="opacity-90">
@@ -424,114 +430,112 @@ export const PatientPortal: React.FC = () => {
           <div className="space-y-6">
             {/* Quick Stats */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="p-4 bg-white rounded-xl shadow-sm border">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <Calendar className="w-5 h-5 text-blue-600" />
+              <GlassCard className="p-5">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/40 dark:to-blue-800/40 rounded-xl">
+                    <Calendar className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold">{upcomingCount}</p>
-                    <p className="text-sm text-gray-500">Upcoming</p>
+                    <p className="text-3xl font-bold text-neutral-900 dark:text-white">{upcomingCount}</p>
+                    <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400">Upcoming</p>
                   </div>
                 </div>
-              </div>
-              <div className="p-4 bg-white rounded-xl shadow-sm border">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-green-100 rounded-lg">
-                    <Heart className="w-5 h-5 text-green-600" />
+              </GlassCard>
+              <GlassCard className="p-5">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-gradient-to-br from-green-100 to-green-200 dark:from-green-900/40 dark:to-green-800/40 rounded-xl">
+                    <Heart className="w-6 h-6 text-green-600 dark:text-green-400" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold">{doctors.length}+</p>
-                    <p className="text-sm text-gray-500">Doctors</p>
+                    <p className="text-3xl font-bold text-neutral-900 dark:text-white">{doctors.length}+</p>
+                    <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400">Doctors</p>
                   </div>
                 </div>
-              </div>
-              <div className="p-4 bg-white rounded-xl shadow-sm border">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-purple-100 rounded-lg">
-                    <Award className="w-5 h-5 text-purple-600" />
+              </GlassCard>
+              <GlassCard className="p-5">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-gradient-to-br from-purple-100 to-purple-200 dark:from-purple-900/40 dark:to-purple-800/40 rounded-xl">
+                    <Award className="w-6 h-6 text-purple-600 dark:text-purple-400" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold">4.8</p>
-                    <p className="text-sm text-gray-500">Rating</p>
+                    <p className="text-3xl font-bold text-neutral-900 dark:text-white">4.8</p>
+                    <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400">Rating</p>
                   </div>
                 </div>
-              </div>
-              <div className="p-4 bg-white rounded-xl shadow-sm border">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-yellow-100 rounded-lg">
-                    <Shield className="w-5 h-5 text-yellow-600" />
+              </GlassCard>
+              <GlassCard className="p-5">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-gradient-to-br from-yellow-100 to-yellow-200 dark:from-yellow-900/40 dark:to-yellow-800/40 rounded-xl">
+                    <Shield className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold">100%</p>
-                    <p className="text-sm text-gray-500">Secure</p>
+                    <p className="text-3xl font-bold text-neutral-900 dark:text-white">100%</p>
+                    <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400">Secure</p>
                   </div>
                 </div>
-              </div>
+              </GlassCard>
             </div>
 
             {/* Quick Actions */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <button 
-                className="p-6 text-center hover:shadow-lg transition-all hover:-translate-y-1 bg-white rounded-xl border"
-                onClick={() => setPortalTab('find-doctors')}
-              >
-                <Calendar className="w-12 h-12 mx-auto mb-3 text-medical-cyan" />
-                <h3 className="font-bold text-lg">Book Appointment</h3>
-                <p className="text-sm text-gray-500">Find and book with nearby doctors</p>
-              </button>
+              <GlassCard hoverable className="p-8 text-center bg-white/60 dark:bg-neutral-800/60" onClick={() => setPortalTab('find-doctors')}>
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-primary-100 to-blue-100 dark:from-primary-900/30 dark:to-blue-900/30 flex items-center justify-center border-4 border-white dark:border-neutral-800 shadow-md">
+                  <Calendar className="w-8 h-8 text-primary-600" />
+                </div>
+                <h3 className="font-bold text-xl text-neutral-900 dark:text-white mb-2">Book Appointment</h3>
+                <p className="text-sm text-neutral-500 dark:text-neutral-400">Find and book with nearby doctors</p>
+              </GlassCard>
 
-              <button 
-                className="p-6 text-center hover:shadow-lg transition-all hover:-translate-y-1 bg-white rounded-xl border"
-                onClick={() => setPortalTab('appointments')}
-              >
-                <Clock className="w-12 h-12 mx-auto mb-3 text-medical-cyan" />
-                <h3 className="font-bold text-lg">My Appointments</h3>
-                <p className="text-sm text-gray-500">View and manage your visits</p>
-              </button>
+              <GlassCard hoverable className="p-8 text-center bg-white/60 dark:bg-neutral-800/60" onClick={() => setPortalTab('appointments')}>
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 flex items-center justify-center border-4 border-white dark:border-neutral-800 shadow-md">
+                  <Clock className="w-8 h-8 text-green-600" />
+                </div>
+                <h3 className="font-bold text-xl text-neutral-900 dark:text-white mb-2">My Appointments</h3>
+                <p className="text-sm text-neutral-500 dark:text-neutral-400">View and manage your visits</p>
+              </GlassCard>
 
-              <button 
-                className="p-6 text-center hover:shadow-lg transition-all hover:-translate-y-1 bg-white rounded-xl border"
-                onClick={() => setPortalTab('records')}
-              >
-                <FileText className="w-12 h-12 mx-auto mb-3 text-medical-cyan" />
-                <h3 className="font-bold text-lg">Health Records</h3>
-                <p className="text-sm text-gray-500">Access your medical history</p>
-              </button>
+              <GlassCard hoverable className="p-8 text-center bg-white/60 dark:bg-neutral-800/60" onClick={() => setPortalTab('records')}>
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-purple-100 to-fuchsia-100 dark:from-purple-900/30 dark:to-fuchsia-900/30 flex items-center justify-center border-4 border-white dark:border-neutral-800 shadow-md">
+                  <FileText className="w-8 h-8 text-purple-600" />
+                </div>
+                <h3 className="font-bold text-xl text-neutral-900 dark:text-white mb-2">Health Records</h3>
+                <p className="text-sm text-neutral-500 dark:text-neutral-400">Access your medical history</p>
+              </GlassCard>
             </div>
 
             {/* Recommended Doctors Preview */}
-            <div className="p-6 bg-white rounded-xl shadow-sm">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold">Recommended for You</h2>
+            <GlassCard className="p-6 md:p-8 bg-white/70 dark:bg-neutral-800/70">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-neutral-900 dark:text-white">Recommended for You</h2>
                 <Button variant="ghost" size="sm" onClick={() => setPortalTab('find-doctors')}>
                   View All
                 </Button>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {doctors.slice(0, 3).map((doctor) => (
-                  <div key={doctor.id} className="p-4 border rounded-lg hover:shadow-md transition-shadow">
-                    <h3 className="font-bold">{doctor.name}</h3>
-                    <p className="text-medical-cyan text-sm">{doctor.specialty}</p>
-                    <div className="flex items-center gap-2 mt-2 text-sm">
+                  <div key={doctor.id} className="p-5 border border-neutral-200 dark:border-neutral-700/50 rounded-xl hover:shadow-xl transition-all duration-300 bg-white dark:bg-neutral-800/80 group hover:-translate-y-1">
+                    <h3 className="font-bold text-lg text-neutral-900 dark:text-white group-hover:text-primary-600 transition-colors">{doctor.name}</h3>
+                    <p className="text-primary-600 dark:text-primary-400 text-sm mb-3">{doctor.specialty}</p>
+                    
+                    <div className="flex items-center gap-2 mt-2 text-sm text-neutral-600 dark:text-neutral-400">
                       <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                      <span>{doctor.rating}</span>
+                      <span className="font-medium text-neutral-900 dark:text-white">{doctor.rating}</span>
                       <span>•</span>
-                      <span>₹{doctor.consultationFee}</span>
+                      <span className="font-medium text-neutral-900 dark:text-white">₹{doctor.consultationFee}</span>
                     </div>
                     {doctor.distance && (
-                      <div className="flex items-center gap-1 mt-2 text-xs text-gray-500">
+                      <div className="flex items-center gap-1 mt-3 text-xs bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 px-2 py-1 rounded-full w-fit">
                         <Navigation className="w-3 h-3" />
                         {doctor.distance} km away
                       </div>
                     )}
-                    <Button size="sm" fullWidth className="mt-3" onClick={() => handleBookAppointment(doctor)}>
+                    <Button size="sm" fullWidth className="mt-5 btn-premium" onClick={() => handleBookAppointment(doctor)}>
                       Book Now
                     </Button>
                   </div>
                 ))}
               </div>
-            </div>
+            </GlassCard>
           </div>
         )}
 

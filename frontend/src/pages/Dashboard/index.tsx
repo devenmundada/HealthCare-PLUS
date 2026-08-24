@@ -143,8 +143,13 @@ export const Dashboard: React.FC = () => {
   }, []);
 
   return (
-    <div className="min-h-screen py-6 bg-background-primary">
-      <Container>
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-primary-50 via-white to-blue-50 dark:from-neutral-900 dark:via-neutral-900 dark:to-blue-950/30 py-6">
+      {/* Animated background blobs */}
+      <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-white/50 to-transparent dark:from-neutral-900/50 pointer-events-none z-0"></div>
+      <div className="absolute -top-40 -right-40 w-96 h-96 bg-primary-400 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob pointer-events-none z-0"></div>
+      <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-2000 pointer-events-none z-0"></div>
+
+      <Container className="relative z-10">
         {showEmergencyAlert && emergencyStats.p1Patients > 0 && (
           <EmergencyAlertBanner
             p1Count={emergencyStats.p1Patients}
