@@ -115,9 +115,35 @@ export const Home: React.FC = () => {
   );
   const [newsletterEmail, setNewsletterEmail] = useState('');
   const [newsletterState, setNewsletterState] = useState<'idle' | 'saved'>('idle');
-  
 
+  const [newsData, setNewsData] = useState<(MedicalInsight & { url?: string })[]>([]);
 
+  useEffect(() => {
+    fetch('https://saurav.tech/NewsAPI/top-headlines/category/health/in.json')
+      .then(res => res.json())
+      .then(data => {
+        if (data.articles) {
+          const formatted = data.articles
+            .filter((a: any) => a.title && a.urlToImage)
+            .map((article: any, index: number) => ({
+              id: index + 100,
+              title: article.title.split(' - ')[0],
+              author: article.source?.name || article.author || 'Health News',
+              date: new Date(article.publishedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }),
+              readTime: '5 min read',
+              category: 'News',
+              excerpt: article.description || article.content?.substring(0, 100) || '',
+              fullContent: article.content || '',
+              imageUrl: article.urlToImage,
+              authorAvatar: `https://api.dicebear.com/7.x/initials/svg?seed=${article.source?.name || 'News'}`,
+              tags: ['News', 'Health'],
+              url: article.url
+            }));
+          setNewsData(formatted);
+        }
+      })
+      .catch(err => console.error("Failed to load news:", err));
+  }, []);
 
   useEffect(() => {
     if (isCarouselPaused) return;
@@ -613,9 +639,10 @@ export const Home: React.FC = () => {
     );
   };
 
+  const baseInsights = newsData.length > 0 ? newsData : medicalInsights;
   const filteredInsights = insightCategory
-    ? medicalInsights.filter((a) => a.category === insightCategory)
-    : medicalInsights;
+    ? baseInsights.filter((a) => a.category === insightCategory || a.category === 'News')
+    : baseInsights;
   const visibleInsights = showAllInsights ? filteredInsights : filteredInsights.slice(0, 4);
 
   const toggleDailyReminders = async () => {
@@ -1160,8 +1187,12 @@ export const Home: React.FC = () => {
                     key={article.id}
                     className="group cursor-pointer"
                     onClick={() => {
-                      setSelectedArticle(article);
-                      setShowArticleModal(true);
+                      if ((article as any).url) {
+                        window.open((article as any).url, '_blank');
+                      } else {
+                        setSelectedArticle(article as MedicalInsight);
+                        setShowArticleModal(true);
+                      }
                     }}
                   >
                     <Card className="h-full overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1">

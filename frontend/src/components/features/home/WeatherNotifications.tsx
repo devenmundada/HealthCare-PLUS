@@ -65,21 +65,21 @@ export const WeatherNotifications: React.FC = () => {
 
   // Get AQI color and label
   const getAQIInfo = (aqi: number) => {
-    if (aqi <= 50) return { color: 'bg-clinical-normal text-white', label: 'Good', risk: 'Low' };
-    if (aqi <= 100) return { color: 'bg-clinical-low text-white', label: 'Moderate', risk: 'Low' };
-    if (aqi <= 150) return { color: 'bg-clinical-moderate text-white', label: 'Unhealthy for Sensitive', risk: 'Medium' };
-    if (aqi <= 200) return { color: 'bg-clinical-high text-white', label: 'Unhealthy', risk: 'High' };
-    return { color: 'bg-clinical-critical text-white', label: 'Very Unhealthy', risk: 'Critical' };
+    if (aqi <= 50) return { color: 'bg-green-500 text-white', iconColor: 'text-green-500', label: 'Good', risk: 'Low' };
+    if (aqi <= 100) return { color: 'bg-yellow-500 text-white', iconColor: 'text-yellow-500', label: 'Moderate', risk: 'Low' };
+    if (aqi <= 150) return { color: 'bg-orange-500 text-white', iconColor: 'text-orange-500', label: 'Sensitive', risk: 'Medium' };
+    if (aqi <= 200) return { color: 'bg-red-500 text-white', iconColor: 'text-red-500', label: 'Unhealthy', risk: 'High' };
+    return { color: 'bg-purple-600 text-white', iconColor: 'text-purple-600', label: 'Very Unhealthy', risk: 'Critical' };
   };
 
   // Get health advisory based on weather conditions
   const getHealthAdvisory = (temp: number, aqi: number, humidity: number, condition: string): string => {
     const advisories = [];
 
-    if (temp > 85) {
+    if (temp > 35) {
       advisories.push('High temperature - Stay hydrated and avoid prolonged sun exposure');
-    } else if (temp < 40) {
-      advisories.push('Low temperature - Dress warmly and watch for hypothermia symptoms');
+    } else if (temp < 10) {
+      advisories.push('Low temperature - Dress warmly and watch for cold symptoms');
     }
 
     if (aqi > 100) {
@@ -114,14 +114,14 @@ export const WeatherNotifications: React.FC = () => {
       risks.push('Increased asthma risk');
     }
 
-    if (temp > 90) {
+    if (temp > 35) {
       risks.push('Heat exhaustion');
       risks.push('Dehydration');
     }
 
-    if (temp < 32) {
-      risks.push('Frostbite risk');
-      risks.push('Hypothermia');
+    if (temp < 5) {
+      risks.push('Cold stress');
+      risks.push('Hypothermia risk');
     }
 
     if (humidity > 80) {
@@ -129,7 +129,7 @@ export const WeatherNotifications: React.FC = () => {
       risks.push('Respiratory discomfort');
     }
 
-    if (aqi > 100 && temp > 80) {
+    if (aqi > 100 && temp > 30) {
       risks.push('Compounded respiratory stress');
     }
 
@@ -138,9 +138,9 @@ export const WeatherNotifications: React.FC = () => {
 
   // Get color based on conditions
   const getConditionColor = (temp: number, aqi: number): string => {
-    if (aqi > 150 || temp > 95 || temp < 20) return 'from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20';
-    if (aqi > 100 || temp > 85 || temp < 32) return 'from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20';
-    return 'from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20';
+    if (aqi > 150 || temp > 38 || temp < 0) return 'from-red-50 to-orange-50 border-red-200 dark:from-red-900/20 dark:to-orange-900/20 dark:border-red-800/30';
+    if (aqi > 100 || temp > 32 || temp < 10) return 'from-yellow-50 to-amber-50 border-yellow-200 dark:from-yellow-900/20 dark:to-amber-900/20 dark:border-yellow-800/30';
+    return 'from-blue-50 to-cyan-50 border-blue-200 dark:from-blue-900/20 dark:to-cyan-900/20 dark:border-blue-800/30';
   };
 
   // WMO weather codes (used by Open-Meteo) -> a human condition label.
@@ -181,8 +181,7 @@ export const WeatherNotifications: React.FC = () => {
       const [weatherRes, aqiRes, cityName] = await Promise.all([
         fetch(
           `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
-            `&current=temperature_2m,relative_humidity_2m,apparent_temperature,wind_speed_10m,weather_code` +
-            `&temperature_unit=fahrenheit&wind_speed_unit=mph`
+            `&current=temperature_2m,relative_humidity_2m,apparent_temperature,wind_speed_10m,weather_code`
         ).then((r) => r.json()),
         fetch(
           `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=us_aqi`
@@ -316,89 +315,91 @@ export const WeatherNotifications: React.FC = () => {
       )}
 
       {/* Main Weather Card */}
-      <GlassCard className={`p-6 bg-gradient-to-r ${weatherData.color} border-0 mb-6`}>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <GlassCard className={`p-8 bg-gradient-to-br ${weatherData.color} border shadow-xl mb-8 rounded-3xl overflow-hidden`}>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Current Conditions */}
-          <div className="lg:col-span-2">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="p-3 rounded-xl bg-white/50 dark:bg-neutral-800/50">
+          <div className="lg:col-span-2 flex flex-col justify-between">
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-4">
+                <div className="p-4 rounded-2xl bg-white/60 dark:bg-neutral-800/60 shadow-sm backdrop-blur-md border border-white/40 dark:border-neutral-700/40">
                   {weatherData.icon}
                 </div>
                 <div>
-                  <div className="flex items-center gap-2">
-                    <MapPin className="w-4 h-4 text-primary-600" />
-                    <h3 className="text-xl font-bold text-neutral-900 dark:text-white">
+                  <div className="flex items-center gap-2 mb-1">
+                    <MapPin className="w-5 h-5 text-primary-600" />
+                    <h3 className="text-2xl font-extrabold text-neutral-900 dark:text-white tracking-tight">
                       {weatherData.city}
                     </h3>
                   </div>
-                  <p className="text-neutral-600 dark:text-neutral-400 text-sm">
+                  <p className="text-neutral-500 dark:text-neutral-400 text-sm font-medium">
                     Updated just now
                   </p>
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-5xl font-bold text-neutral-900 dark:text-white">
+                <div className="text-6xl font-black text-neutral-900 dark:text-white tracking-tighter drop-shadow-sm">
                   {weatherData.temperature}°
                 </div>
-                <p className="text-neutral-600 dark:text-neutral-400">
+                <p className="text-neutral-600 dark:text-neutral-300 font-medium mt-1">
                   Feels like {weatherData.feelsLike}°
                 </p>
               </div>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-              <div className="p-4 rounded-xl bg-white/50 dark:bg-neutral-800/50">
-                <div className="flex items-center gap-2 mb-2">
-                  <Wind className="w-4 h-4 text-blue-600" />
-                  <span className="text-sm text-neutral-600 dark:text-neutral-400">Wind</span>
+              <div className="p-5 rounded-2xl bg-white/60 dark:bg-neutral-900/40 border border-white/50 dark:border-neutral-700/50 shadow-sm hover:scale-105 transition-transform duration-300">
+                <div className="flex items-center gap-2 mb-3">
+                  <Wind className="w-5 h-5 text-blue-600" />
+                  <span className="text-sm font-semibold text-neutral-600 dark:text-neutral-400">Wind</span>
                 </div>
-                <p className="text-xl font-bold text-neutral-900 dark:text-white">
-                  {weatherData.windSpeed} mph
+                <p className="text-2xl font-bold text-neutral-900 dark:text-white">
+                  {weatherData.windSpeed} <span className="text-sm font-medium text-neutral-500">km/h</span>
                 </p>
               </div>
 
-              <div className="p-4 rounded-xl bg-white/50 dark:bg-neutral-800/50">
-                <div className="flex items-center gap-2 mb-2">
-                  <Droplets className="w-4 h-4 text-blue-500" />
-                  <span className="text-sm text-neutral-600 dark:text-neutral-400">Humidity</span>
+              <div className="p-5 rounded-2xl bg-white/60 dark:bg-neutral-900/40 border border-white/50 dark:border-neutral-700/50 shadow-sm hover:scale-105 transition-transform duration-300">
+                <div className="flex items-center gap-2 mb-3">
+                  <Droplets className="w-5 h-5 text-blue-500" />
+                  <span className="text-sm font-semibold text-neutral-600 dark:text-neutral-400">Humidity</span>
                 </div>
-                <p className="text-xl font-bold text-neutral-900 dark:text-white">
+                <p className="text-2xl font-bold text-neutral-900 dark:text-white">
                   {weatherData.humidity}%
                 </p>
               </div>
 
-              <div className="p-4 rounded-xl bg-white/50 dark:bg-neutral-800/50">
-                <div className="flex items-center gap-2 mb-2">
-                  <Cloud className="w-4 h-4 text-neutral-500" />
-                  <span className="text-sm text-neutral-600 dark:text-neutral-400">Condition</span>
+              <div className="p-5 rounded-2xl bg-white/60 dark:bg-neutral-900/40 border border-white/50 dark:border-neutral-700/50 shadow-sm hover:scale-105 transition-transform duration-300">
+                <div className="flex items-center gap-2 mb-3">
+                  <Cloud className="w-5 h-5 text-neutral-500" />
+                  <span className="text-sm font-semibold text-neutral-600 dark:text-neutral-400">Condition</span>
                 </div>
-                <p className="text-xl font-bold text-neutral-900 dark:text-white">
+                <p className="text-lg font-bold text-neutral-900 dark:text-white leading-tight">
                   {weatherData.condition}
                 </p>
               </div>
 
-              <div className="p-4 rounded-xl bg-white/50 dark:bg-neutral-800/50">
+              <div className="p-5 rounded-2xl bg-white/60 dark:bg-neutral-900/40 border border-white/50 dark:border-neutral-700/50 shadow-sm hover:scale-105 transition-transform duration-300 flex flex-col justify-center">
                 <div className="flex items-center gap-2 mb-2">
-                  <Activity className="w-4 h-4" style={{ color: `var(--${aqiInfo.color.split('-')[1]})` }} />
-                  <span className="text-sm text-neutral-600 dark:text-neutral-400">Air Quality</span>
+                  <Activity className={`w-5 h-5 ${aqiInfo.iconColor}`} />
+                  <span className="text-sm font-semibold text-neutral-600 dark:text-neutral-400">Air Quality</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Badge className={aqiInfo.color}>
+                <div className="flex flex-col gap-1 items-start mt-1">
+                  <Badge className={`${aqiInfo.color} font-bold shadow-sm`}>
                     {weatherData.aqi} AQI
                   </Badge>
-                  <span className="text-sm font-medium">{aqiInfo.label}</span>
+                  <span className="text-xs font-bold text-neutral-700 dark:text-neutral-300 uppercase tracking-wide">{aqiInfo.label}</span>
                 </div>
               </div>
             </div>
 
             {/* Health Advisory */}
-            <div className="p-4 rounded-xl bg-white/70 dark:bg-neutral-800/70">
-              <div className="flex items-center gap-2 mb-3">
-                <AlertTriangle className="w-5 h-5 text-amber-600" />
-                <h4 className="font-bold text-neutral-900 dark:text-white">Health Advisory</h4>
+            <div className="p-5 rounded-2xl bg-white/80 dark:bg-neutral-800/80 border border-white/50 dark:border-neutral-700/50 shadow-sm">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
+                  <AlertTriangle className="w-5 h-5 text-amber-600" />
+                </div>
+                <h4 className="font-bold text-neutral-900 dark:text-white text-lg">Health Advisory</h4>
               </div>
-              <p className="text-neutral-700 dark:text-neutral-300">
+              <p className="text-neutral-700 dark:text-neutral-300 leading-relaxed font-medium">
                 {weatherData.advisory}
               </p>
             </div>
@@ -407,17 +408,19 @@ export const WeatherNotifications: React.FC = () => {
           {/* Health Risks & Quick Actions */}
           <div className="space-y-6">
             {/* Health Risks */}
-            <div className="p-4 rounded-xl bg-white/70 dark:bg-neutral-800/70">
-              <div className="flex items-center gap-2 mb-3">
-                <Heart className="w-5 h-5 text-red-600" />
-                <h4 className="font-bold text-neutral-900 dark:text-white">Potential Health Risks</h4>
+            <div className="p-5 rounded-2xl bg-white/80 dark:bg-neutral-800/80 border border-white/50 dark:border-neutral-700/50 shadow-sm">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-lg">
+                  <Heart className="w-5 h-5 text-red-600" />
+                </div>
+                <h4 className="font-bold text-neutral-900 dark:text-white text-lg">Potential Risks</h4>
               </div>
-              <ul className="space-y-2">
+              <ul className="space-y-3">
                 {weatherData.healthRisks.map((risk, index) => (
-                  <li key={index} className="flex items-center gap-2 text-sm">
-                    <div className={`w-2 h-2 rounded-full ${
-                      risk.includes('Critical') || risk.includes('High') ? 'bg-red-500' :
-                      risk.includes('Medium') ? 'bg-yellow-500' : 'bg-green-500'
+                  <li key={index} className="flex items-center gap-3 text-sm font-medium">
+                    <div className={`w-2.5 h-2.5 rounded-full shadow-sm ${
+                      risk.includes('Critical') || risk.includes('High') || risk.includes('exhaustion') || risk.includes('distress') ? 'bg-red-500' :
+                      risk.includes('Medium') || risk.includes('stress') || risk.includes('discomfort') ? 'bg-yellow-500' : 'bg-green-500'
                     }`} />
                     <span className="text-neutral-700 dark:text-neutral-300">{risk}</span>
                   </li>
@@ -426,45 +429,47 @@ export const WeatherNotifications: React.FC = () => {
             </div>
 
             {/* Quick Actions */}
-            <div className="p-4 rounded-xl bg-gradient-to-br from-primary-50 to-blue-50 dark:from-primary-900/20 dark:to-blue-900/20">
-              <div className="flex items-center gap-2 mb-3">
-                <Shield className="w-5 h-5 text-primary-600" />
-                <h4 className="font-bold text-neutral-900 dark:text-white">Recommended Actions</h4>
+            <div className="p-5 rounded-2xl bg-gradient-to-br from-primary-50 to-blue-50 dark:from-primary-900/20 dark:to-blue-900/20 border border-primary-100/50 dark:border-primary-800/30 shadow-sm">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 bg-primary-100 dark:bg-primary-900/30 rounded-lg">
+                  <Shield className="w-5 h-5 text-primary-600" />
+                </div>
+                <h4 className="font-bold text-neutral-900 dark:text-white text-lg">Actions</h4>
               </div>
-              <div className="space-y-3">
+              <div className="space-y-3 font-medium">
                 {weatherData.aqi > 100 && (
-                  <p className="text-sm text-neutral-700 dark:text-neutral-300">
-                    • Limit outdoor activities
+                  <p className="text-sm text-neutral-700 dark:text-neutral-300 flex items-start gap-2">
+                    <span className="text-primary-500">•</span> Limit outdoor activities
                   </p>
                 )}
-                {weatherData.temperature > 85 && (
-                  <p className="text-sm text-neutral-700 dark:text-neutral-300">
-                    • Stay hydrated
+                {weatherData.temperature > 30 && (
+                  <p className="text-sm text-neutral-700 dark:text-neutral-300 flex items-start gap-2">
+                    <span className="text-primary-500">•</span> Stay hydrated
                   </p>
                 )}
                 {weatherData.humidity > 70 && (
-                  <p className="text-sm text-neutral-700 dark:text-neutral-300">
-                    • Use dehumidifier if needed
+                  <p className="text-sm text-neutral-700 dark:text-neutral-300 flex items-start gap-2">
+                    <span className="text-primary-500">•</span> Use dehumidifier if needed
                   </p>
                 )}
-                <p className="text-sm text-neutral-700 dark:text-neutral-300">
-                  • Check in with at-risk family members
+                <p className="text-sm text-neutral-700 dark:text-neutral-300 flex items-start gap-2">
+                  <span className="text-primary-500">•</span> Check in with at-risk family
                 </p>
               </div>
             </div>
 
             {/* City Selector */}
-            <div className="p-4 rounded-xl bg-white/70 dark:bg-neutral-800/70">
-              <h4 className="font-bold text-neutral-900 dark:text-white mb-3">Check Other Cities</h4>
-              <div className="grid grid-cols-2 gap-2">
+            <div className="p-5 rounded-2xl bg-white/80 dark:bg-neutral-800/80 border border-white/50 dark:border-neutral-700/50 shadow-sm">
+              <h4 className="font-bold text-neutral-900 dark:text-white mb-4">Check Other Cities</h4>
+              <div className="grid grid-cols-2 gap-3">
                 {presetCities.map((city) => (
                   <button
                     key={city.name}
                     onClick={() => handleCitySelect(city)}
-                    className={`px-3 py-2 rounded-lg text-sm transition-colors ${
+                    className={`px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
                       weatherData.city === city.name
-                        ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
-                        : 'bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700'
+                        ? 'bg-primary-600 text-white shadow-md shadow-primary-500/30 scale-[1.02]'
+                        : 'bg-neutral-50 dark:bg-neutral-800/50 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700 hover:scale-[1.02] border border-transparent hover:border-neutral-200 dark:hover:border-neutral-600'
                     }`}
                   >
                     {city.name.split(',')[0]}
