@@ -54,10 +54,56 @@ import {
   Share2
 } from 'lucide-react';
 
+const generateRandomStories = () => {
+  const firstNamesM = ['James', 'Robert', 'John', 'Michael', 'David', 'William', 'Richard', 'Joseph', 'Thomas', 'Charles'];
+  const firstNamesF = ['Mary', 'Patricia', 'Jennifer', 'Linda', 'Elizabeth', 'Barbara', 'Susan', 'Jessica', 'Sarah', 'Karen'];
+  const lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez'];
+  const cities = ['New York, NY', 'Los Angeles, CA', 'Chicago, IL', 'Houston, TX', 'Phoenix, AZ', 'Philadelphia, PA', 'San Antonio, TX', 'San Diego, CA'];
+  const conditions = ['Cardiac Arrhythmia', 'Asthma Management', 'Diabetes Management', 'Mental Wellness', 'Post-Op Recovery', 'Hypertension', 'Sleep Apnea'];
+  const doctors = ['Dr. Sarah Chen', 'Dr. James Wilson', 'Dr. Emma Johnson', 'Dr. Lisa Wang', 'Dr. Michael Rodriguez', 'Dr. Alan Grant', 'Dr. Emily Stone'];
+  const hospitals = ['Mayo Clinic', 'Johns Hopkins', 'Cleveland Clinic', 'Massachusetts General', 'Stanford Health', 'Mount Sinai', 'UCSF Medical Center'];
+  const quotes = [
+    "Early detection through AI analysis saved my life. The continuous monitoring helped me regain control of my heart health.",
+    "The voice analysis detected subtle changes in my breathing. Early treatment made all the difference in managing my respiratory condition.",
+    "Continuous glucose monitoring and AI insights transformed how I manage my diabetes. My A1C is the best it has been in years.",
+    "The mental health tracking helped me understand my anxiety patterns. Combined with therapy, I am living more peacefully.",
+    "Post-surgery recovery was smooth with remote monitoring. My doctor knew exactly when I needed adjustments in medication.",
+    "The instant video consultation feature connected me with a specialist in minutes. Incredible service and care.",
+    "Having my medical history and AI analysis in one place made my emergency room visit so much more efficient."
+  ];
+
+  const stories = [];
+  for (let i = 0; i < 5; i++) {
+    const isMale = Math.random() > 0.5;
+    const firstName = isMale ? firstNamesM[Math.floor(Math.random() * firstNamesM.length)] : firstNamesF[Math.floor(Math.random() * firstNamesF.length)];
+    const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
+    
+    const imageId = Math.floor(Math.random() * 90) + 1;
+    const gender = isMale ? 'men' : 'women';
+    const image = `https://randomuser.me/api/portraits/${gender}/${imageId}.jpg`;
+
+    stories.push({
+      id: i + 1,
+      name: `${firstName} ${lastName}`,
+      city: cities[Math.floor(Math.random() * cities.length)],
+      quote: quotes[Math.floor(Math.random() * quotes.length)],
+      condition: conditions[Math.floor(Math.random() * conditions.length)],
+      image,
+      avatarInitials: `${firstName[0]}${lastName[0]}`,
+      doctor: doctors[Math.floor(Math.random() * doctors.length)],
+      hospital: hospitals[Math.floor(Math.random() * hospitals.length)],
+      rating: Math.random() > 0.8 ? 4 : 5,
+      age: Math.floor(Math.random() * 50) + 20
+    });
+  }
+  return stories;
+};
+
 export const Home: React.FC = () => {
   const navigate = useNavigate();
   const [showAppointmentModal, setShowAppointmentModal] = useState(false);
   const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
+  const [successStories] = useState(() => generateRandomStories());
   const [weatherData, setWeatherData] = useState<any>(null);
   const [isCarouselPaused, setIsCarouselPaused] = useState(false);
   const [selectedArticle, setSelectedArticle] = useState<MedicalInsight | null>(null);
@@ -154,73 +200,7 @@ export const Home: React.FC = () => {
     },
   ];
 
-  const successStories = [
-    {
-      id: 1,
-      name: 'Robert Chen',
-      city: 'San Francisco, CA',
-      quote: 'Early detection through AI analysis saved my life. The continuous monitoring helped me regain control of my heart health.',
-      condition: 'Cardiac Arrhythmia',
-      image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=500&q=80',
-      avatarInitials: 'RC',
-      doctor: 'Dr. Sarah Chen',
-      hospital: 'Mayo Clinic',
-      rating: 5,
-      age: 45
-    },
-    {
-      id: 2,
-      name: 'Maria Garcia',
-      city: 'Austin, TX',
-      quote: "The voice analysis detected subtle changes in my breathing. Early treatment made all the difference in managing my respiratory condition.",
-      condition: 'Asthma Management',
-      image: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?auto=format&fit=crop&w=500&q=80',
-      avatarInitials: 'MG',
-      doctor: 'Dr. James Wilson',
-      hospital: 'Johns Hopkins',
-      rating: 5,
-      age: 32
-    },
-    {
-      id: 3,
-      name: 'David Park',
-      city: 'Chicago, IL',
-      quote: 'Continuous glucose monitoring and AI insights transformed how I manage my diabetes. My A1C is the best it has been in years.',
-      condition: 'Diabetes Management',
-      image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=500&q=80',
-      avatarInitials: 'DP',
-      doctor: 'Dr. Emma Johnson',
-      hospital: 'Cleveland Clinic',
-      rating: 4,
-      age: 58
-    },
-    {
-      id: 4,
-      name: 'Priya Sharma',
-      city: 'New York, NY',
-      quote: 'The mental health tracking helped me understand my anxiety patterns. Combined with therapy, I am living more peacefully.',
-      condition: 'Mental Wellness',
-      image: 'https://images.unsplash.com/photo-1544725176-7c40e5a71c5e?auto=format&fit=crop&w=500&q=80',
-      avatarInitials: 'PS',
-      doctor: 'Dr. Lisa Wang',
-      hospital: 'Massachusetts General',
-      rating: 5,
-      age: 28
-    },
-    {
-      id: 5,
-      name: 'James Wilson',
-      city: 'Miami, FL',
-      quote: 'Post-surgery recovery was smooth with remote monitoring. My doctor knew exactly when I needed adjustments in medication.',
-      condition: 'Post-Op Recovery',
-      image: 'https://images.unsplash.com/photo-1551601651-2a8555f1a136?auto=format&fit=crop&w=500&q=80',
-      avatarInitials: 'JW',
-      doctor: 'Dr. Michael Rodriguez',
-      hospital: 'Stanford Health',
-      rating: 5,
-      age: 52
-    }
-  ];
+
 
   const dailyTips = [
     'Stay hydrated - Drink at least 8 glasses of water daily',
@@ -801,7 +781,7 @@ export const Home: React.FC = () => {
 
                       <button
                         className="w-full group flex items-center p-5 bg-white dark:bg-slate-800/80 rounded-2xl border border-slate-100 dark:border-slate-700 hover:border-teal-200 dark:hover:border-teal-800 hover:shadow-lg transition-all text-left"
-                        onClick={() => navigate('/map')}
+                        onClick={() => navigate('/map-prediction')}
                       >
                         <div className="w-14 h-14 rounded-xl bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center mr-5 group-hover:scale-110 transition-transform shadow-sm">
                           <MapPin className="w-7 h-7 text-teal-600 dark:text-teal-400" />
@@ -845,12 +825,12 @@ export const Home: React.FC = () => {
             {stats.map((stat, index) => (
               <div
                 key={index}
-                className="fade-in-up"
+                className="fade-in-up h-full"
                 style={{ animationDelay: `${index * 100}ms` }}
               >
                 <GlassCard
                   hoverable
-                  className="p-6 border-0 hover-lift"
+                  className="p-6 border-0 hover-lift h-full flex flex-col justify-between"
                 >
                 <div className="flex items-start justify-between">
                   <div>
