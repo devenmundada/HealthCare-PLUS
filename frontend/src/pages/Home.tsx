@@ -119,25 +119,25 @@ export const Home: React.FC = () => {
   const [newsData, setNewsData] = useState<(MedicalInsight & { url?: string })[]>([]);
 
   useEffect(() => {
-    fetch('https://saurav.tech/NewsAPI/top-headlines/category/health/in.json')
+    fetch('https://api.rss2json.com/v1/api.json?rss_url=http://feeds.bbci.co.uk/news/health/rss.xml')
       .then(res => res.json())
       .then(data => {
-        if (data.articles) {
-          const formatted = data.articles
-            .filter((a: any) => a.title && a.urlToImage)
-            .map((article: any, index: number) => ({
+        if (data.items) {
+          const formatted = data.items
+            .filter((item: any) => item.title && item.enclosure?.thumbnail)
+            .map((item: any, index: number) => ({
               id: index + 100,
-              title: article.title.split(' - ')[0],
-              author: article.source?.name || article.author || 'Health News',
-              date: new Date(article.publishedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }),
+              title: item.title,
+              author: 'BBC Health',
+              date: new Date(item.pubDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }),
               readTime: '5 min read',
               category: 'News',
-              excerpt: article.description || article.content?.substring(0, 100) || '',
-              fullContent: article.content || '',
-              imageUrl: article.urlToImage,
-              authorAvatar: `https://api.dicebear.com/7.x/initials/svg?seed=${article.source?.name || 'News'}`,
+              excerpt: item.description?.replace(/<[^>]+>/g, '').substring(0, 100) + '...',
+              fullContent: item.content || '',
+              imageUrl: item.enclosure.thumbnail,
+              authorAvatar: `https://api.dicebear.com/7.x/initials/svg?seed=BBC`,
               tags: ['News', 'Health'],
-              url: article.url
+              url: item.link
             }));
           setNewsData(formatted);
         }
