@@ -119,6 +119,16 @@ export const Home: React.FC = () => {
   const [newsData, setNewsData] = useState<(MedicalInsight & { url?: string })[]>([]);
 
   useEffect(() => {
+    const getCategory = (title: string, desc: string) => {
+      const text = (title + " " + desc).toLowerCase();
+      if (text.match(/heart|blood|cardiac|stroke|artery|vein|cardio/)) return 'Cardiology';
+      if (text.match(/asthma|lung|breath|air|pollution|covid|flu|respiratory/)) return 'Respiratory';
+      if (text.match(/mental|brain|stress|anxiety|depression|autism|adhd|alzheimer|dementia|sleep/)) return 'Mental Health';
+      if (text.match(/diet|food|eat|weight|nutrition|obesity|sugar|vitamin/)) return 'Nutrition';
+      if (text.match(/child|kid|baby|pediatric|infant|maternity|boy|girl/)) return 'Pediatrics';
+      return 'Preventive Care';
+    };
+
     fetch('https://api.rss2json.com/v1/api.json?rss_url=http://feeds.bbci.co.uk/news/health/rss.xml')
       .then(res => res.json())
       .then(data => {
@@ -131,7 +141,7 @@ export const Home: React.FC = () => {
               author: 'BBC Health',
               date: new Date(item.pubDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }),
               readTime: '5 min read',
-              category: 'News',
+              category: getCategory(item.title, item.description || ''),
               excerpt: item.description?.replace(/<[^>]+>/g, '').substring(0, 100) + '...',
               fullContent: item.content || '',
               imageUrl: item.enclosure.thumbnail,
@@ -641,7 +651,7 @@ export const Home: React.FC = () => {
 
   const baseInsights = newsData.length > 0 ? newsData : medicalInsights;
   const filteredInsights = insightCategory
-    ? baseInsights.filter((a) => a.category === insightCategory || a.category === 'News')
+    ? baseInsights.filter((a) => a.category === insightCategory)
     : baseInsights;
   const visibleInsights = showAllInsights ? filteredInsights : filteredInsights.slice(0, 4);
 

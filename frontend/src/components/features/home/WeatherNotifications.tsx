@@ -15,7 +15,9 @@ import {
   RefreshCw,
   Shield,
   Activity,
-  Heart
+  Heart,
+  Search,
+  Navigation
 } from 'lucide-react';
 
 interface WeatherData {
@@ -37,6 +39,8 @@ export const WeatherNotifications: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [userLocation, setUserLocation] = useState<{ lat: number; lon: number } | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
 
   // Quick-switch shortcuts — real coordinates, fetched live from the API below.
   const presetCities = [
@@ -266,6 +270,51 @@ export const WeatherNotifications: React.FC = () => {
     }
   };
 
+  const handleSearch = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!searchQuery.trim()) return;
+    
+    setIsSearching(true);
+    setLocationError(null);
+    try {
+      const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(searchQuery)}&count=1`);
+      const data = await res.json();
+      
+      if (data.results && data.results.length > 0) {
+        const result = data.results[0];
+        setUserLocation({ lat: result.latitude, lon: result.longitude });
+        const nameHint = result.admin1 && result.admin1 !== result.name ? `${result.name}, ${result.admin1}` : result.name;
+        fetchWeatherData(result.latitude, result.longitude, nameHint);
+        setSearchQuery('');
+      } else {
+        setLocationError(`Could not find city: ${searchQuery}`);
+      }
+    } catch (err) {
+      console.error('Geocoding failed:', err);
+      setLocationError('Failed to search for city. Please try again.');
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const handleCurrentLocation = () => {
+    setLocationError(null);
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setUserLocation({ lat: latitude, lon: longitude });
+          fetchWeatherData(latitude, longitude);
+        },
+        (error) => {
+          setLocationError('Enable location access for weather at your exact location.');
+        }
+      );
+    } else {
+      setLocationError('Geolocation not supported by this browser.');
+    }
+  };
+
   if (loading) {
     return (
       <div className="max-w-4xl mx-auto">
@@ -459,14 +508,37 @@ export const WeatherNotifications: React.FC = () => {
             </div>
 
             {/* City Selector */}
-            <div className="p-5 rounded-2xl bg-white/80 dark:bg-neutral-800/80 border border-white/50 dark:border-neutral-700/50 shadow-sm">
-              <h4 className="font-bold text-neutral-900 dark:text-white mb-4">Check Other Cities</h4>
-              <div className="grid grid-cols-2 gap-3">
+            <div className="p-5 rounded-2xl bg-white/80 dark:bg-neutral-800/80 border border-white/50 dark:border-neutral-700/50 shadow-sm flex flex-col gap-4">
+              <div className="flex items-center justify-between">
+                <h4 className="font-bold text-neutral-900 dark:text-white">Location</h4>
+                <button 
+                  onClick={handleCurrentLocation}
+                  className="flex items-center gap-1.5 text-xs font-semibold text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 transition-colors"
+                  title="Use My Location"
+                >
+                  <Navigation className="w-3.5 h-3.5" />
+                  My Location
+                </button>
+              </div>
+
+              <form onSubmit={handleSearch} className="relative">
+                <input
+                  type="text"
+                  placeholder="Search city..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-9 pr-4 py-2 bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/50 transition-all dark:text-white"
+                />
+                <Search className="w-4 h-4 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <button type="submit" className="hidden" disabled={isSearching}>Search</button>
+              </form>
+
+              <div className="grid grid-cols-2 gap-3 mt-1">
                 {presetCities.map((city) => (
                   <button
                     key={city.name}
                     onClick={() => handleCitySelect(city)}
-                    className={`px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                    className={`px-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 ${
                       weatherData.city === city.name
                         ? 'bg-primary-600 text-white shadow-md shadow-primary-500/30 scale-[1.02]'
                         : 'bg-neutral-50 dark:bg-neutral-800/50 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700 hover:scale-[1.02] border border-transparent hover:border-neutral-200 dark:hover:border-neutral-600'
