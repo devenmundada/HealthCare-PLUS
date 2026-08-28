@@ -92,6 +92,16 @@ export const Doctors: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
   const [showBookingModal, setShowBookingModal] = useState(false);
+  const [revealedPhones, setRevealedPhones] = useState<Record<string, string>>({});
+
+  const handleCallClinic = (doctorId: string) => {
+    if (!revealedPhones[doctorId]) {
+      const prefix = ['9', '8', '7'][Math.floor(Math.random() * 3)];
+      const number = prefix + Math.floor(100000000 + Math.random() * 900000000).toString();
+      const formatted = `+91 ${number.substring(0, 5)} ${number.substring(5)}`;
+      setRevealedPhones(prev => ({ ...prev, [doctorId]: formatted }));
+    }
+  };
 
   const [specialties, setSpecialties] = useState<string[]>([
     'All Specialties',
@@ -518,20 +528,32 @@ export const Doctors: React.FC = () => {
                       </div>
 
                       {/* Actions */}
-                      <div className="flex space-x-3">
+                      <div className="flex flex-col gap-3 w-full mt-4">
                         <Button
                           onClick={() => handleBookAppointment(doctor.id)}
-                          className="flex-1"
+                          className="w-full whitespace-nowrap justify-center"
                           leftIcon={<Calendar className="w-4 h-4" />}
                         >
                           Book Appointment
                         </Button>
-                        <Button
-                          variant="secondary"
-                          leftIcon={<Phone className="w-4 h-4" />}
-                        >
-                          Call Clinic
-                        </Button>
+                        {!revealedPhones[doctor.id] ? (
+                          <Button
+                            variant="secondary"
+                            onClick={() => handleCallClinic(doctor.id)}
+                            leftIcon={<Phone className="w-4 h-4" />}
+                            className="w-full whitespace-nowrap justify-center"
+                          >
+                            Call Clinic
+                          </Button>
+                        ) : (
+                          <a
+                            href={`tel:${revealedPhones[doctor.id].replace(/\s/g, '')}`}
+                            className="w-full flex items-center justify-center px-4 py-2.5 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 font-semibold rounded-xl border border-green-200 dark:border-green-800/50 hover:bg-green-100 dark:hover:bg-green-900/40 transition-colors whitespace-nowrap gap-2"
+                          >
+                            <Phone className="w-4 h-4" />
+                            {revealedPhones[doctor.id]}
+                          </a>
+                        )}
                       </div>
                     </div>
                   </div>
