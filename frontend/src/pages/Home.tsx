@@ -131,22 +131,26 @@ export const Home: React.FC = () => {
     {
       title: 'AI-Powered Diagnostics',
       description: 'Advanced medical imaging analysis with 96% clinical accuracy',
-      icon: <Brain className="w-8 h-8 text-primary-600" />
+      icon: <Brain className="w-8 h-8 text-primary-600" />,
+      onClick: () => navigate('/analysis')
     },
     {
       title: 'Voice Health Analysis',
       description: 'Analyze voice patterns for wellness insights and emotional state',
-      icon: <Mic className="w-8 h-8 text-primary-600" />
+      icon: <Mic className="w-8 h-8 text-primary-600" />,
+      onClick: () => document.getElementById('voice-analyzer')?.scrollIntoView({ behavior: 'smooth' })
     },
     {
       title: 'Real-time Appointment',
       description: 'Instant booking with automatic calendar sync and reminders',
-      icon: <Calendar className="w-8 h-8 text-primary-600" />
+      icon: <Calendar className="w-8 h-8 text-primary-600" />,
+      onClick: () => setShowAppointmentModal(true)
     },
     {
       title: 'Emergency Response',
       description: '24/7 emergency support with location-based services',
-      icon: <AlertTriangle className="w-8 h-8 text-primary-600" />
+      icon: <AlertTriangle className="w-8 h-8 text-primary-600" />,
+      onClick: () => navigate('/map-prediction')
     },
   ];
 
@@ -818,7 +822,7 @@ export const Home: React.FC = () => {
       </section>
 
       {/* Voice Analyzer Section */}
-      <section className="py-12">
+      <section id="voice-analyzer" className="py-12">
         <Container>
           <VoiceAnalyzer />
         </Container>
@@ -928,10 +932,13 @@ export const Home: React.FC = () => {
                       {feature.description}
                     </p>
 
-                    <div className="flex items-center text-primary-600 dark:text-primary-400 text-sm font-medium">
+                    <button 
+                      onClick={feature.onClick}
+                      className="flex items-center text-primary-600 dark:text-primary-400 text-sm font-medium hover:underline focus:outline-none"
+                    >
                       Learn more
                       <ChevronRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                    </div>
+                    </button>
                   </div>
                 </Card>
               </div>
