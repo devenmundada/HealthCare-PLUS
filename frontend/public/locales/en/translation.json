@@ -112,22 +112,87 @@
     "comingSoon": "Coming Soon",
     "tryNow": "Try Now",
     "featuresList": {
-      "image": { "title": "AI Image Analysis", "desc": "Upload a photo or scan and get a general-purpose AI visual assessment — not a replacement for a radiologist or specialist.", "h1": "Plain-language visual observations", "h2": "Flags findings worth discussing with a doctor", "h3": "Self-reported confidence per finding", "h4": "Always paired with a \"confirm with a professional\" disclaimer" },
-      "chat": { "title": "Medical Chat Assistant", "desc": "24/7 AI-powered medical guidance with symptom checking and evidence-based recommendations.", "h1": "Natural language processing", "h2": "HIPAA-compliant", "h3": "Emergency triage", "h4": "Multi-language support" },
-      "voice": { "title": "Voice-to-Text Medical Notes", "desc": "Accurate speech recognition for clinical documentation with medical terminology support.", "h1": "99% accuracy rate", "h2": "Real-time transcription", "h3": "Medical terminology", "h4": "Integration with EHR" },
-      "analytics": { "title": "Clinical Analytics Dashboard", "desc": "Real-time bed occupancy, doctor roster, and operational metrics for hospital accounts.", "h1": "Live bed occupancy by specialty", "h2": "Real doctor roster", "h3": "Occupancy trend metrics" },
-      "code": { "title": "AI Medical Code Generator", "desc": "Automatic ICD-10 and CPT code suggestions based on clinical notes and diagnoses.", "h1": "ICD-10 automation", "h2": "CPT code suggestions", "h3": "Billing optimization", "h4": "Compliance checking" },
-      "security": { "title": "Enterprise Security Suite", "desc": "End-to-end encryption, access controls, and compliance tools for healthcare organizations.", "h1": "Role-based access control", "h2": "Audit trail logging", "h3": "Password hashing (bcrypt)", "h4": "HIPAA-aligned data handling" },
-      "telemedicine": { "title": "Telemedicine Platform", "desc": "Secure video consultations, appointment scheduling, and virtual care delivery.", "h1": "Google Meet video consultations", "h2": "Doctor accepts before it's confirmed", "h3": "Real-time slot availability" },
-      "appointment": { "title": "Smart Appointment System", "desc": "Real-time doctor availability with a doctor-confirms booking flow.", "h1": "Live open-slot scheduling", "h2": "Doctor accept/decline requests", "h3": "Status tracking for patients" }
+      "image": {
+        "title": "AI Image Analysis",
+        "desc": "Upload a photo or scan and get a general-purpose AI visual assessment — not a replacement for a radiologist or specialist.",
+        "h1": "Plain-language visual observations",
+        "h2": "Flags findings worth discussing with a doctor",
+        "h3": "Self-reported confidence per finding",
+        "h4": "Always paired with a \"confirm with a professional\" disclaimer"
+      },
+      "chat": {
+        "title": "Medical Chat Assistant",
+        "desc": "24/7 AI-powered medical guidance with symptom checking and evidence-based recommendations.",
+        "h1": "Natural language processing",
+        "h2": "HIPAA-compliant",
+        "h3": "Emergency triage",
+        "h4": "Multi-language support"
+      },
+      "voice": {
+        "title": "Voice-to-Text Medical Notes",
+        "desc": "Accurate speech recognition for clinical documentation with medical terminology support.",
+        "h1": "99% accuracy rate",
+        "h2": "Real-time transcription",
+        "h3": "Medical terminology",
+        "h4": "Integration with EHR"
+      },
+      "analytics": {
+        "title": "Clinical Analytics Dashboard",
+        "desc": "Real-time bed occupancy, doctor roster, and operational metrics for hospital accounts.",
+        "h1": "Live bed occupancy by specialty",
+        "h2": "Real doctor roster",
+        "h3": "Occupancy trend metrics"
+      },
+      "code": {
+        "title": "AI Medical Code Generator",
+        "desc": "Automatic ICD-10 and CPT code suggestions based on clinical notes and diagnoses.",
+        "h1": "ICD-10 automation",
+        "h2": "CPT code suggestions",
+        "h3": "Billing optimization",
+        "h4": "Compliance checking"
+      },
+      "security": {
+        "title": "Enterprise Security Suite",
+        "desc": "End-to-end encryption, access controls, and compliance tools for healthcare organizations.",
+        "h1": "Role-based access control",
+        "h2": "Audit trail logging",
+        "h3": "Password hashing (bcrypt)",
+        "h4": "HIPAA-aligned data handling"
+      },
+      "telemedicine": {
+        "title": "Telemedicine Platform",
+        "desc": "Secure video consultations, appointment scheduling, and virtual care delivery.",
+        "h1": "Google Meet video consultations",
+        "h2": "Doctor accepts before it's confirmed",
+        "h3": "Real-time slot availability"
+      },
+      "appointment": {
+        "title": "Smart Appointment System",
+        "desc": "Real-time doctor availability with a doctor-confirms booking flow.",
+        "h1": "Live open-slot scheduling",
+        "h2": "Doctor accept/decline requests",
+        "h3": "Status tracking for patients"
+      }
     },
     "infraTitle": "Infrastructure & Security",
     "infraSubtitle": "Built on enterprise-grade infrastructure with healthcare-specific security measures.",
     "infraList": {
-      "cloud": { "title": "Cloud Infrastructure", "desc": "Scalable and reliable cloud infrastructure with 99.9% uptime SLA." },
-      "ai": { "title": "AI Processing", "desc": "GPU-accelerated AI inference for real-time medical analysis." },
-      "data": { "title": "Data Storage", "desc": "Secure, encrypted storage with automatic backup and recovery." },
-      "api": { "title": "API Access", "desc": "RESTful APIs for seamless integration with existing systems." }
+      "cloud": {
+        "title": "Cloud Infrastructure",
+        "desc": "Scalable and reliable cloud infrastructure with 99.9% uptime SLA."
+      },
+      "ai": {
+        "title": "AI Processing",
+        "desc": "GPU-accelerated AI inference for real-time medical analysis."
+      },
+      "data": {
+        "title": "Data Storage",
+        "desc": "Secure, encrypted storage with automatic backup and recovery."
+      },
+      "api": {
+        "title": "API Access",
+        "desc": "RESTful APIs for seamless integration with existing systems."
+      }
     },
     "ctaTitle": "Ready to Transform Healthcare?",
     "ctaSubtitle": "Join leading healthcare providers who are using our AI platform to improve patient outcomes and operational efficiency.",
@@ -150,35 +215,92 @@
     "patients": "Patients",
     "valuesTitle": "Our Values",
     "values": {
-      "patient": { "title": "Patient-Centered", "desc": "Every feature is designed with patient outcomes as the primary focus." },
-      "clinical": { "title": "Clinical Excellence", "desc": "Maintaining the highest standards of medical accuracy and reliability." },
-      "transparency": { "title": "Transparency", "desc": "Clear explanations of AI decision-making processes for clinicians." },
-      "collaboration": { "title": "Collaboration", "desc": "Fostering partnerships between AI and healthcare professionals." }
+      "patient": {
+        "title": "Patient-Centered",
+        "desc": "Every feature is designed with patient outcomes as the primary focus."
+      },
+      "clinical": {
+        "title": "Clinical Excellence",
+        "desc": "Maintaining the highest standards of medical accuracy and reliability."
+      },
+      "transparency": {
+        "title": "Transparency",
+        "desc": "Clear explanations of AI decision-making processes for clinicians."
+      },
+      "collaboration": {
+        "title": "Collaboration",
+        "desc": "Fostering partnerships between AI and healthcare professionals."
+      }
     },
     "journeyTitle": "Our Journey",
     "milestones": {
-      "m1": { "event": "Company Founded", "desc": "Started with a vision to transform healthcare with AI" },
-      "m2": { "event": "First Clinical Trial", "desc": "Partnered with 3 major hospitals for validation" },
-      "m3": { "event": "Series A Funding", "desc": "Raised $20M to expand research and development" },
-      "m4": { "event": "Platform Launch", "desc": "Public launch of HealthCare+ with 5 core features" },
-      "m5": { "event": "Global Expansion", "desc": "Expanding to 10+ countries worldwide" }
+      "m1": {
+        "event": "Company Founded",
+        "desc": "Started with a vision to transform healthcare with AI"
+      },
+      "m2": {
+        "event": "First Clinical Trial",
+        "desc": "Partnered with 3 major hospitals for validation"
+      },
+      "m3": {
+        "event": "Series A Funding",
+        "desc": "Raised $20M to expand research and development"
+      },
+      "m4": {
+        "event": "Platform Launch",
+        "desc": "Public launch of HealthCare+ with 5 core features"
+      },
+      "m5": {
+        "event": "Global Expansion",
+        "desc": "Expanding to 10+ countries worldwide"
+      }
     },
     "teamTitle": "Leadership Team",
     "expertise": "Expertise:",
     "team": {
-      "sarah": { "role": "Chief Medical Officer", "exp": "Cardiology, AI Ethics" },
-      "michael": { "role": "Head of AI Research", "exp": "Machine Learning, Medical Imaging" },
-      "james": { "role": "Clinical Director", "exp": "Oncology, Clinical Trials" },
-      "emma": { "role": "Head of Product", "exp": "Healthcare Technology, UX Design" },
-      "david": { "role": "Chief Technology Officer", "exp": "Cloud Infrastructure, Security" },
-      "lisa": { "role": "Head of Data Science", "exp": "Predictive Analytics, NLP" }
+      "sarah": {
+        "role": "Chief Medical Officer",
+        "exp": "Cardiology, AI Ethics"
+      },
+      "michael": {
+        "role": "Head of AI Research",
+        "exp": "Machine Learning, Medical Imaging"
+      },
+      "james": {
+        "role": "Clinical Director",
+        "exp": "Oncology, Clinical Trials"
+      },
+      "emma": {
+        "role": "Head of Product",
+        "exp": "Healthcare Technology, UX Design"
+      },
+      "david": {
+        "role": "Chief Technology Officer",
+        "exp": "Cloud Infrastructure, Security"
+      },
+      "lisa": {
+        "role": "Head of Data Science",
+        "exp": "Predictive Analytics, NLP"
+      }
     },
     "awardsTitle": "Awards & Recognition",
     "awards": {
-      "healthtech": { "title": "Best HealthTech 2023", "desc": "Digital Health Awards" },
-      "hipaa": { "title": "HIPAA Excellence", "desc": "Security & Compliance" },
-      "ai": { "title": "AI Innovation", "desc": "TechCrunch Disrupt" },
-      "startup": { "title": "Top Startup", "desc": "Forbes 30 Under 30" }
+      "healthtech": {
+        "title": "Best HealthTech 2023",
+        "desc": "Digital Health Awards"
+      },
+      "hipaa": {
+        "title": "HIPAA Excellence",
+        "desc": "Security & Compliance"
+      },
+      "ai": {
+        "title": "AI Innovation",
+        "desc": "TechCrunch Disrupt"
+      },
+      "startup": {
+        "title": "Top Startup",
+        "desc": "Forbes 30 Under 30"
+      }
     },
     "ctaTitle": "Join Us in Transforming Healthcare",
     "ctaDesc": "Whether you're a healthcare provider, researcher, or technologist, there's a place for you in our mission.",
@@ -217,5 +339,46 @@
       "passwordRequired": "Password is required",
       "passwordMinLength": "Password must be at least 6 characters"
     }
+  },
+  "doctors_page": {
+    "badge": "Our Medical Network",
+    "title1": "Find Trusted",
+    "title2": "Healthcare Providers",
+    "subtitle": "Connect with verified doctors, specialists, and healthcare professionals. All doctors are thoroughly vetted and rated by patients.",
+    "search_placeholder": "Search doctors, specialties, hospitals...",
+    "all_specialties": "All Specialties",
+    "highest_rated": "Highest Rated",
+    "most_experienced": "Most Experienced",
+    "lowest_fee": "Lowest Fee",
+    "online_only": "Online Consultations Only",
+    "emergency_available": "Emergency Available",
+    "doctors_found": "doctors found",
+    "loading": "Loading real doctors from database...",
+    "error_title": "Error loading doctors",
+    "no_doctors": "No doctors found",
+    "try_adjusting": "Try adjusting your search or filter criteria",
+    "verified_professional": "Verified Professional",
+    "qualifications": "Qualifications",
+    "experience_stats": "Experience & Stats",
+    "experience": "Experience",
+    "years": "years",
+    "success_rate": "Success Rate",
+    "response_time": "Response Time",
+    "hospital_availability": "Hospital & Availability",
+    "away": "away",
+    "consultation_options": "Consultation Options",
+    "video_consult": "Video Consult",
+    "in_person": "In-Person",
+    "emergency": "Emergency",
+    "languages": "Languages",
+    "consultation_fee": "Consultation Fee",
+    "book_appointment": "Book Appointment",
+    "call_clinic": "Call Clinic",
+    "about_dr": "About Dr. {{name}}",
+    "recent_review": "Recent Patient Review",
+    "verified_doctors": "Verified Doctors",
+    "patient_satisfaction": "Patient Satisfaction",
+    "emergency_support": "Emergency Support",
+    "specialties_covered": "Specialties Covered"
   }
 }

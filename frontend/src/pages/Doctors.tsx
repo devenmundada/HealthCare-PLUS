@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Container } from '../components/layout/Container';
 import { MedicalCard } from '../components/ui/MedicalCard';
 import { Card } from '../components/ui/Card';
@@ -82,6 +83,7 @@ interface Review {
 }
 
 export const Doctors: React.FC = () => {
+  const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSpecialty, setSelectedSpecialty] = useState<string>('all');
   const [showOnlineOnly, setShowOnlineOnly] = useState(false);
@@ -245,15 +247,14 @@ export const Doctors: React.FC = () => {
           <div className="text-center mb-16 fade-in-up">
             <Badge variant="outline" className="px-5 py-2.5 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border-primary-200/50 dark:border-primary-800/50 rounded-full shadow-sm w-max mb-6">
               <Users className="w-4 h-4 mr-2 text-primary-600 dark:text-primary-400" />
-              <span className="text-sm font-medium tracking-wide text-slate-800 dark:text-slate-200">Our Medical Network</span>
+              <span className="text-sm font-medium tracking-wide text-slate-800 dark:text-slate-200">{t('doctors_page.badge')}</span>
             </Badge>
             <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-6">
-              Find Trusted
-              <span className="bg-gradient-to-r from-primary-600 to-blue-600 dark:from-primary-400 dark:to-blue-400 bg-clip-text text-transparent block mt-2 pb-2">Healthcare Providers</span>
+              {t('doctors_page.title1')}
+              <span className="bg-gradient-to-r from-primary-600 to-blue-600 dark:from-primary-400 dark:to-blue-400 bg-clip-text text-transparent block mt-2 pb-2">{t('doctors_page.title2')}</span>
             </h1>
             <p className="text-xl text-slate-600 dark:text-slate-400 max-w-3xl mx-auto font-light leading-relaxed">
-              Connect with verified doctors, specialists, and healthcare professionals.
-              All doctors are thoroughly vetted and rated by patients.
+              {t('doctors_page.subtitle')}
             </p>
           </div>
 
@@ -262,7 +263,7 @@ export const Doctors: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             <div className="lg:col-span-2">
               <Input
-                placeholder="Search doctors, specialties, hospitals..."
+                placeholder={t('doctors_page.search_placeholder')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 leftIcon={<Search className="w-4 h-4" />}
@@ -277,7 +278,7 @@ export const Doctors: React.FC = () => {
               >
                 {specialties.map(specialty => (
                   <option key={specialty} value={specialty === 'All Specialties' ? 'all' : specialty} className="bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 py-2">
-                    {specialty}
+                    {specialty === 'All Specialties' ? t('doctors_page.all_specialties') : specialty}
                   </option>
                 ))}
               </select>
@@ -290,9 +291,9 @@ export const Doctors: React.FC = () => {
                 onChange={(e) => setSortBy(e.target.value as any)}
                 className="w-full appearance-none bg-white/50 dark:bg-slate-800/50 backdrop-blur-md border border-slate-200/50 dark:border-slate-700/50 rounded-xl px-5 py-3 pr-10 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-primary-500/50 shadow-sm cursor-pointer"
               >
-                <option value="rating" className="bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 py-2">Highest Rated</option>
-                <option value="experience" className="bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 py-2">Most Experienced</option>
-                <option value="fee" className="bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 py-2">Lowest Fee</option>
+                <option value="rating" className="bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 py-2">{t('doctors_page.highest_rated')}</option>
+                <option value="experience" className="bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 py-2">{t('doctors_page.most_experienced')}</option>
+                <option value="fee" className="bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 py-2">{t('doctors_page.lowest_fee')}</option>
               </select>
               <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 pointer-events-none" />
             </div>
@@ -302,17 +303,17 @@ export const Doctors: React.FC = () => {
             <Toggle
               enabled={showOnlineOnly}
               onChange={setShowOnlineOnly}
-              label="Online Consultations Only"
+              label={t('doctors_page.online_only')}
             />
             <Toggle
               enabled={showEmergency}
               onChange={setShowEmergency}
-              label="Emergency Available"
+              label={t('doctors_page.emergency_available')}
             />
             <div className="ml-auto flex items-center space-x-2">
               <Filter className="w-4 h-4 text-neutral-500" />
               <span className="text-sm text-neutral-600 dark:text-neutral-400">
-                {filteredDoctors.length} doctors found
+                {filteredDoctors.length} {t('doctors_page.doctors_found')}
               </span>
             </div>
           </div>
@@ -323,7 +324,7 @@ export const Doctors: React.FC = () => {
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
               <p className="mt-4 text-neutral-600 dark:text-neutral-400">
-                Loading real doctors from database...
+                {t('doctors_page.loading')}
               </p>
             </div>
           </div>
@@ -339,7 +340,7 @@ export const Doctors: React.FC = () => {
               </div>
               <div className="ml-3">
                 <h3 className="text-sm font-medium text-red-800 dark:text-red-200">
-                  Error loading doctors
+                  {t('doctors_page.error_title')}
                 </h3>
                 <div className="mt-2 text-sm text-red-700 dark:text-red-300">
                   <p>{error}</p>
@@ -353,10 +354,10 @@ export const Doctors: React.FC = () => {
           <div className="text-center py-12 bg-white dark:bg-neutral-800 rounded-xl shadow">
             <Search className="mx-auto text-neutral-400 dark:text-neutral-500 mb-4" size={48} />
             <h3 className="text-lg font-medium text-neutral-900 dark:text-white mb-2">
-              No doctors found
+              {t('doctors_page.no_doctors')}
             </h3>
             <p className="text-neutral-600 dark:text-neutral-400">
-              Try adjusting your search or filter criteria
+              {t('doctors_page.try_adjusting')}
             </p>
           </div>
         )}
@@ -408,7 +409,7 @@ export const Doctors: React.FC = () => {
                         {doctor.verified && (
                           <div className="flex items-center justify-center text-green-600 dark:text-green-400 mb-4">
                             <CheckCircle className="w-4 h-4 mr-1" />
-                            <span className="text-sm font-medium">Verified Professional</span>
+                            <span className="text-sm font-medium">{t('doctors_page.verified_professional')}</span>
                           </div>
                         )}
                       </div>
@@ -419,7 +420,7 @@ export const Doctors: React.FC = () => {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                         <div>
                           <h4 className="text-sm font-medium text-neutral-600 dark:text-neutral-400 mb-2">
-                            Qualifications
+                            {t('doctors_page.qualifications')}
                           </h4>
                           <ul className="space-y-1">
                             {doctor.qualifications.map((qual, idx) => (
@@ -433,29 +434,29 @@ export const Doctors: React.FC = () => {
 
                         <div>
                           <h4 className="text-sm font-medium text-neutral-600 dark:text-neutral-400 mb-2">
-                            Experience & Stats
+                            {t('doctors_page.experience_stats')}
                           </h4>
                           <div className="space-y-2">
                             <div className="flex items-center justify-between">
-                              <span className="text-sm">Experience</span>
-                              <span className="font-medium">{doctor.experience} years</span>
+                              <span className="text-sm">{t('doctors_page.experience')}</span>
+                              <span className="font-medium">{doctor.experience} {t('doctors_page.years')}</span>
                             </div>
                             <div className="flex items-center justify-between">
-                              <span className="text-sm">Success Rate</span>
+                              <span className="text-sm">{t('doctors_page.success_rate')}</span>
                               <span className="font-medium text-green-600">{doctor.successRate}%</span>
                             </div>
                             <div className="flex items-center justify-between">
-                              <span className="text-sm">Response Time</span>
+                              <span className="text-sm">{t('doctors_page.response_time')}</span>
                               <span className="font-medium">{doctor.responseTime}</span>
                             </div>
                           </div>
                         </div>
                       </div>
 
-                      {/* Hospital & Availability */}
+                      {/* {t('doctors_page.hospital_availability')} */}
                       <div className="mb-6">
                         <h4 className="text-sm font-medium text-neutral-600 dark:text-neutral-400 mb-2">
-                          Hospital & Availability
+                          {t('doctors_page.hospital_availability')}
                         </h4>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center">
@@ -463,7 +464,7 @@ export const Doctors: React.FC = () => {
                             <div>
                               <div className="font-medium">{doctor.hospital.name}</div>
                               <div className="text-sm text-neutral-500">
-                                {[doctor.hospital.city, doctor.hospital.distance ? `${doctor.hospital.distance} away` : null]
+                                {[doctor.hospital.city, doctor.hospital.distance ? `${doctor.hospital.distance} ${t('doctors_page.away')}` : null]
                                   .filter(Boolean)
                                   .join(' • ')}
                               </div>
@@ -478,26 +479,20 @@ export const Doctors: React.FC = () => {
 
                       {/* Consultation Options */}
                       <div className="mb-6">
-                        <h4 className="text-sm font-medium text-neutral-600 dark:text-neutral-400 mb-2">
-                          Consultation Options
-                        </h4>
+                        <h4 className="text-sm font-medium text-neutral-600 dark:text-neutral-400 mb-2">{t('doctors_page.consultation_options')}</h4>
                         <div className="flex flex-wrap gap-2">
                           {doctor.availability.online && (
                             <Badge variant="outline" className="flex items-center">
-                              <Video className="w-3 h-3 mr-1" />
-                              Video Consult
-                            </Badge>
+                              <Video className="w-3 h-3 mr-1" />{t('doctors_page.video_consult')}</Badge>
                           )}
                           {doctor.availability.inPerson && (
                             <Badge variant="outline" className="flex items-center">
-                              <Users className="w-3 h-3 mr-1" />
-                              In-Person
-                            </Badge>
+                              <Users className="w-3 h-3 mr-1" />{t('doctors_page.in_person')}</Badge>
                           )}
                           {doctor.availability.emergency && (
                             <Badge variant="error" className="flex items-center">
                               <Heart className="w-3 h-3 mr-1" />
-                              Emergency
+                              {t('doctors_page.emergency')}
                             </Badge>
                           )}
                         </div>
@@ -506,9 +501,7 @@ export const Doctors: React.FC = () => {
                       {/* Languages & Fee */}
                       <div className="flex items-center justify-between mb-6">
                         <div>
-                          <h4 className="text-sm font-medium text-neutral-600 dark:text-neutral-400 mb-1">
-                            Languages
-                          </h4>
+                          <h4 className="text-sm font-medium text-neutral-600 dark:text-neutral-400 mb-1">{t('doctors_page.languages')}</h4>
                           <div className="flex flex-wrap gap-1">
                             {doctor.languages.map((lang) => (
                               <span key={lang} className="px-2 py-1 bg-neutral-100 dark:bg-neutral-800 rounded text-xs">
@@ -519,7 +512,7 @@ export const Doctors: React.FC = () => {
                         </div>
                         <div className="text-right">
                           <div className="text-sm text-neutral-600 dark:text-neutral-400">
-                            Consultation Fee
+                            {t('doctors_page.consultation_fee')}
                           </div>
                           <div className="text-2xl font-bold text-primary-600">
                             ₹{doctor.consultationFee}
@@ -534,7 +527,7 @@ export const Doctors: React.FC = () => {
                           className="w-full whitespace-nowrap justify-center"
                           leftIcon={<Calendar className="w-4 h-4" />}
                         >
-                          Book Appointment
+                          {t('doctors_page.book_appointment')}
                         </Button>
                         {!revealedPhones[doctor.id] ? (
                           <Button
@@ -543,7 +536,7 @@ export const Doctors: React.FC = () => {
                             leftIcon={<Phone className="w-4 h-4" />}
                             className="w-full whitespace-nowrap justify-center"
                           >
-                            Call Clinic
+                            {t('doctors_page.call_clinic')}
                           </Button>
                         ) : (
                           <a
@@ -561,7 +554,7 @@ export const Doctors: React.FC = () => {
                   {/* Bio Section */}
                   <div className="border-t border-neutral-200 dark:border-neutral-700 p-6">
                     <h4 className="font-medium text-neutral-900 dark:text-white mb-2">
-                      About Dr. {doctor.name.split(' ')[1] || doctor.name}
+                      {t('doctors_page.about_dr', { name: doctor.name.split(' ')[1] || doctor.name })}
                     </h4>
                     <p className="text-neutral-600 dark:text-neutral-400">
                       {doctor.bio}
@@ -572,7 +565,7 @@ export const Doctors: React.FC = () => {
                   {doctor.patientReviews.length > 0 && (
                     <div className="border-t border-neutral-200 dark:border-neutral-700 p-6">
                       <h4 className="font-medium text-neutral-900 dark:text-white mb-4">
-                        Recent Patient Review
+                        {t('doctors_page.recent_review')}
                       </h4>
                       {doctor.patientReviews.slice(0, 1).map((review) => (
                         <Card key={review.id} className="p-4">
@@ -606,9 +599,7 @@ export const Doctors: React.FC = () => {
                 <div className="text-3xl font-bold text-primary-600 mb-2">
                   {doctors.length}+
                 </div>
-                <div className="text-sm text-neutral-600 dark:text-neutral-400">
-                  Verified Doctors
-                </div>
+                <div className="text-sm text-neutral-600 dark:text-neutral-400">{t('doctors_page.verified_doctors')}</div>
               </Card>
               <Card className="text-center p-6">
                 <div className="text-3xl font-bold text-primary-600 mb-2">
@@ -616,25 +607,19 @@ export const Doctors: React.FC = () => {
                     ? Math.round(doctors.reduce((sum, doc) => sum + doc.rating, 0) / doctors.length * 20)
                     : 98}%
                 </div>
-                <div className="text-sm text-neutral-600 dark:text-neutral-400">
-                  Patient Satisfaction
-                </div>
+                <div className="text-sm text-neutral-600 dark:text-neutral-400">{t('doctors_page.patient_satisfaction')}</div>
               </Card>
               <Card className="text-center p-6">
                 <div className="text-3xl font-bold text-primary-600 mb-2">
                   24/7
                 </div>
-                <div className="text-sm text-neutral-600 dark:text-neutral-400">
-                  Emergency Support
-                </div>
+                <div className="text-sm text-neutral-600 dark:text-neutral-400">{t('doctors_page.emergency_support')}</div>
               </Card>
               <Card className="text-center p-6">
                 <div className="text-3xl font-bold text-primary-600 mb-2">
                   {specialties.length - 1}+
                 </div>
-                <div className="text-sm text-neutral-600 dark:text-neutral-400">
-                  Specialties Covered
-                </div>
+                <div className="text-sm text-neutral-600 dark:text-neutral-400">{t('doctors_page.specialties_covered')}</div>
               </Card>
             </div>
           </>

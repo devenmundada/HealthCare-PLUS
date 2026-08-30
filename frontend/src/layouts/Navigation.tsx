@@ -14,7 +14,8 @@ import {
   Sun,
   AlertTriangle,
   Map,
-  Info,
+  Info
+} from 'lucide-react';
 import { LogIn, LogOut, User } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext'; // Add this import
 import { useTranslation } from 'react-i18next';
