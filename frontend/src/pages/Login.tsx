@@ -16,6 +16,7 @@ import {
   HeartPulse,
   User
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface LoginForm {
   email: string;
@@ -25,6 +26,7 @@ interface LoginForm {
 export const Login: React.FC = () => {
   const navigate = useNavigate();
   const { login, isLoading } = useAuth();
+  const { t } = useTranslation();
   
   const [formData, setFormData] = useState<LoginForm>({
     email: '',
@@ -41,16 +43,16 @@ export const Login: React.FC = () => {
     // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!formData.email) {
-      newErrors.email = 'Email is required';
+      newErrors.email = t('auth.login.emailRequired');
     } else if (!emailRegex.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email address';
+      newErrors.email = t('auth.login.invalidEmail');
     }
 
     // Password validation
     if (!formData.password) {
-      newErrors.password = 'Password is required';
+      newErrors.password = t('auth.login.passwordRequired');
     } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
+      newErrors.password = t('auth.login.passwordMinLength');
     }
 
     setErrors(newErrors);
@@ -70,7 +72,7 @@ export const Login: React.FC = () => {
     if (success) {
       navigate('/');
     } else {
-      setLoginError('Invalid email or password. Please try again.');
+      setLoginError(t('auth.login.invalidCredentials'));
     }
   };
 
@@ -115,13 +117,13 @@ export const Login: React.FC = () => {
           <div className="text-center mb-12">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 mb-4">
               <Shield className="w-4 h-4" />
-              <span className="text-sm font-medium">Secure Healthcare Login</span>
+              <span className="text-sm font-medium">{t('auth.login.secureLogin')}</span>
             </div>
             <h1 className="text-4xl font-bold text-neutral-900 dark:text-white mb-4">
-              Welcome Back
+              {t('auth.login.welcomeBack')}
             </h1>
             <p className="text-lg text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto">
-              Sign in to access your health dashboard, appointments, and medical records
+              {t('auth.login.subtitle')}
             </p>
           </div>
 
@@ -140,14 +142,14 @@ export const Login: React.FC = () => {
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div>
                     <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                      Email Address
+                      {t('auth.login.emailLabel')}
                     </label>
                     <Input
                       type="email"
                       name="email"
                       value={formData.email}
                       onChange={handleChange}
-                      placeholder="john@example.com"
+                      placeholder={t('auth.login.emailPlaceholder')}
                       leftIcon={<Mail className="w-4 h-4" />}
                       error={errors.email}
                       disabled={isLoading}
@@ -157,13 +159,13 @@ export const Login: React.FC = () => {
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                        Password
+                        {t('auth.login.passwordLabel')}
                       </label>
                       <Link 
                         to="/forgot-password" 
                         className="text-sm text-primary-600 hover:text-primary-700"
                       >
-                        Forgot password?
+                        {t('auth.login.forgotPassword')}
                       </Link>
                     </div>
                     <Input
@@ -194,7 +196,7 @@ export const Login: React.FC = () => {
                       className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-neutral-300 rounded"
                     />
                     <label htmlFor="rememberMe" className="text-sm text-neutral-700 dark:text-neutral-300 ml-2">
-                      Remember me on this device
+                      {t('auth.login.rememberMe')}
                     </label>
                   </div>
 
@@ -209,18 +211,18 @@ export const Login: React.FC = () => {
                     {isLoading ? (
                       <span className="flex items-center">
                         <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                        Signing in...
+                        {t('auth.login.signingIn')}
                       </span>
                     ) : (
-                      'Sign In'
+                      t('auth.login.signIn')
                     )}
                   </Button>
 
                   <div className="text-center pt-4">
                     <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                      Don't have an account?{' '}
+                      {t('auth.login.noAccount')}{' '}
                       <Link to="/signup" className="text-primary-600 hover:text-primary-700 font-medium">
-                        Create account
+                        {t('auth.login.createAccount')}
                       </Link>
                     </p>
                   </div>
@@ -271,7 +273,7 @@ export const Login: React.FC = () => {
             <div className="space-y-6">
               <GlassCard className="p-6 bg-gradient-to-br from-primary-50 to-blue-50 dark:from-primary-900/20 dark:to-blue-900/20">
                 <h3 className="text-xl font-bold text-neutral-900 dark:text-white mb-4">
-                  What You Can Access
+                  {t('auth.login.whatYouCanAccess')}
                 </h3>
                 <div className="space-y-4">
                   <div className="flex items-start space-x-3">
@@ -279,9 +281,9 @@ export const Login: React.FC = () => {
                       <HeartPulse className="w-5 h-5 text-primary-600" />
                     </div>
                     <div>
-                      <h4 className="font-medium text-neutral-900 dark:text-white">Health Dashboard</h4>
+                      <h4 className="font-medium text-neutral-900 dark:text-white">{t('auth.login.healthDashboard')}</h4>
                       <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                        Track your health metrics, appointments, and medications
+                        {t('auth.login.healthDashboardDesc')}
                       </p>
                     </div>
                   </div>
@@ -291,9 +293,9 @@ export const Login: React.FC = () => {
                       <Shield className="w-5 h-5 text-primary-600" />
                     </div>
                     <div>
-                      <h4 className="font-medium text-neutral-900 dark:text-white">Secure & Private</h4>
+                      <h4 className="font-medium text-neutral-900 dark:text-white">{t('auth.login.securePrivate')}</h4>
                       <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                        HIPAA-compliant encryption for all your medical data
+                        {t('auth.login.securePrivateDesc')}
                       </p>
                     </div>
                   </div>
@@ -302,36 +304,36 @@ export const Login: React.FC = () => {
 
               <GlassCard className="p-6">
                 <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-4">
-                  Security Features
+                  {t('auth.login.securityFeatures')}
                 </h3>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="p-3 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-center">
                     <div className="text-lg font-bold text-primary-600">256-bit</div>
-                    <div className="text-xs text-neutral-600 dark:text-neutral-400">Encryption</div>
+                    <div className="text-xs text-neutral-600 dark:text-neutral-400">{t('auth.login.encryption')}</div>
                   </div>
                   <div className="p-3 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-center">
                     <div className="text-lg font-bold text-primary-600">2FA</div>
-                    <div className="text-xs text-neutral-600 dark:text-neutral-400">Ready</div>
+                    <div className="text-xs text-neutral-600 dark:text-neutral-400">{t('auth.login.ready')}</div>
                   </div>
                 </div>
               </GlassCard>
 
               <GlassCard className="p-6">
                 <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-4">
-                  Community Trust
+                  {t('auth.login.communityTrust')}
                 </h3>
                 <div className="grid grid-cols-3 gap-4 text-center">
                   <div>
                     <div className="text-2xl font-bold text-primary-600">10K+</div>
-                    <div className="text-xs text-neutral-600 dark:text-neutral-400">Active Patients</div>
+                    <div className="text-xs text-neutral-600 dark:text-neutral-400">{t('auth.login.activePatients')}</div>
                   </div>
                   <div>
                     <div className="text-2xl font-bold text-primary-600">500+</div>
-                    <div className="text-xs text-neutral-600 dark:text-neutral-400">Doctors</div>
+                    <div className="text-xs text-neutral-600 dark:text-neutral-400">{t('navigation.doctors')}</div>
                   </div>
                   <div>
                     <div className="text-2xl font-bold text-primary-600">99.9%</div>
-                    <div className="text-xs text-neutral-600 dark:text-neutral-400">Uptime</div>
+                    <div className="text-xs text-neutral-600 dark:text-neutral-400">{t('auth.login.uptime')}</div>
                   </div>
                 </div>
               </GlassCard>

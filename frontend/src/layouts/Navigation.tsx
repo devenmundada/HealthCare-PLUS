@@ -15,26 +15,26 @@ import {
   AlertTriangle,
   Map,
   Info,
-  LogIn,
-  LogOut,
-  User
-} from 'lucide-react';
+import { LogIn, LogOut, User } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext'; // Add this import
+import { useTranslation } from 'react-i18next';
+import { LanguageSwitcher } from '../components/shared/LanguageSwitcher';
 
-const navigation = [
-  { name: 'Home', href: '/', icon: Home },
-  { name: 'Features', href: '/features', icon: Settings },
-  { name: 'Doctors', href: '/doctors', icon: Users },
-  { name: 'Map Prediction', href: '/map-prediction', icon: Map },
-  { name: 'About', href: '/about', icon: Info },
-  { name: 'Emergency', href: 'tel:911', icon: AlertTriangle, isExternal: true }
-  
+
+const navigationItems = [
+  { nameKey: 'home', href: '/', icon: Home },
+  { nameKey: 'features', href: '/features', icon: Settings },
+  { nameKey: 'doctors', href: '/doctors', icon: Users },
+  { nameKey: 'mapPrediction', href: '/map-prediction', icon: Map },
+  { nameKey: 'about', href: '/about', icon: Info },
+  { nameKey: 'emergency', href: 'tel:911', icon: AlertTriangle, isExternal: true }
 ];
 
 export const Navigation: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
   const { isAuthenticated, user, toggleAuth } = useAuth(); // Get auth state
+  const { t } = useTranslation();
 
   const toggleDarkMode = () => {
     setDarkMode(!darkMode);
@@ -58,16 +58,16 @@ export const Navigation: React.FC = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-1">
-            {navigation.map((item) => {
+            {navigationItems.map((item) => {
               if (item.isExternal) {
                 return (
                   <a
-                    key={item.name}
+                    key={item.nameKey}
                     href={item.href}
                     onClick={(e) => {
-                      if (item.name === 'Emergency') {
+                      if (item.nameKey === 'emergency') {
                         const confirmCall = window.confirm(
-                          'This will call emergency services (911). Use only for real medical emergencies. Proceed?'
+                          t('navigation.emergencyConfirm')
                         );
                         if (!confirmCall) {
                           e.preventDefault();
@@ -77,14 +77,14 @@ export const Navigation: React.FC = () => {
                     className="flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors text-neutral-600 hover:bg-neutral-50 dark:text-neutral-300 dark:hover:bg-neutral-800"
                   >
                     <item.icon className="w-4 h-4 mr-2" />
-                    {item.name}
+                    {t(`navigation.${item.nameKey}`)}
                   </a>
                 );
               }
               
               return (
                 <NavLink
-                  key={item.name}
+                  key={item.nameKey}
                   to={item.href}
                   className={({ isActive }) =>
                     `flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
@@ -95,7 +95,7 @@ export const Navigation: React.FC = () => {
                   }
                 >
                   <item.icon className="w-4 h-4 mr-2" />
-                  {item.name}
+                  {t(`navigation.${item.nameKey}`)}
                 </NavLink>
               );
             })}
@@ -103,12 +103,14 @@ export const Navigation: React.FC = () => {
 
           {/* Right side actions - UPDATED WITH AUTH */}
           <div className="flex items-center space-x-3">
+            <LanguageSwitcher />
+            
             <Button
               variant="ghost"
               size="sm"
               onClick={toggleDarkMode}
               className="hidden sm:inline-flex"
-              aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+              aria-label={darkMode ? t('navigation.switchToLight') : t('navigation.switchToDark')}
             >
               {darkMode ? (
                 <Sun className="w-4 h-4" />
@@ -131,7 +133,7 @@ export const Navigation: React.FC = () => {
                     <UserCircle className="w-8 h-8 text-primary-600" />
                   )}
                   <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                    Hi, {user?.name?.split(' ')[0] || 'User'}
+                    {t('navigation.hi')}, {user?.name?.split(' ')[0] || t('navigation.user')}
                   </span>
                 </div>
                 <Button
@@ -141,7 +143,7 @@ export const Navigation: React.FC = () => {
                   leftIcon={<LogOut className="w-4 h-4" />}
                   className="hidden sm:inline-flex"
                 >
-                  Logout
+                  {t('navigation.logout')}
                 </Button>
               </div>
             ) : (
@@ -152,7 +154,7 @@ export const Navigation: React.FC = () => {
                 leftIcon={<LogIn className="w-4 h-4" />}
                 className="hidden sm:inline-flex"
               >
-                Login Demo
+                {t('navigation.loginDemo')}
               </Button>
             )}
 
@@ -175,16 +177,16 @@ export const Navigation: React.FC = () => {
         {isMenuOpen && (
           <div className="md:hidden border-t border-neutral-200 dark:border-neutral-800 mt-2 pt-2 pb-3">
             <div className="px-2 space-y-1">
-              {navigation.map((item) => {
+              {navigationItems.map((item) => {
                 if (item.isExternal) {
                   return (
                     <a
-                      key={item.name}
+                      key={item.nameKey}
                       href={item.href}
                       onClick={(e) => {
-                        if (item.name === 'Emergency') {
+                        if (item.nameKey === 'emergency') {
                           const confirmCall = window.confirm(
-                            'This will call emergency services (911). Use only for real medical emergencies. Proceed?'
+                            t('navigation.emergencyConfirm')
                           );
                           if (!confirmCall) {
                             e.preventDefault();
@@ -194,20 +196,20 @@ export const Navigation: React.FC = () => {
                         }
                       }}
                       className={`flex items-center px-3 py-2 rounded-lg text-base font-medium ${
-                        item.name === 'Emergency'
+                        item.nameKey === 'emergency'
                           ? 'bg-red-50 text-red-700 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-300'
                           : 'text-neutral-600 hover:bg-neutral-50 dark:text-neutral-300 dark:hover:bg-neutral-800'
                       }`}
                     >
                       <item.icon className="w-5 h-5 mr-3" />
-                      {item.name}
+                      {t(`navigation.${item.nameKey}`)}
                     </a>
                   );
                 }
                 
                 return (
                   <NavLink
-                    key={item.name}
+                    key={item.nameKey}
                     to={item.href}
                     onClick={() => setIsMenuOpen(false)}
                     className={({ isActive }) =>
@@ -219,7 +221,7 @@ export const Navigation: React.FC = () => {
                     }
                   >
                     <item.icon className="w-5 h-5 mr-3" />
-                    {item.name}
+                    {t(`navigation.${item.nameKey}`)}
                   </NavLink>
                 );
               })}
@@ -233,7 +235,7 @@ export const Navigation: React.FC = () => {
                   onClick={toggleDarkMode}
                   leftIcon={darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
                 >
-                  {darkMode ? 'Light Mode' : 'Dark Mode'}
+                  {darkMode ? t('navigation.lightMode') : t('navigation.darkMode')}
                 </Button>
                 
                 {/* Auth Toggle for Mobile */}
@@ -264,7 +266,7 @@ export const Navigation: React.FC = () => {
                       }}
                       leftIcon={<LogOut className="w-4 h-4" />}
                     >
-                      Logout
+                      {t('navigation.logout')}
                     </Button>
                   </>
                 ) : (
@@ -278,7 +280,7 @@ export const Navigation: React.FC = () => {
                     }}
                     leftIcon={<LogIn className="w-4 h-4" />}
                   >
-                    Login Demo
+                    {t('navigation.loginDemo')}
                   </Button>
                 )}
               </div>

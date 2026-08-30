@@ -12,6 +12,7 @@ import { WeatherNotifications } from '../components/features/home/WeatherNotific
 import AppointmentBookingModal from '../components/features/appointment/AppointmentBookingModal';
 import { useAuth } from '../contexts/AuthContext';
 import React, { useEffect, useState } from "react";
+import { useTranslation } from 'react-i18next';
 import VoiceAnalyzer from "../components/features/home/VoiceAnalyzer";
 
 
@@ -101,6 +102,7 @@ const generateRandomStories = () => {
 
 export const Home: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [showAppointmentModal, setShowAppointmentModal] = useState(false);
   const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
   const [successStories] = useState(() => generateRandomStories());
@@ -251,6 +253,7 @@ export const Home: React.FC = () => {
   // Auth Toggle Button Component
   const AuthToggleButton: React.FC = () => {
     const { isAuthenticated, logout } = useAuth();
+    const { t } = useTranslation();
 
     return (
       <Button
@@ -274,6 +277,7 @@ export const Home: React.FC = () => {
   // Conditional Content Component
   const AuthConditionalContent: React.FC = () => {
     const { isAuthenticated, user } = useAuth();
+    const { t } = useTranslation();
     const [appointments, setAppointments] = useState<Array<{
       id: string | number;
       type: string;
@@ -709,17 +713,16 @@ export const Home: React.FC = () => {
               <div className="space-y-6">
                 <Badge variant="outline" className="px-5 py-2.5 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border-primary-200/50 dark:border-primary-800/50 rounded-full shadow-sm w-max">
                   <TrendingUp className="w-4 h-4 mr-2 text-primary-600 dark:text-primary-400" />
-                  <span className="text-sm font-medium tracking-wide text-slate-800 dark:text-slate-200">Trusted by 500+ Top Hospitals</span>
+                  <span className="text-sm font-medium tracking-wide text-slate-800 dark:text-slate-200">{t('home.hero.trustedBy')}</span>
                 </Badge>
 
                 <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-[1.1]">
-                  Your Health,
-                  <span className="bg-gradient-to-r from-primary-600 to-blue-600 dark:from-primary-400 dark:to-blue-400 bg-clip-text text-transparent block mt-2 pb-2">Our Priority</span>
+                  {t('home.hero.titlePart1')}
+                  <span className="bg-gradient-to-r from-primary-600 to-blue-600 dark:from-primary-400 dark:to-blue-400 bg-clip-text text-transparent block mt-2 pb-2">{t('home.hero.titlePart2')}</span>
                 </h1>
 
                 <p className="text-xl text-slate-600 dark:text-slate-400 leading-relaxed max-w-2xl font-light">
-                  AI-powered healthcare platform connecting you with trusted medical professionals.
-                  From instant consultations to advanced diagnostics, we're here for your health journey.
+                  {t('home.hero.subtitle')}
                 </p>
               </div>
 
@@ -730,7 +733,7 @@ export const Home: React.FC = () => {
                   onClick={() => setShowAppointmentModal(true)}
                   className="bg-primary-600 hover:bg-primary-700 text-white shadow-[0_8px_30px_rgb(0,194,203,0.3)] dark:shadow-[0_8px_30px_rgb(0,194,203,0.2)] rounded-xl px-8 py-4 text-lg font-medium transition-all hover:-translate-y-1"
                 >
-                  Book an Appointment
+                  {t('home.hero.bookAppointment')}
                 </Button>
                 <Button
                   variant="secondary"
@@ -739,7 +742,7 @@ export const Home: React.FC = () => {
                   className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border border-slate-200 dark:border-slate-700 hover:bg-white dark:hover:bg-slate-700 shadow-sm rounded-xl px-8 py-4 text-lg font-medium transition-all hover:-translate-y-1 text-slate-700 dark:text-slate-200"
                   onClick={() => setShowAppointmentModal(true)}
                 >
-                  Video Consultation
+                  {t('home.hero.videoConsultation')}
                 </Button>
               </div>
 
@@ -747,19 +750,19 @@ export const Home: React.FC = () => {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-10">
                 <div className="flex flex-col text-left p-5 bg-white/40 dark:bg-slate-800/40 backdrop-blur-xl border border-white/50 dark:border-slate-700/50 rounded-2xl shadow-sm hover:bg-white/60 dark:hover:bg-slate-800/60 transition-colors">
                   <div className="text-3xl font-extrabold text-primary-600 dark:text-primary-400 tracking-tight">24/7</div>
-                  <div className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-2 uppercase tracking-wider">AI Support</div>
+                  <div className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-2 uppercase tracking-wider">{t('home.hero.stats.aiSupport')}</div>
                 </div>
                 <div className="flex flex-col text-left p-5 bg-white/40 dark:bg-slate-800/40 backdrop-blur-xl border border-white/50 dark:border-slate-700/50 rounded-2xl shadow-sm hover:bg-white/60 dark:hover:bg-slate-800/60 transition-colors">
                   <div className="text-3xl font-extrabold text-primary-600 dark:text-primary-400 tracking-tight">500+</div>
-                  <div className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-2 uppercase tracking-wider">Doctors</div>
+                  <div className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-2 uppercase tracking-wider">{t('home.hero.stats.doctors')}</div>
                 </div>
                 <div className="flex flex-col text-left p-5 bg-white/40 dark:bg-slate-800/40 backdrop-blur-xl border border-white/50 dark:border-slate-700/50 rounded-2xl shadow-sm hover:bg-white/60 dark:hover:bg-slate-800/60 transition-colors">
                   <div className="text-3xl font-extrabold text-primary-600 dark:text-primary-400 tracking-tight">98.2%</div>
-                  <div className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-2 uppercase tracking-wider">Success Rate</div>
+                  <div className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-2 uppercase tracking-wider">{t('home.hero.stats.successRate')}</div>
                 </div>
                 <div className="flex flex-col text-left p-5 bg-white/40 dark:bg-slate-800/40 backdrop-blur-xl border border-white/50 dark:border-slate-700/50 rounded-2xl shadow-sm hover:bg-white/60 dark:hover:bg-slate-800/60 transition-colors">
                   <div className="text-3xl font-extrabold text-primary-600 dark:text-primary-400 tracking-tight">2.4s</div>
-                  <div className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-2 uppercase tracking-wider">Response Time</div>
+                  <div className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-2 uppercase tracking-wider">{t('home.hero.stats.responseTime')}</div>
                 </div>
               </div>
             </div>
@@ -780,10 +783,10 @@ export const Home: React.FC = () => {
 
                     <div className="space-y-4">
                       <h3 className="text-3xl md:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-                        Start Your Health Journey
+                        {t('home.hero.startJourney')}
                       </h3>
                       <p className="text-slate-600 dark:text-slate-400 text-lg">
-                        Get personalized health insights in minutes
+                        {t('home.hero.healthInsights')}
                       </p>
                     </div>
 
@@ -796,8 +799,8 @@ export const Home: React.FC = () => {
                           <Stethoscope className="w-7 h-7 text-primary-600 dark:text-primary-400" />
                         </div>
                         <div className="flex-1">
-                          <div className="font-bold text-slate-900 dark:text-white text-lg group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">Health Assessment</div>
-                          <div className="text-sm text-slate-500 dark:text-slate-400 font-medium mt-1">3 min questionnaire</div>
+                          <div className="font-bold text-slate-900 dark:text-white text-lg group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">{t('home.hero.healthAssessment')}</div>
+                          <div className="text-sm text-slate-500 dark:text-slate-400 font-medium mt-1">{t('home.hero.assessmentDesc')}</div>
                         </div>
                         <ChevronRight className="w-6 h-6 text-slate-300 group-hover:text-primary-600 group-hover:translate-x-1 transition-all" />
                       </button>

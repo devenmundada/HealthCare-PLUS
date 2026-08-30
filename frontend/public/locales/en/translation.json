@@ -1,0 +1,71 @@
+{
+  "navigation": {
+    "home": "Home",
+    "features": "Features",
+    "doctors": "Doctors",
+    "mapPrediction": "Map Prediction",
+    "about": "About",
+    "emergency": "Emergency",
+    "emergencyConfirm": "This will call emergency services (911). Use only for real medical emergencies. Proceed?",
+    "switchToLight": "Switch to light mode",
+    "switchToDark": "Switch to dark mode",
+    "lightMode": "Light Mode",
+    "darkMode": "Dark Mode",
+    "hi": "Hi",
+    "user": "User",
+    "logout": "Logout",
+    "loginDemo": "Login Demo"
+  },
+  "home": {
+    "hero": {
+      "trustedBy": "Trusted by 500+ Top Hospitals",
+      "titlePart1": "Your Health,",
+      "titlePart2": "Our Priority",
+      "subtitle": "AI-powered healthcare platform connecting you with trusted medical professionals. From instant consultations to advanced diagnostics, we're here for your health journey.",
+      "bookAppointment": "Book an Appointment",
+      "videoConsultation": "Video Consultation",
+      "stats": {
+        "aiSupport": "24/7 AI Support",
+        "doctors": "500+ Doctors",
+        "successRate": "98.2% Success Rate",
+        "responseTime": "2.4s Response Time"
+      },
+      "startJourney": "Start Your Health Journey",
+      "healthInsights": "Get personalized health insights in minutes",
+      "healthAssessment": "Health Assessment",
+      "assessmentDesc": "3 min questionnaire"
+    }
+  },
+  "auth": {
+    "login": {
+      "secureLogin": "Secure Healthcare Login",
+      "welcomeBack": "Welcome Back",
+      "subtitle": "Sign in to access your health dashboard, appointments, and medical records",
+      "emailLabel": "Email Address",
+      "emailPlaceholder": "john@example.com",
+      "passwordLabel": "Password",
+      "forgotPassword": "Forgot password?",
+      "rememberMe": "Remember me on this device",
+      "signIn": "Sign In",
+      "signingIn": "Signing in...",
+      "noAccount": "Don't have an account?",
+      "createAccount": "Create account",
+      "invalidCredentials": "Invalid email or password. Please try again.",
+      "whatYouCanAccess": "What You Can Access",
+      "healthDashboard": "Health Dashboard",
+      "healthDashboardDesc": "Track your health metrics, appointments, and medications",
+      "securePrivate": "Secure & Private",
+      "securePrivateDesc": "HIPAA-compliant encryption for all your medical data",
+      "securityFeatures": "Security Features",
+      "encryption": "Encryption",
+      "ready": "Ready",
+      "communityTrust": "Community Trust",
+      "activePatients": "Active Patients",
+      "uptime": "Uptime",
+      "emailRequired": "Email is required",
+      "invalidEmail": "Please enter a valid email address",
+      "passwordRequired": "Password is required",
+      "passwordMinLength": "Password must be at least 6 characters"
+    }
+  }
+}

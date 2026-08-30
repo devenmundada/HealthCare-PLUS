@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 // @ts-nocheck
 import React, { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Hospital } from '../types/healthcare';
 import L from 'leaflet';
@@ -40,6 +40,16 @@ interface IndianCity {
   latitude: number;
   longitude: number;
 }
+
+const MapUpdater: React.FC<{ center: [number, number] }> = ({ center }) => {
+  const map = useMap();
+  useEffect(() => {
+    if (center) {
+      map.flyTo(center, 12, { animate: true, duration: 1.5 });
+    }
+  }, [center, map]);
+  return null;
+};
 
 const MapPrediction: React.FC = () => {
   // No hardcoded default city — we start with nothing selected and try the
@@ -359,6 +369,7 @@ const MapPrediction: React.FC = () => {
                 zoom={12}
                 className="h-full w-full rounded-lg"
               >
+                <MapUpdater center={mapCenter} />
                 <TileLayer
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                   attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
