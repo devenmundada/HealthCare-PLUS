@@ -23,7 +23,6 @@ import {
     Calendar,
     Heart,
     Settings
-    Settings
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
