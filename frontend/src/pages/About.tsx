@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Container } from '../components/layout/Container';
 import { GlassCard } from '../components/layout/GlassCard';
 import { Card } from '../components/ui/Card';
@@ -19,44 +20,46 @@ import {
 } from 'lucide-react';
 
 export const About: React.FC = () => {
+  const { t } = useTranslation();
+  
   const values = [
     {
-      title: 'Patient-Centered',
-      description: 'Every feature is designed with patient outcomes as the primary focus.',
+      title: t('aboutPage.values.patient.title'),
+      description: t('aboutPage.values.patient.desc'),
       icon: <Heart className="w-8 h-8 text-primary-600" />
     },
     {
-      title: 'Clinical Excellence',
-      description: 'Maintaining the highest standards of medical accuracy and reliability.',
+      title: t('aboutPage.values.clinical.title'),
+      description: t('aboutPage.values.clinical.desc'),
       icon: <Target className="w-8 h-8 text-primary-600" />
     },
     {
-      title: 'Transparency',
-      description: 'Clear explanations of AI decision-making processes for clinicians.',
+      title: t('aboutPage.values.transparency.title'),
+      description: t('aboutPage.values.transparency.desc'),
       icon: <Eye className="w-8 h-8 text-primary-600" />
     },
     {
-      title: 'Collaboration',
-      description: 'Fostering partnerships between AI and healthcare professionals.',
+      title: t('aboutPage.values.collaboration.title'),
+      description: t('aboutPage.values.collaboration.desc'),
       icon: <Users className="w-8 h-8 text-primary-600" />
     }
   ];
 
   const milestones = [
-    { year: '2021', event: 'Company Founded', description: 'Started with a vision to transform healthcare with AI' },
-    { year: '2022', event: 'First Clinical Trial', description: 'Partnered with 3 major hospitals for validation' },
-    { year: '2023', event: 'Series A Funding', description: 'Raised $20M to expand research and development' },
-    { year: '2024', event: 'Platform Launch', description: 'Public launch of HealthCare+ with 5 core features' },
-    { year: '2025', event: 'Global Expansion', description: 'Expanding to 10+ countries worldwide' }
+    { year: '2021', event: t('aboutPage.milestones.m1.event'), description: t('aboutPage.milestones.m1.desc') },
+    { year: '2022', event: t('aboutPage.milestones.m2.event'), description: t('aboutPage.milestones.m2.desc') },
+    { year: '2023', event: t('aboutPage.milestones.m3.event'), description: t('aboutPage.milestones.m3.desc') },
+    { year: '2024', event: t('aboutPage.milestones.m4.event'), description: t('aboutPage.milestones.m4.desc') },
+    { year: '2025', event: t('aboutPage.milestones.m5.event'), description: t('aboutPage.milestones.m5.desc') }
   ];
 
   const team = [
-    { name: 'Dr. Sarah Chen', role: 'Chief Medical Officer', expertise: 'Cardiology, AI Ethics' },
-    { name: 'Michael Rodriguez', role: 'Head of AI Research', expertise: 'Machine Learning, Medical Imaging' },
-    { name: 'Dr. James Wilson', role: 'Clinical Director', expertise: 'Oncology, Clinical Trials' },
-    { name: 'Emma Johnson', role: 'Head of Product', expertise: 'Healthcare Technology, UX Design' },
-    { name: 'David Kim', role: 'Chief Technology Officer', expertise: 'Cloud Infrastructure, Security' },
-    { name: 'Lisa Wang', role: 'Head of Data Science', expertise: 'Predictive Analytics, NLP' }
+    { name: 'Dr. Sarah Chen', role: t('aboutPage.team.sarah.role'), expertise: t('aboutPage.team.sarah.exp') },
+    { name: 'Michael Rodriguez', role: t('aboutPage.team.michael.role'), expertise: t('aboutPage.team.michael.exp') },
+    { name: 'Dr. James Wilson', role: t('aboutPage.team.james.role'), expertise: t('aboutPage.team.james.exp') },
+    { name: 'Emma Johnson', role: t('aboutPage.team.emma.role'), expertise: t('aboutPage.team.emma.exp') },
+    { name: 'David Kim', role: t('aboutPage.team.david.role'), expertise: t('aboutPage.team.david.exp') },
+    { name: 'Lisa Wang', role: t('aboutPage.team.lisa.role'), expertise: t('aboutPage.team.lisa.exp') }
   ];
 
   return (
@@ -71,21 +74,20 @@ export const About: React.FC = () => {
         {/* Hero Section */}
         <div className="text-center max-w-4xl mx-auto mb-20 fade-in-up">
           <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-6 leading-[1.1]">
-            Redefining Healthcare
-            <span className="bg-gradient-to-r from-primary-600 to-blue-600 dark:from-primary-400 dark:to-blue-400 bg-clip-text text-transparent block mt-2 pb-2">with AI</span>
+            {t('aboutPage.heroTitle')}
+            <span className="bg-gradient-to-r from-primary-600 to-blue-600 dark:from-primary-400 dark:to-blue-400 bg-clip-text text-transparent block mt-2 pb-2">{t('aboutPage.heroTitleGradient')}</span>
           </h1>
           <p className="text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto font-light leading-relaxed mb-8">
-            We're building the future of medical technology—where artificial intelligence 
-            enhances human expertise to deliver better patient outcomes.
+            {t('aboutPage.heroSubtitle')}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" className="bg-primary-600 hover:bg-primary-700 text-white shadow-[0_8px_30px_rgb(0,194,203,0.3)] dark:shadow-[0_8px_30px_rgb(0,194,203,0.2)] rounded-xl px-8 py-4 text-lg font-medium transition-all hover:-translate-y-1">
               <Globe className="w-5 h-5 mr-2" />
-              Global Impact Report
+              {t('aboutPage.globalImpact')}
             </Button>
             <Button variant="secondary" size="lg" className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border border-slate-200 dark:border-slate-700 hover:bg-white dark:hover:bg-slate-700 shadow-sm rounded-xl px-8 py-4 text-lg font-medium transition-all hover:-translate-y-1 text-slate-700 dark:text-slate-200">
               <Users className="w-5 h-5 mr-2" />
-              Join Our Mission
+              {t('aboutPage.joinMission')}
             </Button>
           </div>
         </div>
@@ -97,15 +99,14 @@ export const About: React.FC = () => {
               <Target className="w-8 h-8 text-primary-600" />
             </div>
             <h2 className="text-2xl font-bold text-neutral-900 dark:text-white mb-4">
-              Our Mission
+              {t('aboutPage.missionTitle')}
             </h2>
             <p className="text-lg text-neutral-600 dark:text-neutral-400 mb-6">
-              To empower healthcare professionals with AI tools that enhance diagnostic 
-              accuracy, improve patient outcomes, and make quality healthcare accessible globally.
+              {t('aboutPage.missionDesc')}
             </p>
             <div className="p-4 bg-primary-50 dark:bg-primary-900/20 rounded-xl">
               <p className="text-primary-700 dark:text-primary-300 font-medium">
-                "Technology should serve humanity, especially in healthcare."
+                {t('aboutPage.missionQuote')}
               </p>
             </div>
           </GlassCard>
@@ -115,25 +116,23 @@ export const About: React.FC = () => {
               <Eye className="w-8 h-8 text-primary-600" />
             </div>
             <h2 className="text-2xl font-bold text-neutral-900 dark:text-white mb-4">
-              Our Vision
+              {t('aboutPage.visionTitle')}
             </h2>
             <p className="text-lg text-neutral-600 dark:text-neutral-400 mb-6">
-              A world where every medical decision is informed by the best available 
-              technology and every patient receives the highest standard of care, 
-              regardless of location or resources.
+              {t('aboutPage.visionDesc')}
             </p>
             <div className="flex items-center space-x-4">
               <div className="flex-1 p-3 bg-white dark:bg-neutral-800 rounded-lg text-center">
                 <div className="text-2xl font-bold text-primary-600">500+</div>
-                <div className="text-sm text-neutral-600 dark:text-neutral-400">Hospitals</div>
+                <div className="text-sm text-neutral-600 dark:text-neutral-400">{t('aboutPage.hospitals')}</div>
               </div>
               <div className="flex-1 p-3 bg-white dark:bg-neutral-800 rounded-lg text-center">
                 <div className="text-2xl font-bold text-primary-600">50+</div>
-                <div className="text-sm text-neutral-600 dark:text-neutral-400">Countries</div>
+                <div className="text-sm text-neutral-600 dark:text-neutral-400">{t('aboutPage.countries')}</div>
               </div>
               <div className="flex-1 p-3 bg-white dark:bg-neutral-800 rounded-lg text-center">
                 <div className="text-2xl font-bold text-primary-600">2M+</div>
-                <div className="text-sm text-neutral-600 dark:text-neutral-400">Patients</div>
+                <div className="text-sm text-neutral-600 dark:text-neutral-400">{t('aboutPage.patients')}</div>
               </div>
             </div>
           </GlassCard>
@@ -142,7 +141,7 @@ export const About: React.FC = () => {
         {/* Values */}
         <div className="mb-16">
           <h2 className="text-3xl font-bold text-neutral-900 dark:text-white mb-8 text-center">
-            Our Values
+            {t('aboutPage.valuesTitle')}
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {values.map((value, index) => (
@@ -164,7 +163,7 @@ export const About: React.FC = () => {
         {/* Timeline */}
         <div className="mb-16">
           <h2 className="text-3xl font-bold text-neutral-900 dark:text-white mb-8 text-center">
-            Our Journey
+            {t('aboutPage.journeyTitle')}
           </h2>
           <GlassCard className="p-8">
             <div className="relative">
@@ -200,7 +199,7 @@ export const About: React.FC = () => {
         {/* Team */}
         <div className="mb-16">
           <h2 className="text-3xl font-bold text-neutral-900 dark:text-white mb-8 text-center">
-            Leadership Team
+            {t('aboutPage.teamTitle')}
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {team.map((member, index) => (
@@ -219,7 +218,7 @@ export const About: React.FC = () => {
                   </div>
                 </div>
                 <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                  <span className="font-medium text-neutral-700 dark:text-neutral-300">Expertise:</span> {member.expertise}
+                  <span className="font-medium text-neutral-700 dark:text-neutral-300">{t('aboutPage.expertise')}</span> {member.expertise}
                 </p>
               </div>
             ))}
@@ -229,43 +228,43 @@ export const About: React.FC = () => {
         {/* Awards & Recognition */}
         <GlassCard className="p-8 mb-16">
           <h2 className="text-3xl font-bold text-neutral-900 dark:text-white mb-8 text-center">
-            Awards & Recognition
+            {t('aboutPage.awardsTitle')}
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="text-center p-6">
               <Award className="w-12 h-12 text-yellow-500 mx-auto mb-4" />
               <h4 className="font-bold text-neutral-900 dark:text-white mb-2">
-                Best HealthTech 2023
+                {t('aboutPage.awards.healthtech.title')}
               </h4>
               <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                Digital Health Awards
+                {t('aboutPage.awards.healthtech.desc')}
               </p>
             </div>
             <div className="text-center p-6">
               <Shield className="w-12 h-12 text-green-500 mx-auto mb-4" />
               <h4 className="font-bold text-neutral-900 dark:text-white mb-2">
-                HIPAA Excellence
+                {t('aboutPage.awards.hipaa.title')}
               </h4>
               <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                Security & Compliance
+                {t('aboutPage.awards.hipaa.desc')}
               </p>
             </div>
             <div className="text-center p-6">
               <Zap className="w-12 h-12 text-blue-500 mx-auto mb-4" />
               <h4 className="font-bold text-neutral-900 dark:text-white mb-2">
-                AI Innovation
+                {t('aboutPage.awards.ai.title')}
               </h4>
               <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                TechCrunch Disrupt
+                {t('aboutPage.awards.ai.desc')}
               </p>
             </div>
             <div className="text-center p-6">
               <Star className="w-12 h-12 text-purple-500 mx-auto mb-4" />
               <h4 className="font-bold text-neutral-900 dark:text-white mb-2">
-                Top Startup
+                {t('aboutPage.awards.startup.title')}
               </h4>
               <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                Forbes 30 Under 30
+                {t('aboutPage.awards.startup.desc')}
               </p>
             </div>
           </div>
@@ -274,21 +273,20 @@ export const About: React.FC = () => {
         {/* Call to Action */}
         <div className="text-center">
           <h2 className="text-3xl font-bold text-neutral-900 dark:text-white mb-6">
-            Join Us in Transforming Healthcare
+            {t('aboutPage.ctaTitle')}
           </h2>
           <p className="text-lg text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto mb-8">
-            Whether you're a healthcare provider, researcher, or technologist, 
-            there's a place for you in our mission.
+            {t('aboutPage.ctaDesc')}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" leftIcon={<Users className="w-5 h-5" />}>
-              Career Opportunities
+              {t('aboutPage.careers')}
             </Button>
             <Button variant="secondary" size="lg" leftIcon={<Clock className="w-5 h-5" />}>
-              Schedule a Meeting
+              {t('aboutPage.schedule')}
             </Button>
             <Button variant="ghost" size="lg" leftIcon={<CheckCircle className="w-5 h-5" />}>
-              Partner With Us
+              {t('aboutPage.partner')}
             </Button>
           </div>
         </div>

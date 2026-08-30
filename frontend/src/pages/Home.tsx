@@ -182,57 +182,57 @@ export const Home: React.FC = () => {
 
   const stats = [
     {
-      label: 'Active Doctors',
+      label: t('home.stats.activeDoctors'),
       value: '500+',
       change: '+12%',
       icon: <Users className="w-6 h-6 text-primary-600" />,
-      description: 'Verified medical professionals'
+      description: t('home.stats.verifiedPros')
     },
     {
-      label: 'Success Rate',
+      label: t('home.stats.successRate'),
       value: '98.2%',
       change: '+0.8%',
       icon: <Award className="w-6 h-6 text-primary-600" />,
-      description: 'Patient satisfaction'
+      description: t('home.stats.patientSatisfaction')
     },
     {
-      label: 'Avg. Response Time',
+      label: t('home.stats.responseTime'),
       value: '2.4s',
       change: '-15%',
       icon: <Clock className="w-6 h-6 text-primary-600" />,
-      description: 'AI processing speed'
+      description: t('home.stats.aiSpeed')
     },
     {
-      label: 'Emergency Cases',
+      label: t('home.stats.emergencyCases'),
       value: '1.2K',
       change: '-8%',
       icon: <Activity className="w-6 h-6 text-primary-600" />,
-      description: 'Handled this month'
+      description: t('home.stats.handledMonth')
     },
   ];
 
   const features = [
     {
-      title: 'AI-Powered Diagnostics',
-      description: 'Advanced medical imaging analysis with 96% clinical accuracy',
+      title: t('home.features.aiDiag'),
+      description: t('home.features.aiDiagDesc'),
       icon: <Brain className="w-8 h-8 text-primary-600" />,
       onClick: () => navigate('/analysis')
     },
     {
-      title: 'Voice Health Analysis',
-      description: 'Analyze voice patterns for wellness insights and emotional state',
+      title: t('home.features.voiceHealth'),
+      description: t('home.features.voiceHealthDesc'),
       icon: <Mic className="w-8 h-8 text-primary-600" />,
       onClick: () => document.getElementById('voice-analyzer')?.scrollIntoView({ behavior: 'smooth' })
     },
     {
-      title: 'Real-time Appointment',
-      description: 'Instant booking with automatic calendar sync and reminders',
+      title: t('home.features.realtimeAppt'),
+      description: t('home.features.realtimeApptDesc'),
       icon: <Calendar className="w-8 h-8 text-primary-600" />,
       onClick: () => setShowAppointmentModal(true)
     },
     {
-      title: 'Emergency Response',
-      description: '24/7 emergency support with location-based services',
+      title: t('home.features.emergencyResp'),
+      description: t('home.features.emergencyRespDesc'),
       icon: <AlertTriangle className="w-8 h-8 text-primary-600" />,
       onClick: () => navigate('/map-prediction')
     },
@@ -813,8 +813,8 @@ export const Home: React.FC = () => {
                           <MessageSquare className="w-7 h-7 text-blue-600 dark:text-blue-400" />
                         </div>
                         <div className="flex-1">
-                          <div className="font-bold text-slate-900 dark:text-white text-lg group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">Chat with AI Assistant</div>
-                          <div className="text-sm text-slate-500 dark:text-slate-400 font-medium mt-1">24/7 available</div>
+                          <div className="font-bold text-slate-900 dark:text-white text-lg group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{t('home.hero.chatAssistant')}</div>
+                          <div className="text-sm text-slate-500 dark:text-slate-400 font-medium mt-1">{t('home.hero.chatDesc')}</div>
                         </div>
                         <ChevronRight className="w-6 h-6 text-slate-300 group-hover:text-blue-600 group-hover:translate-x-1 transition-all" />
                       </button>
@@ -827,8 +827,8 @@ export const Home: React.FC = () => {
                           <MapPin className="w-7 h-7 text-teal-600 dark:text-teal-400" />
                         </div>
                         <div className="flex-1">
-                          <div className="font-bold text-slate-900 dark:text-white text-lg group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">Find Nearby Hospitals</div>
-                          <div className="text-sm text-slate-500 dark:text-slate-400 font-medium mt-1">Emergency services</div>
+                          <div className="font-bold text-slate-900 dark:text-white text-lg group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">{t('home.hero.findHospitals')}</div>
+                          <div className="text-sm text-slate-500 dark:text-slate-400 font-medium mt-1">{t('home.hero.findDesc')}</div>
                         </div>
                         <ChevronRight className="w-6 h-6 text-slate-300 group-hover:text-teal-600 group-hover:translate-x-1 transition-all" />
                       </button>
@@ -854,10 +854,10 @@ export const Home: React.FC = () => {
         <Container>
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-neutral-900 dark:text-white mb-4 clinical-heading">
-              Trusted Healthcare Platform
+              {t('home.stats.trustedPlatform')}
             </h2>
             <p className="text-lg text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto">
-              Real-time metrics demonstrating our commitment to your health
+              {t('home.stats.trustedSubtitle')}
             </p>
           </div>
 
@@ -917,14 +917,14 @@ export const Home: React.FC = () => {
           <div className="text-center mb-16">
             <Badge className="mb-4 px-4 py-2 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300">
               <Zap className="w-4 h-4 mr-2" />
-              Advanced Capabilities
+              {t('home.features.badge')}
             </Badge>
 
             <h2 className="text-4xl font-bold text-neutral-900 dark:text-white mb-6 clinical-heading">
-              Comprehensive Healthcare Solutions
+              {t('home.features.title')}
             </h2>
             <p className="text-xl text-neutral-600 dark:text-neutral-400 max-w-3xl mx-auto leading-relaxed">
-              Everything you need for complete healthcare management, powered by cutting-edge technology
+              {t('home.features.subtitle')}
             </p>
           </div>
 
@@ -956,7 +956,7 @@ export const Home: React.FC = () => {
                       onClick={feature.onClick}
                       className="flex items-center text-primary-600 dark:text-primary-400 text-sm font-medium hover:underline focus:outline-none"
                     >
-                      Learn more
+                      {t('home.features.learnMore')}
                       <ChevronRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                     </button>
                   </div>
@@ -973,8 +973,8 @@ export const Home: React.FC = () => {
                   <Shield className="w-6 h-6 text-primary-600" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-neutral-900 dark:text-white">HIPAA Compliant</h4>
-                  <p className="text-sm text-neutral-600 dark:text-neutral-400">Your data is always secure and private</p>
+                  <h4 className="font-bold text-neutral-900 dark:text-white">{t('home.features.hipaa')}</h4>
+                  <p className="text-sm text-neutral-600 dark:text-neutral-400">{t('home.features.hipaaDesc')}</p>
                 </div>
               </div>
 
@@ -983,8 +983,8 @@ export const Home: React.FC = () => {
                   <Clock className="w-6 h-6 text-primary-600" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-neutral-900 dark:text-white">24/7 Support</h4>
-                  <p className="text-sm text-neutral-600 dark:text-neutral-400">Always here when you need us</p>
+                  <h4 className="font-bold text-neutral-900 dark:text-white">{t('home.features.support')}</h4>
+                  <p className="text-sm text-neutral-600 dark:text-neutral-400">{t('home.features.supportDesc')}</p>
                 </div>
               </div>
 
@@ -993,8 +993,8 @@ export const Home: React.FC = () => {
                   <Award className="w-6 h-6 text-primary-600" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-neutral-900 dark:text-white">Verified Doctors</h4>
-                  <p className="text-sm text-neutral-600 dark:text-neutral-400">All practitioners are board-certified</p>
+                  <h4 className="font-bold text-neutral-900 dark:text-white">{t('home.features.verified')}</h4>
+                  <p className="text-sm text-neutral-600 dark:text-neutral-400">{t('home.features.verifiedDesc')}</p>
                 </div>
               </div>
             </div>
@@ -1012,10 +1012,10 @@ export const Home: React.FC = () => {
         <Container>
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-neutral-900 dark:text-white mb-3">
-              Patient Success Stories
+              {t('home.stories.title')}
             </h2>
             <p className="text-lg text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto">
-              Real experiences from our community. Hear how compassionate care made a difference.
+              {t('home.stories.subtitle')}
             </p>
           </div>
 
@@ -1084,7 +1084,7 @@ export const Home: React.FC = () => {
                         {successStories[currentStoryIndex].name}
                       </h4>
                       <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                        Age {successStories[currentStoryIndex].age}
+                        {t('home.stories.age')} {successStories[currentStoryIndex].age}
                       </p>
                     </div>
 
@@ -1098,7 +1098,7 @@ export const Home: React.FC = () => {
                     <div className="pt-4 border-t border-neutral-200 dark:border-neutral-800">
                       <div className="flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-400 mb-1">
                         <Users className="w-3 h-3" />
-                        <span className="font-medium">Treated by:</span> {successStories[currentStoryIndex].doctor}
+                        <span className="font-medium">{t('home.stories.treatedBy')}</span> {successStories[currentStoryIndex].doctor}
                       </div>
                       <div className="flex items-center gap-2 text-sm text-neutral-500 dark:text-neutral-500">
                         <Shield className="w-3 h-3" />
@@ -1144,9 +1144,9 @@ export const Home: React.FC = () => {
             <div className="mt-4 text-center">
               <div className="inline-flex items-center gap-2 text-sm text-neutral-500 dark:text-neutral-400">
                 <Clock className="w-3 h-3" />
-                Auto-rotates every 5 seconds
+                {t('home.stories.autoRotates')}
                 {isCarouselPaused && (
-                  <span className="text-xs text-primary-600 ml-2">(Paused on hover)</span>
+                  <span className="text-xs text-primary-600 ml-2">{t('home.stories.paused')}</span>
                 )}
               </div>
             </div>
@@ -1181,13 +1181,13 @@ export const Home: React.FC = () => {
           <div className="text-center mb-12">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 mb-4">
               <Brain className="w-4 h-4" />
-              <span className="text-sm font-medium">Latest Research & Insights</span>
+              <span className="text-sm font-medium">{t('home.insights.badge')}</span>
             </div>
             <h2 className="text-3xl font-bold text-neutral-900 dark:text-white mb-4">
-              Medical Insights & Health Blog
+              {t('home.insights.title')}
             </h2>
             <p className="text-lg text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto">
-              Evidence-based articles and expert advice for your health journey
+              {t('home.insights.subtitle')}
             </p>
           </div>
 
@@ -1269,7 +1269,7 @@ export const Home: React.FC = () => {
                         {/* Read More */}
                         <div className="flex items-center justify-between pt-4 border-t border-neutral-200 dark:border-neutral-800">
                           <span className="text-primary-600 dark:text-primary-400 text-sm font-medium group-hover:underline">
-                            Read full article
+                            {t('home.insights.readFull')}
                           </span>
                           <ChevronRight className="w-4 h-4 text-primary-600 group-hover:translate-x-1 transition-transform" />
                         </div>
@@ -1288,7 +1288,7 @@ export const Home: React.FC = () => {
                     className="border-primary-200 dark:border-primary-800 text-primary-700 dark:text-primary-300 hover:bg-primary-50 dark:hover:bg-primary-900/30"
                     onClick={() => setShowAllInsights((v) => !v)}
                   >
-                    {showAllInsights ? 'Show Fewer Articles' : `View All ${filteredInsights.length} Articles`}
+                    {showAllInsights ? t('home.insights.showFewer') : t('home.insights.viewAll', { count: filteredInsights.length })}
                   </Button>
                 </div>
               )}
@@ -1300,7 +1300,7 @@ export const Home: React.FC = () => {
               <Card className="p-6">
                 <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-4 flex items-center gap-2">
                   <Activity className="w-5 h-5 text-primary-600" />
-                  Browse by Category
+                  {t('home.insights.browseCategory')}
                 </h3>
                 <div className="space-y-3">
                   {insightCategory && (
@@ -1308,7 +1308,7 @@ export const Home: React.FC = () => {
                       onClick={() => { setInsightCategory(null); setShowAllInsights(false); }}
                       className="flex items-center gap-2 text-sm text-primary-600 dark:text-primary-400 hover:underline mb-1"
                     >
-                      <ChevronLeft className="w-4 h-4" /> All categories
+                      <ChevronLeft className="w-4 h-4" /> {t('home.insights.allCategories')}
                     </button>
                   )}
                   {['Cardiology', 'Respiratory', 'Mental Health', 'Nutrition', 'Preventive Care', 'Pediatrics'].map((category) => (
@@ -1334,7 +1334,7 @@ export const Home: React.FC = () => {
                   </div>
                   <div>
                     <h3 className="font-bold text-neutral-900 dark:text-white">
-                      Today's Wellness Focus
+                      {t('home.insights.wellnessFocus')}
                     </h3>
                     <p className="text-sm text-neutral-600 dark:text-neutral-400">
                       {new Date().toLocaleDateString('en-US', {
@@ -1366,7 +1366,7 @@ export const Home: React.FC = () => {
                   leftIcon={<Bell className="w-4 h-4" />}
                   onClick={toggleDailyReminders}
                 >
-                  {remindersEnabled ? 'Daily Reminders Enabled ✓' : 'Enable Daily Reminders'}
+                  {remindersEnabled ? t('home.insights.remindersEnabled') : t('home.insights.enableReminders')}
                 </Button>
               </Card>
 
@@ -1377,28 +1377,28 @@ export const Home: React.FC = () => {
                     <MessageSquare className="w-6 h-6 text-primary-600" />
                   </div>
                   <h3 className="font-bold text-neutral-900 dark:text-white mb-2">
-                    Health Insights Newsletter
+                    {t('home.insights.newsletterTitle')}
                   </h3>
                   <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">
-                    Get weekly evidence-based health tips and research updates
+                    {t('home.insights.newsletterDesc')}
                   </p>
 
                   {newsletterState === 'saved' ? (
                     <p className="text-sm text-primary-700 dark:text-primary-300 font-medium">
-                      You're subscribed! Look out for our next issue.
+                      {t('home.insights.subscribed')}
                     </p>
                   ) : (
                   <div className="space-y-3">
                     <Input
                       type="email"
-                      placeholder="Your email address"
+                      placeholder={t('home.insights.emailPlaceholder')}
                       className="bg-white dark:bg-neutral-800"
                       value={newsletterEmail}
                       onChange={(e) => setNewsletterEmail(e.target.value)}
                       onKeyDown={(e) => { if (e.key === 'Enter') handleNewsletterSubmit(); }}
                     />
                     <Button className="w-full" onClick={handleNewsletterSubmit} disabled={!newsletterEmail.includes('@')}>
-                      Subscribe
+                      {t('home.insights.subscribe')}
                     </Button>
                   </div>
                   )}
