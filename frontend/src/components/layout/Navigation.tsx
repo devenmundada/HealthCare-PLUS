@@ -23,23 +23,26 @@ import {
     Calendar,
     Heart,
     Settings
+    Settings
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTranslation } from 'react-i18next';
+import { LanguageSwitcher } from '../shared/LanguageSwitcher';
 
 // Navigation items configuration
-const navigation = [
-    { name: 'Home', href: '/', icon: Home },
-    { name: 'Features', href: '/features', icon: Settings },
-    { name: 'Command Center', href: '/dashboard', icon: LayoutGrid },
-    { name: 'Doctors', href: '/doctors', icon: Users },
-    { name: 'Map Prediction', href: '/map-prediction', icon: Map },
-    { name: 'About', href: '/about', icon: Info },
-    { name: 'Emergency', href: 'tel:911', icon: AlertTriangle, isExternal: true },
-    
+const navigationItems = [
+    { nameKey: 'home', href: '/', icon: Home },
+    { nameKey: 'features', href: '/features', icon: Settings },
+    { nameKey: 'commandCenter', href: '/dashboard', icon: LayoutGrid },
+    { nameKey: 'doctors', href: '/doctors', icon: Users },
+    { nameKey: 'mapPrediction', href: '/map-prediction', icon: Map },
+    { nameKey: 'about', href: '/about', icon: Info },
+    { nameKey: 'emergency', href: 'tel:911', icon: AlertTriangle, isExternal: true },
 ];
 
 export const Navigation: React.FC = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const { t } = useTranslation();
     // Never persisted before — every reload silently reset to light mode
     // regardless of what was chosen. Read the saved choice (or fall back to
     // the OS preference) on first render instead of always starting false.
@@ -67,8 +70,8 @@ export const Navigation: React.FC = () => {
     // Command Center is hospital-only — hide it from patients/doctors/
     // logged-out visitors instead of showing a link that just bounces them
     // straight back out via the role redirect.
-    const visibleNavigation = navigation.filter(
-        (item) => item.name !== 'Command Center' || user?.role === 'hospital'
+    const visibleNavigation = navigationItems.filter(
+        (item) => item.nameKey !== 'commandCenter' || user?.role === 'hospital'
     );
 
     // Apply + persist whenever darkMode changes, including the very first
@@ -103,7 +106,7 @@ export const Navigation: React.FC = () => {
     // Handle emergency call with confirmation
     const handleEmergencyCall = () => {
         const confirmCall = window.confirm(
-            'This will call emergency services (911). Use only for real medical emergencies. Proceed?'
+            t('navigation.emergencyConfirm')
         );
         if (confirmCall) {
             window.location.href = 'tel:911';
@@ -137,18 +140,20 @@ export const Navigation: React.FC = () => {
                     <div className="hidden md:flex items-center space-x-1">
                         {visibleNavigation.map((item) => (
                             <NavLink
-                                key={item.name}
+                                key={item.nameKey}
                                 to={item.href}
                                 className={({ isActive }) => getNavLinkClassName(isActive)}
                             >
                                 <item.icon className="w-4 h-4 mr-2" />
-                                {item.name}
+                                {t(`navigation.${item.nameKey}`)}
                             </NavLink>
                         ))}
                     </div>
 
                     {/* Right side actions */}
                     <div className="flex items-center space-x-3">
+                        <LanguageSwitcher />
+
                         {/* Emergency alerts button */}
                         <Button
                             variant="ghost"
@@ -174,7 +179,7 @@ export const Navigation: React.FC = () => {
                             size="sm"
                             onClick={toggleDarkMode}
                             className="hidden sm:inline-flex"
-                            aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+                            aria-label={darkMode ? t('navigation.switchToLight') : t('navigation.switchToDark')}
                         >
                             {darkMode ? (
                                 <Sun className="w-4 h-4" />
@@ -210,7 +215,7 @@ export const Navigation: React.FC = () => {
                                             )}
                                         </div>
                                         <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                                            Hi, {user.name.split(' ')[0]}
+                                            {t('navigation.hi')}, {user.name.split(' ')[0]}
                                         </span>
                                     </button>
 
@@ -244,7 +249,7 @@ export const Navigation: React.FC = () => {
                                             className="flex items-center w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-neutral-100 dark:hover:bg-neutral-700"
                                         >
                                             <LogOut className="w-4 h-4 mr-3" />
-                                            Sign Out
+                                            {t('navigation.logout')}
                                         </button>
                                     </div>
                                 </div>
@@ -284,13 +289,13 @@ export const Navigation: React.FC = () => {
                             {/* Navigation links */}
                             {visibleNavigation.map((item) => (
                                 <NavLink
-                                    key={item.name}
+                                    key={item.nameKey}
                                     to={item.href}
                                     onClick={() => setIsMenuOpen(false)}
                                     className={({ isActive }) => getNavLinkClassName(isActive, true)}
                                 >
                                     <item.icon className="w-5 h-5 mr-3" />
-                                    {item.name}
+                                    {t(`navigation.${item.nameKey}`)}
                                 </NavLink>
                             ))}
 
@@ -304,7 +309,7 @@ export const Navigation: React.FC = () => {
                                     onClick={toggleDarkMode}
                                     leftIcon={darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
                                 >
-                                    {darkMode ? 'Light Mode' : 'Dark Mode'}
+                                    {darkMode ? t('navigation.lightMode') : t('navigation.darkMode')}
                                 </Button>
 
                                 {/* Mobile Auth Section */}
@@ -366,7 +371,7 @@ export const Navigation: React.FC = () => {
                                             onClick={handleLogout}
                                             leftIcon={<LogOut className="w-4 h-4" />}
                                         >
-                                            Sign Out
+                                            {t('navigation.logout')}
                                         </Button>
                                     </>
                                 ) : (
