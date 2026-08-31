@@ -380,5 +380,37 @@
     "patient_satisfaction": "Patient Satisfaction",
     "emergency_support": "Emergency Support",
     "specialties_covered": "Specialties Covered"
+  },
+  "footer": {
+    "description": "AI-powered healthcare platform designed for medical professionals, providing advanced diagnostic support and clinical decision tools.",
+    "featuresHeading": "Features",
+    "links": {
+      "imageAnalysis": "AI Image Analysis",
+      "chatAssistant": "Medical Chat Assistant",
+      "voiceToText": "Voice-to-Text Transcription",
+      "clinicalAnalytics": "Clinical Analytics"
+    },
+    "contactHeading": "Contact",
+    "contact": {
+      "address": "123 Medical Center Dr, Boston, MA"
+    },
+    "trustHeading": "Trust & Security",
+    "trust": {
+      "hipaa": "HIPAA Compliant",
+      "encryption": "End-to-End Encryption",
+      "privacy": "Patient Privacy First"
+    },
+    "bottom": {
+      "rights": "© {{year}} HealthCare+. All rights reserved.",
+      "privacyPolicy": "Privacy Policy",
+      "termsOfService": "Terms of Service",
+      "cookiePolicy": "Cookie Policy"
+    }
+  },
+  "medicalDisclaimer": {
+    "criticalTitle": "Emergency Medical Notice",
+    "criticalDesc": "This is an AI-powered decision support tool only. For medical emergencies, call emergency services immediately. Always consult with qualified healthcare professionals for diagnosis and treatment.",
+    "defaultTitle": "Medical Disclaimer",
+    "defaultDesc": "This AI tool provides decision support only, not medical diagnosis. Always consult with healthcare professionals for medical decisions."
   }
 }

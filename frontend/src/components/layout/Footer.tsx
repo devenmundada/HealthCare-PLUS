@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Logo } from '../shared/Logo';
 import { 
   Heart,
@@ -15,6 +16,8 @@ import {
 import { MedicalDisclaimer } from '../shared/MedicalDisclaimer';
 
 export const Footer: React.FC = () => {
+  const { t } = useTranslation();
+
   return (
     <footer className="bg-neutral-50 dark:bg-neutral-900 border-t border-neutral-200 dark:border-neutral-800">
       <div className="container-wide py-12">
@@ -23,8 +26,7 @@ export const Footer: React.FC = () => {
           <div>
             <Logo size="lg" />
             <p className="mt-4 text-neutral-600 dark:text-neutral-400">
-              AI-powered healthcare platform designed for medical professionals, 
-              providing advanced diagnostic support and clinical decision tools.
+              {t('footer.description')}
             </p>
             <div className="flex space-x-4 mt-6">
               <a href="#" className="text-neutral-400 hover:text-primary-600 transition-colors">
@@ -45,27 +47,27 @@ export const Footer: React.FC = () => {
           {/* Quick Links */}
           <div>
             <h3 className="text-lg font-semibold text-neutral-900 dark:text-white mb-4">
-              Features
+              {t('footer.featuresHeading')}
             </h3>
             <ul className="space-y-2">
               <li>
                 <a href="#" className="text-neutral-600 hover:text-primary-600 dark:text-neutral-400 transition-colors">
-                  AI Image Analysis
+                  {t('footer.links.imageAnalysis')}
                 </a>
               </li>
               <li>
                 <a href="#" className="text-neutral-600 hover:text-primary-600 dark:text-neutral-400 transition-colors">
-                  Medical Chat Assistant
+                  {t('footer.links.chatAssistant')}
                 </a>
               </li>
               <li>
                 <a href="#" className="text-neutral-600 hover:text-primary-600 dark:text-neutral-400 transition-colors">
-                  Voice-to-Text Transcription
+                  {t('footer.links.voiceToText')}
                 </a>
               </li>
               <li>
                 <a href="#" className="text-neutral-600 hover:text-primary-600 dark:text-neutral-400 transition-colors">
-                  Clinical Analytics
+                  {t('footer.links.clinicalAnalytics')}
                 </a>
               </li>
             </ul>
@@ -74,7 +76,7 @@ export const Footer: React.FC = () => {
           {/* Contact */}
           <div>
             <h3 className="text-lg font-semibold text-neutral-900 dark:text-white mb-4">
-              Contact
+              {t('footer.contactHeading')}
             </h3>
             <ul className="space-y-3">
               <li className="flex items-center text-neutral-600 dark:text-neutral-400">
@@ -87,7 +89,7 @@ export const Footer: React.FC = () => {
               </li>
               <li className="flex items-center text-neutral-600 dark:text-neutral-400">
                 <MapPin className="w-4 h-4 mr-3" />
-                123 Medical Center Dr, Boston, MA
+                {t('footer.contact.address')}
               </li>
             </ul>
           </div>
@@ -95,25 +97,25 @@ export const Footer: React.FC = () => {
           {/* Trust Badges */}
           <div>
             <h3 className="text-lg font-semibold text-neutral-900 dark:text-white mb-4">
-              Trust & Security
+              {t('footer.trustHeading')}
             </h3>
             <div className="space-y-4">
               <div className="flex items-center">
                 <Shield className="w-5 h-5 text-primary-600 mr-2" />
                 <span className="text-neutral-600 dark:text-neutral-400">
-                  HIPAA Compliant
+                  {t('footer.trust.hipaa')}
                 </span>
               </div>
               <div className="flex items-center">
                 <Lock className="w-5 h-5 text-primary-600 mr-2" />
                 <span className="text-neutral-600 dark:text-neutral-400">
-                  End-to-End Encryption
+                  {t('footer.trust.encryption')}
                 </span>
               </div>
               <div className="flex items-center">
                 <Heart className="w-5 h-5 text-primary-600 mr-2" />
                 <span className="text-neutral-600 dark:text-neutral-400">
-                  Patient Privacy First
+                  {t('footer.trust.privacy')}
                 </span>
               </div>
             </div>
@@ -125,17 +127,17 @@ export const Footer: React.FC = () => {
         <div className="border-t border-neutral-200 dark:border-neutral-800 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <p className="text-neutral-600 dark:text-neutral-400 text-sm">
-              © {new Date().getFullYear()} HealthCare+. All rights reserved.
+              {t('footer.bottom.rights', { year: new Date().getFullYear() })}
             </p>
             <div className="flex space-x-6 mt-4 md:mt-0">
               <a href="#" className="text-sm text-neutral-600 hover:text-primary-600 dark:text-neutral-400 transition-colors">
-                Privacy Policy
+                {t('footer.bottom.privacyPolicy')}
               </a>
               <a href="#" className="text-sm text-neutral-600 hover:text-primary-600 dark:text-neutral-400 transition-colors">
-                Terms of Service
+                {t('footer.bottom.termsOfService')}
               </a>
               <a href="#" className="text-sm text-neutral-600 hover:text-primary-600 dark:text-neutral-400 transition-colors">
-                Cookie Policy
+                {t('footer.bottom.cookiePolicy')}
               </a>
             </div>
           </div>
